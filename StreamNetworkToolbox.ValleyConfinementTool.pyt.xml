@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<metadata xml:lang="en">
+	<Esri>
+		<CreaDate>20141120</CreaDate>
+		<CreaTime>10065900</CreaTime>
+		<ArcGISFormat>1.0</ArcGISFormat>
+		<SyncOnce>TRUE</SyncOnce>
+		<ModDate>20150225</ModDate>
+		<ModTime>132506</ModTime>
+		<scaleRange>
+			<minScale>150000000</minScale>
+			<maxScale>5000</maxScale>
+		</scaleRange>
+		<ArcGISProfile>ItemDescription</ArcGISProfile>
+	</Esri>
+	<dataIdInfo>
+		<idCitation>
+			<resTitle>Valley Confinement</resTitle>
+		</idCitation>
+		<searchKeys>
+			<keyword>Stream Network Tools</keyword>
+			<keyword>Confinement</keyword>
+		</searchKeys>
+		<dataExt>
+			<geoEle xmlns="">
+				<GeoBndBox esriExtentType="search"/>
+			</geoEle>
+		</dataExt>
+	</dataIdInfo>
+	<distInfo>
+		<distributor>
+			<distorFormat>
+				<formatName>ArcToolbox Tool</formatName>
+			</distorFormat>
+		</distributor>
+	</distInfo>
+	<tool name="ValleyConfinementTool" displayname="Valley Confinement" toolboxalias="Stream Network and Riverstyles" xmlns="">
+		<parameters>
+			<param name="InputFCCenterline" displayname="Stream Network or Centerline" type="Required" direction="Input" datatype="Feature Layer" expression="InputFCCenterline">
+				<dialogReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;The segmented polyline stream network or channel centerline. Confinement will be calculated for each segment (feature).&lt;/SPAN&gt;&lt;/P&gt;&lt;P&gt;&lt;SPAN&gt;This model works best if this is the line network that was used to create the valley bottom and channel polygons.&lt;/SPAN&gt;&lt;/P&gt;&lt;P&gt;&lt;SPAN&gt;** Make sure that this layer is &lt;/SPAN&gt;&lt;SPAN&gt;not Z-enabled&lt;/SPAN&gt;&lt;SPAN&gt;**&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;&lt;/DIV&gt;</dialogReference>
+			</param>
+			<param name="InputConfinementEdges" displayname="Input Valley Bottom Polygon" type="Required" direction="Input" datatype="Feature Layer" expression="InputConfinementEdges">
+				<dialogReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;The valley bottom polygon for the stream. &lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;&lt;/DIV&gt;</dialogReference>
+			</param>
+			<param name="InputChannelBottom" displayname="Input Channel Polygon" type="Required" direction="Input" datatype="Feature Layer" expression="InputChannelBottom">
+				<dialogReference>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;The channel area polygon for the stream. &lt;/SPAN&gt;&lt;/P&gt;&lt;P&gt;&lt;SPAN&gt;This polygon should be sufficiently buffered so it intersects the valley bottom polygon in areas of confinement. It is ok if this polygon expands outside of the valley bottom polygon.&lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;&lt;/DIV&gt;</dialogReference>
+			</param>
+			<param name="outputConCenterlineFC" displayname="Output Confinement by Centerline Feature Class" type="Required" direction="Output" datatype="Feature Class" expression="outputConCenterlineFC"/><param name="outputConSegmentsFC" displayname="Output Confinement by Segments Feature Class" type="Required" direction="Output" datatype="Feature Class" expression="outputConSegmentsFC"/><param name="InputTempWorkspace" displayname="Scratch Workspace" type="Optional" direction="Input" datatype="Workspace" expression="{InputTempWorkspace}"/><param name="CrossSectionLength" displayname="Maximum Cross Section Width (Meters)" type="Optional" direction="Input" datatype="Double" expression="{CrossSectionLength}"/></parameters>
+		<usage>&lt;DIV STYLE="text-align:Left;"&gt;&lt;DIV&gt;&lt;P&gt;&lt;SPAN&gt;Calculate the valley confinement for segmented stream network based on valley bottom and stream channel area polygons.  &lt;/SPAN&gt;&lt;/P&gt;&lt;/DIV&gt;&lt;/DIV&gt;</usage>
+	</tool>
+	<mdHrLv>
+		<ScopeCd value="005"/>
+	</mdHrLv>
+</metadata>

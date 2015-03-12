@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{54bb0110-2bb5-4b52-b164-c697bdc76521}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>BuildNetworkTopology.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</InterpreterId>
+    <InterpreterVersion>2.7</InterpreterVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+    <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="StreamNetworkToolbox.BuildNetworkTopologyTool.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.CalculateRiverStylesTool.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.ChangeStartingVertexTool.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.CheckNetworkConnectivityTool.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.ConfinementTool.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.DividePolygonBySegmentsTool.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.DynamicSegmentationTool.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.FindBraidedNetworkTool.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.NetworkSegmentationTool.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.PlanformTool.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.pyt" />
+    <Content Include="StreamNetworkToolbox.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.SinuosityTool.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.StreamPlanformTool.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.TransferLineAttributesTool.pyt.xml" />
+    <Content Include="StreamNetworkToolbox.ValleyConfinementTool.pyt.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BuildNetworkTopology.py" />
+    <Compile Include="ChangeStartingVertex.py" />
+    <Compile Include="CheckNetworkConnectivity.py" />
+    <Compile Include="DividePolygonBySegment.py" />
+    <Compile Include="DynamicSegmentation.py" />
+    <Compile Include="FindBraidedNetwork.py" />
+    <Compile Include="gis_tools.py" />
+    <Compile Include="NetworkSegmentation.py" />
+    <Compile Include="Sinuosity.py" />
+    <Compile Include="TransferAttributesToLine.py" />
+    <Compile Include="ValleyConfinement.py" />
+    <Compile Include="ValleyPlanform.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="{9a7a9026-48c1-4688-9d5d-e5699d47d074}\2.7" />
+  </ItemGroup>
+  <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
+</Project>
