@@ -20,13 +20,13 @@ import gis_tools
 import DividePolygonBySegment
 
 def main(fcFromLine,fcToLine,fcRawBoundingPolygon,bool_IsSegmented,fcOutputLineNetwork):
-    
+
     workspaceTemp=arcpy.env.scratchWorkspace
     
     fcTempLine = gis_tools.newGISDataset(workspaceTemp,"Transfer_01_TempLine")
     arcpy.CopyFeatures_management(fcFromLine,fcTempLine)
     
-    if bool_IsSegmented == False:
+    if bool_IsSegmented is not True:
         fcSegmentedBoundingPolygons = gis_tools.newGISDataset(workspaceTemp,"Transfer_02_SegmentedBoundingPolygons")
         DividePolygonBySegment.main(fcFromLine,fcRawBoundingPolygon,fcSegmentedBoundingPolygons,workspaceTemp)
     else: 
