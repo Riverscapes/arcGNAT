@@ -214,7 +214,7 @@ class CalculateRiverStylesTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Segmented Stream Centerline (Segments for Sinuosity/Planform)",
+            displayName="Segmented Stream Flowline (Segments for Sinuosity/Planform)",
             name="InputFCCenterline",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -222,7 +222,7 @@ class CalculateRiverStylesTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Segmented Stream Centerline (Segments for Confinement)",
+            displayName="Segmented Stream Flowline (Segments for Confinement)",
             name="InputFCCenterlineSmall",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -337,6 +337,8 @@ class CalculateRiverStylesTool(object):
                                    fcOutputChannelPolygonSegmented,
                                    fcOutputConfinementCenterline,
                                    fcOutputConfinementSegments,
+                                   True,
+                                   False,
                                    workspaceConfinement,
                                    "300.00")
 
@@ -374,7 +376,7 @@ class CalculateRiverStylesTool(object):
 class ConfinementTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Stream Confinement"
+        self.label = "Valley Confinement"
         self.description = "Calculate the Valley Confinement for segmented reaches using the Stream Centerline, Channel Buffer, and Valley Bottom Polygon."
         self.canRunInBackground = True
         self.category = "Riverstyles Tools"
@@ -382,7 +384,7 @@ class ConfinementTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Stream Network or Centerline",
+            displayName="Segmented Stream Network Flowline",
             name="InputFCCenterline",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -422,22 +424,38 @@ class ConfinementTool(object):
         param4.filter.list = ["Polyline"]
 
         param5 = arcpy.Parameter(
+            displayName="Calculate Confinement for each Segment?",
+            name="boolCalculateConfinement",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input")
+        param5.value = True
+
+        param6 = arcpy.Parameter(
+            displayName="Channel Polygon Is Already Segmented?",
+            name="boolChannelPolygonSegmented",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input")
+        #param6.value = False
+
+        param7 = arcpy.Parameter(
             displayName="Scratch Workspace",
             name="InputTempWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
-        param5.filter.list = ["Local Database"]
+        param7.filter.list = ["Local Database"]
 
-        param6 = arcpy.Parameter(
+        param8 = arcpy.Parameter(
             displayName="Maximum Cross Section Width (Meters)",
             name="CrossSectionLength",
             datatype="GPDouble", 
             parameterType="Optional",
             direction="Input")
-        param6.value = "200.00"
+        param8.value = "200.00"
 
-        return [param0,param1,param2,param3,param4,param5,param6]
+        return [param0,param1,param2,param3,param4,param5,param6,param7,param8]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -466,7 +484,9 @@ class ConfinementTool(object):
                                p[3].valueAsText,
                                p[4].valueAsText,
                                p[5].valueAsText,
-                               p[6].valueAsText
+                               p[6].valueAsText,
+                               p[7].valueAsText,
+                               p[8].valueAsText
                                )
         return
 
@@ -1002,6 +1022,7 @@ class TransferLineAttributesTool(object):
             datatype="GPBoolean", 
             parameterType="Optional",
             direction="Input")
+        param3.value = False
 
         param4 = arcpy.Parameter(
             displayName="Output Line Network",
