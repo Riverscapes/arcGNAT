@@ -30,6 +30,7 @@ import Sinuosity
 import DividePolygonBySegment
 import ChangeStartingVertex
 import TransferAttributesToLine
+import StreamOrder
 
 class Toolbox(object):
     def __init__(self):
@@ -40,7 +41,8 @@ class Toolbox(object):
         self.description = "Tools for generating a Stream Network and for calculating Riverstyles Metrics."
 
         # List of tool classes associated with this toolbox
-        self.tools = [CheckNetworkConnectivityTool,
+        self.tools = [StreamOrderTool,
+                      CheckNetworkConnectivityTool,
                       FindBraidedNetworkTool,
                       BuildNetworkTopologyTool,
                       #NetworkSegmentationTool,
@@ -55,7 +57,70 @@ class Toolbox(object):
                       ]
 
 # Stream Network Tools #
+class StreamOrderTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Generate Stream Order for the Stream Network"
+        self.description = "Generate Stream Order for the Stream Network."
+        self.canRunInBackground = True
+        self.category = "Stream Network Tools"
 
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input Stream Network",
+            name="InputStreamNetwork",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        param1 = arcpy.Parameter(
+            displayName="Downstream Reach ID (in FID field)",
+            name="DownstreamReach",
+            datatype="GPLong", #Integer
+            parameterType="Required",
+            direction="Input")
+
+        param2 = arcpy.Parameter(
+            displayName="Output Stream Order Feature Class",
+            name="outputStreamOrderFC",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Output")
+        param2.filter.list = ["Polyline"]
+
+        param3 = arcpy.Parameter(
+            displayName="Scratch Workspace",
+            name="InputTempWorkspace",
+            datatype="DEWorkspace", 
+            parameterType="Optional",
+            direction="Input")
+        param3.filter.list = ["Local Database"]
+        return [param0,param1,param2,param3]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(StreamOrder)
+        StreamOrder.main(p[0].valueAsText,
+                         p[1].valueAsText,
+                         p[2].valueAsText,
+                         p[3].valueAsText,)
+
+        return
 
 class CheckNetworkConnectivityTool(object):
     def __init__(self):
@@ -76,13 +141,15 @@ class CheckNetworkConnectivityTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Downstream Reach",
+            displayName="Downstream Reach ID (in FID field)",
             name="DownstreamReach",
             datatype="GPLong", #Integer
             parameterType="Required",
             direction="Input")
 
-        return [param0,param1]
+
+
+        return [param0]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
