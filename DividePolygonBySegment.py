@@ -29,9 +29,9 @@ def main(fcInputCenterline,fcInputPolygon,fcSegmentedPolygons,workspaceTemp=arcp
     fcCenterline = gis_tools.newGISDataset(workspaceTemp,"Centerline")
     arcpy.CopyFeatures_management(fcInputCenterline,fcCenterline)
 
-    arcpy.env.extent = fcInputCenterline
+    arcpy.env.extent = fcInputPolygon
 
-    arcpy.Densify_edit(fcCenterline,"DISTANCE",dblPointDensity)
+    arcpy.Densify_edit(fcCenterline,"DISTANCE",str(dblPointDensity) + " METERS")
 
     fcTribJunctionPoints = gis_tools.newGISDataset(workspaceTemp,"TribJunctionPoints") # All Segment Junctions??
     gis_tools.findSegmentJunctions(fcCenterline,fcTribJunctionPoints,"ALL")
