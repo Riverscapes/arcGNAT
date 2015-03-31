@@ -49,7 +49,7 @@ def findBraidedReaches(fcLines):
     arcpy.MakeFeatureLayer_management(fcLines,"lyrBraidedReaches")
     arcpy.MakeFeatureLayer_management("in_memory/DonutPolygons","lyrDonuts")
     arcpy.SelectLayerByLocation_management("lyrBraidedReaches","SHARE_A_LINE_SEGMENT_WITH","lyrDonuts",'',"NEW_SELECTION")
-    arcpy.CalculateField_management("lyrBraidedReaches","IsBraidedReach",1)
+    arcpy.CalculateField_management("lyrBraidedReaches","IsBraidedReach",1,"PYTHON")
 
 def main(fcStreamNetwork):
 
@@ -65,7 +65,7 @@ def main(fcStreamNetwork):
     if len(listFields) is not 1:
         arcpy.AddField_management(fcStreamNetwork,"IsBraidedReach","SHORT")
     else:
-        arcpy.CalculateField_management(fcStreamNetwork,"IsBraidedReach",0) #clear field
+        arcpy.CalculateField_management(fcStreamNetwork,"IsBraidedReach",0,"PYTHON") #clear field
 
     # Process
     findBraidedReaches(fcStreamNetwork)
