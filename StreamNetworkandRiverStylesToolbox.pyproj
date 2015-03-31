@@ -21,6 +21,7 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="readme.md" />
     <Content Include="StreamNetworkToolbox.BuildNetworkTopologyTool.pyt.xml" />
     <Content Include="StreamNetworkToolbox.CalculateRiverStylesTool.pyt.xml" />
     <Content Include="StreamNetworkToolbox.ChangeStartingVertexTool.pyt.xml" />
@@ -48,6 +49,9 @@
     <Compile Include="gis_tools.py" />
     <Compile Include="NetworkSegmentation.py" />
     <Compile Include="Sinuosity.py" />
+    <Compile Include="StreamOrder.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="TransferAttributesToLine.py" />
     <Compile Include="ValleyConfinement.py" />
     <Compile Include="ValleyPlanform.py" />
