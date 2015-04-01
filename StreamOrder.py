@@ -54,6 +54,9 @@ def main(inputFCPolylineNetwork,
 
     arcpy.SelectLayerByLocation_management(lyrA,"INTERSECT",lyrDangles,selection_type="NEW_SELECTION")
     arcpy.CalculateField_management(lyrA,"Stream_Order",intCurrentOrder,"PYTHON")
+    
+    fcStreamOrderTransistionPoints = gis_tools.newGISDataset(scratchWorkspace,"StreamOrderTransistionPoints")
+
 
     # Iterate through stream orders
     arcpy.AddMessage("Evaluating Stream Order: " + str(intCurrentOrder))
@@ -68,15 +71,23 @@ def main(inputFCPolylineNetwork,
         for pair in listPairs:
             if pair not in listPairsRetired:
                 fcIntersectPoints = gis_tools.newGISDataset(scratchWorkspace,"IntersectPoints_" + str(intIteration) + "_Pair_" + str(pair[0]) + "_" + str(pair[1]) + "_Order_" + str(intCurrentOrder))
+                lyrIntersectPoints = gis_tools.newGISDataset("LAYER","lyrIntersectPoints" + str(intIteration) + str(pair[0]) + str(pair[1]))
                 if pair[0] == pair[1]:
                     arcpy.SelectLayerByAttribute_management(lyrA,"NEW_SELECTION",'"Stream_Order" = ' + str(pair[0]))
                     arcpy.Intersect_analysis(lyrA,fcIntersectPoints,output_type="POINT")
+                    arcpy.MakeFeatureLayer_management(fcIntersectPoints,lyrIntersectPoints)
                     arcpy.SelectLayerByAttribute_management(lyrCalculate,"NEW_SELECTION",'"Stream_Order" = 0')
+                    arcpy.SelectLayerByLocation_management(lyrIntersectPoints,"INTERSECT",lyrCalculate,selection_type="NEW_SELECTION")
+                    if arcpy.Exists(fcStreamOrderTransistionPoints):
+                        arcpy.Append_management(lyrIntersectPoints,fcStreamOrderTransistionPoints)
+                    else:
+                        arcpy.CopyFeatures_management(lyrIntersectPoints,fcStreamOrderTransistionPoints)
                     arcpy.SelectLayerByLocation_management(lyrCalculate,"INTERSECT",fcIntersectPoints,selection_type="SUBSET_SELECTION")
                     if int(arcpy.GetCount_management(lyrCalculate).getOutput(0)) > 0 and pair[0] == intCurrentOrder:
                         intCurrentOrder = intCurrentOrder + 1
                         arcpy.AddMessage("New Stream Order: " + str(intCurrentOrder))
                     arcpy.CalculateField_management(lyrCalculate,"Stream_Order",int(intCurrentOrder),"PYTHON")
+
                 else:
                     arcpy.SelectLayerByAttribute_management(lyrA,"NEW_SELECTION",'"Stream_Order" = ' + str(pair[0]))
                     arcpy.SelectLayerByAttribute_management(lyrB,"NEW_SELECTION",'"Stream_Order" = ' + str(pair[1]))
@@ -91,14 +102,14 @@ def main(inputFCPolylineNetwork,
         intIteration = intIteration + 1
 
     arcpy.CopyFeatures_management(fcNetworkDissolved,outputFCPolylineStreamOrder)
-
+    arcpy.DeleteIdentical_management(fcStreamOrderTransistionPoints,"Shape")
     return
 
 def newListPairs(number):
     list = []
     for i1 in range(1,number + 1):
         for i2 in range(i1,number + 1):
-            list.append([i1,i2])
+            list.append(tuple([i1,i2]))
     return list
 
 
