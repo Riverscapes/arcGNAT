@@ -29,8 +29,8 @@ def main(inputFCPolylineNetwork,
        arcpy.Delete_management(outputFCPolylineStreamOrder)
 
     # Preprocess Network
-    fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"NetworkDissolved")
-    arcpy.Dissolve_management(inputFCPolylineNetwork,fcNetworkDissolved,multi_part="SINGLE_PART",unsplit_lines="UNSPLIT_LINES")
+    fcNetworkDissolved = inputFCPolylineNetwork#gis_tools.newGISDataset(scratchWorkspace,"NetworkDissolved")
+    #arcpy.Dissolve_management(inputFCPolylineNetwork,fcNetworkDissolved,multi_part="SINGLE_PART",unsplit_lines="UNSPLIT_LINES")
 
     listFields = arcpy.ListFields(fcNetworkDissolved,"Stream_Order")
     if len(listFields) == 0:

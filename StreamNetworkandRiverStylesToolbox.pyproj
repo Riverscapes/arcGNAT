@@ -5,14 +5,17 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{54bb0110-2bb5-4b52-b164-c697bdc76521}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>BuildNetworkTopology.py</StartupFile>
-    <SearchPath />
+    <StartupFile>
+    </StartupFile>
+    <SearchPath>
+    </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</InterpreterId>
     <InterpreterVersion>2.7</InterpreterVersion>
+    <IsWindowsApplication>False</IsWindowsApplication>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -41,8 +44,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BuildNetworkTopology.py" />
+    <Compile Include="Centerline.py" />
     <Compile Include="ChangeStartingVertex.py" />
     <Compile Include="CheckNetworkConnectivity.py" />
+    <Compile Include="def__Export.py" />
+    <Compile Include="def__ExtremePoints.py" />
+    <Compile Include="def__ScratchWPathName.py" />
+    <Compile Include="def__SLEM.py" />
+    <Compile Include="def__UpToDateShapeLengthField.py" />
     <Compile Include="DividePolygonBySegment.py" />
     <Compile Include="DynamicSegmentation.py" />
     <Compile Include="FindBraidedNetwork.py" />

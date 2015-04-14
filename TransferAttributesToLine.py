@@ -40,7 +40,7 @@ def main(fcFromLine,fcToLine,fcRawBoundingPolygon,bool_IsSegmented,fcOutputLineN
 
     #fcSplitLinesJoinFID = gis_tools.newGISDataset(workspaceTemp,"Transfer_05_SplitLinesJoinFID")
 
-    descFromLine = arcpy.Describe(fcFromLine)
+    descTempLine = arcpy.Describe(fcTempLine)
 
     if arcpy.Exists(fcOutputLineNetwork):
         arcpy.Delete_management(fcOutputLineNetwork)
@@ -57,8 +57,8 @@ def main(fcFromLine,fcToLine,fcRawBoundingPolygon,bool_IsSegmented,fcOutputLineN
 
     arcpy.JoinField_management(fcSplitLinesJoinFID,
                                "JOIN_FID",
-                               fcFromLine,
-                               str(descFromLine.OIDFieldName),
+                               fcTempLine,
+                               str(descTempLine.OIDFieldName),
                                )
     
     return

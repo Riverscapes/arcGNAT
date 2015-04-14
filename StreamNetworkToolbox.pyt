@@ -31,6 +31,7 @@ import DividePolygonBySegment
 import ChangeStartingVertex
 import TransferAttributesToLine
 import StreamOrder
+import Centerline
 
 class Toolbox(object):
     def __init__(self):
@@ -53,7 +54,8 @@ class Toolbox(object):
                       SinuosityTool,
                       DividePolygonBySegmentsTool,
                       ChangeStartingVertexTool,
-                      TransferLineAttributesTool
+                      TransferLineAttributesTool,
+                      FluvialCorridorCenterlineTool
                       ]
 
 # Stream Network Tools #
@@ -147,9 +149,7 @@ class CheckNetworkConnectivityTool(object):
             parameterType="Required",
             direction="Input")
 
-
-
-        return [param0]
+        return [param0,param1]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -166,10 +166,11 @@ class CheckNetworkConnectivityTool(object):
         parameter.  This method is called after internal validation."""
         return
 
-    def execute(self, parameters, messages):
+    def execute(self, p, messages):
         """The source code of the tool."""
         reload(CheckNetworkConnectivity)
-        CheckNetworkConnectivity.main(parameters[0].valueAsText,parameters[1].valueAsText)
+        CheckNetworkConnectivity.main(p[0].valueAsText,
+                                      p[1].valueAsText)
         return
 
 class FindBraidedNetworkTool(object):
@@ -1130,58 +1131,90 @@ class TransferLineAttributesTool(object):
 
         return
 
-#class PrepareNetworkForSegmentationTool(object):
-#    def __init__(self):
-#        """Define the tool (tool name is the name of the class)."""
-#        self.label = "Change Starting Vertex of Polygons"
-#        self.description = "Changes the Starting Vertex of a set of Polygons based on a point layer."
-#        self.canRunInBackground = True
-#        self.category = "Utilities"
+class FluvialCorridorCenterlineTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Fluvial Corridor Centerline Tool"
+        self.description = "Generate a centerline of a polygon using Fluvial Cooridor Centerline Tool"
+        self.canRunInBackground = False
+        self.category = "Utilities"
 
-#    def getParameterInfo(self):
-#        """Define parameter definitions"""
-#        param0 = arcpy.Parameter(
-#            displayName="First Vetex Points",
-#            name="InputFCPoint",
-#            datatype="GPFeatureLayer", 
-#            parameterType="Required",
-#            direction="Input")
-#        param0.filter.list = ["Point"]
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Polygon",
+            name="InputPolygon",
+            datatype="DEFeatureClass", 
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polygon"]
 
-#        param1 = arcpy.Parameter(
-#            displayName="Polygons",
-#            name="InputFCPolygon",
-#            datatype="GPFeatureLayer", 
-#            parameterType="Required",
-#            direction="Input")
-#        param1.filter.list = ["Polygon"]       
+        param1 = arcpy.Parameter(
+            displayName="Polyline",
+            name="InputFCPolyline",
+            datatype="DEFeatureClass", 
+            parameterType="Required",
+            direction="Input")
+        param1.filter.list = ["Polyline"]
         
-#        return [param0,param1]
+        param2 = arcpy.Parameter(
+            displayName="Disaggregation step",
+            name="InputDisaggregationStep",
+            datatype="GPLong", 
+            parameterType="Required",
+            direction="Input") 
+        
+        param3 = arcpy.Parameter(
+            displayName="Smoothing",
+            name="InputSmoothing",
+            datatype="GPLong", 
+            parameterType="Required",
+            direction="Input") 
 
-#    def isLicensed(self):
-#        """Set whether tool is licensed to execute."""
-#        return True
+        param4 = arcpy.Parameter(
+            displayName="Output",
+            name="OutputFCPolyline",
+            datatype="DEFeatureClass", 
+            parameterType="Required",
+            direction="Output")
+        #param4.filter.list = ["Polyline"]        
+        
+        param5 = arcpy.Parameter(    
+            displayName="Delete temporary files",
+            name="InputDeleteTempFiles",
+            datatype="GPBoolean", 
+            parameterType="Required",
+            direction="Input") 
 
-#    def updateParameters(self, parameters):
-#        """Modify the values and properties of parameters before internal
-#        validation is performed.  This method is called whenever a parameter
-#        has been changed."""
+        return [param0,param1,param2,param3,param4,param5]
 
-#        return
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
 
-#    def updateMessages(self, parameters):
-#        """Modify the messages created by internal validation for each tool
-#        parameter.  This method is called after internal validation."""
-#        return
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
 
-#    def execute(self, p, messages):
-#        """The source code of the tool."""
-#        reload(ChangeStartingVertex)
+        return
 
-#        ChangeStartingVertex.main(p[0].valueAsText,
-#                                  p[1].valueAsText
-#                                  )
-#        return
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(Centerline)
+        Centerline.main(p[0].valueAsText,
+                                  p[1].valueAsText,
+                                  p[2].valueAsText,
+                                  p[3].valueAsText,
+                                  p[4].valueAsText,
+                                  p[5].valueAsText
+                                  )
+        return
 
 def setEnvironmentSettings():
     arcpy.env.OutputMFlag = "Disabled"
