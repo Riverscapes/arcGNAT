@@ -56,7 +56,8 @@ class Toolbox(object):
                       DividePolygonBySegmentsTool,
                       ChangeStartingVertexTool,
                       TransferLineAttributesTool,
-                      FluvialCorridorCenterlineTool
+                      FluvialCorridorCenterlineTool,
+                      CombineAttributesTool
                       ]
 
 # Stream Network Tools #
