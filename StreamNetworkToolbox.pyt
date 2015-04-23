@@ -340,7 +340,11 @@ class CalculateRiverStylesTool(object):
             direction="Input",
             multiValue="True",
             )
-        param6.filter.list = ["Segment Channel Polygon","Confinement","Sinuosity","Planform","Generate Final Output"]
+        param6.filter.list = ["Segment Channel Polygon",
+                              "Confinement",
+                              "Sinuosity",
+                              "Planform",
+                              "Generate Final Output"]
 
         return [param0,param1,param2,param3,param4,param5,param6]
 
@@ -374,12 +378,14 @@ class CalculateRiverStylesTool(object):
         fcChannelPolygonInput = p[4].valueAsText
         fcOutputChannelPolygonSegmented = p[5].valueAsText + "\\SegmentedChannelPolygons"
         fcValleyBottomPolygon = p[3].valueAsText
-        fcOutputConfinementCenterline = p[5].valueAsText + "\\ConfinementByCenterline"
+        fcOutputConfinementLineNetwork = p[5].valueAsText + "\\ConfinementByLineNetwork"
         fcOutputConfinementSegments = p[5].valueAsText + "\\ConfinementBySegments"
         fcOutputChannelSinuosity = p[5].valueAsText + "\\ChannelSinuosity"
         fcOutputValleySinuosity = p[5].valueAsText + "\\ValleySinuosity"
         fcOutputChannelPlanform = p[5].valueAsText + "\\ChannelPlanform"
+        fcOutputFinalRiverStyles = p[5].valueAsText + "\\RiverStylesOutput"
 
+        listCombineLineFCs = []
 
         #SegPolygons tool
         if "Segment Channel Polygon" in p[6].valueAsText:
@@ -405,12 +411,14 @@ class CalculateRiverStylesTool(object):
             ValleyConfinement.main(fcChannelCenterlineSmall,
                                    fcValleyBottomPolygon,
                                    fcOutputChannelPolygonSegmented,
-                                   fcOutputConfinementCenterline,
+                                   fcOutputConfinementLineNetwork,
                                    fcOutputConfinementSegments,
                                    True,
                                    False,
                                    workspaceConfinement,
                                    "300.00")
+
+        listCombineLineFCs.append(fcOutputConfinementSegments)
 
         # Planform (Sinuosity Tool)
         if "Planform" in p[6].valueAsText:
@@ -427,6 +435,8 @@ class CalculateRiverStylesTool(object):
                                 fcOutputChannelPlanform
                                 )
 
+            listCombineLineFCs.append(fcOutputChannelPlanform)
+
         if "Sinuosity" in p[6].valueAsText and "Planform" not in p[6].valueAsText: # do not calculate sinuosity if calculating planform
             arcpy.AddMessage("RiverStyles Attributes: Starting Sinuosity Calcluation...")
             workspaceSinuosity = arcpy.CreateUniqueName("ScratchSinuosity.gdb",descOutputGDB.path)
@@ -437,9 +447,16 @@ class CalculateRiverStylesTool(object):
             arcpy.Exists(fcOutputChannelSinuosity)
             Sinuosity.main(fcOutputChannelSinuosity,
                            "Sinuosity")
+
+            listCombineLineFCs.append(fcOutputChannelSinuosity)
         
-        # Gather results
-        
+        if "Generate Final Output" in p[6].valueAsText:
+            arcpy.AddMessage("RiverStyles Attributes: Combining Final Attributes...")
+            workspaceCombine = arcpy.CreateUniqueName("ScratchCombineAttributes.gdb",descOutputGDB.path)
+            arcpy.CreateFileGDB_management(descOutputGDB.path,path.basename(path.splitext(workspaceCombine)[0]))
+            arcpy.env.scratchWorkspace = workspaceCombine
+
+            CombineAttributes.main(listCombineLineFCs,fcValleyBottomPolygon,"False",fcOutputFinalRiverStyles)
 
         return
 
