@@ -1221,19 +1221,20 @@ class FluvialCorridorCenterlineTool(object):
 class CombineAttributesTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Combine Attributes"
-        self.description = "Combine line attributes from multiple networks into a single network."
+        self.label = "Combine Attributes Tool"
+        self.description = "Combine line attributes from multiple networks into a single feature class."
         self.canRunInBackground = True
         self.category = "Utilities"
 
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="""Input Line Networks""",
+            displayName="Input Line Networks",
             name="InputFCList",
-            datatype="GPValueTable", 
+            datatype="GPFeatureLayer", 
             parameterType="Required",
-            direction="Input")
+            direction="Input",
+            multiValue=True)
         param0.filter.list = ["Polyline"]
         
         param1 = arcpy.Parameter(
@@ -1250,6 +1251,7 @@ class CombineAttributesTool(object):
             datatype="GPBoolean", 
             parameterType="Optional",
             direction="Input")
+        param2.value = False
 
         param3 = arcpy.Parameter(
             displayName="Output Line Network",
@@ -1279,10 +1281,10 @@ class CombineAttributesTool(object):
 
     def execute(self, p, messages):
         """The source code of the tool."""
-        reload(TransferAttributesToLine)
+        reload(CombineAttributes)
         setEnvironmentSettings()
 
-        CombineAttributes.main(p[0].valueAsText,
+        CombineAttributes.main(p[0].values,
                                 p[1].valueAsText,
                                 p[2].valueAsText,
                                 p[3].valueAsText)

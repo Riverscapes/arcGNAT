@@ -16,18 +16,7 @@
 # # Import Modules # #
 import sys
 import arcpy
-import gis_tools
 import TransferAttributesToLine
-
-# temporary input variables for testing
-# fcList = ["C:\\JL\\RiverStyles\\Tools\\NetworkToolbox\\CombineAttributes\\data\\Input.gdb\\strm_1000m_seg_testareas",
-# 			"C:\\JL\\RiverStyles\\Tools\\NetworkToolbox\\CombineAttributes\\data\\Input.gdb\\strm_300m_seg_testareas",
-# 			"C:\\JL\\RiverStyles\\Tools\\NetworkToolbox\\CombineAttributes\\data\\Input.gdb\\strm_600m_seg_testareas",
-# 			"C:\\JL\\RiverStyles\\Tools\\NetworkToolbox\\CombineAttributes\\data\\Input.gdb\\strm_800m_seg_testareas"
-# 			]
-# fcBndPoly = "C:\\JL\RiverStyles\\Tools\\NetworkToolbox\\CombineAttributes\\data\\Input.gdb\\MF_JD_valley_bottom"
-# boolSeg = False
-# fcOutCombine = "C:\\JL\\RiverStyles\\Tools\\NetworkToolbox\\CombineAttributes\\data\\Output.gdb\\test_output"
 
 def main(fcList, fcBndPoly, boolSeg, fcOutCombine):
 	# removes first item from list of feature classes
@@ -39,5 +28,3 @@ def main(fcList, fcBndPoly, boolSeg, fcOutCombine):
         fcToolOutput = TransferAttributesToLine.main(i, fcToLine, fcBndPoly, boolSeg, fcOutCombine)
         fcToLine = fcToolOutput
     return fcToLine
-
-#main(fcList, fcBndPoly, boolSeg, fcOutCombine)
