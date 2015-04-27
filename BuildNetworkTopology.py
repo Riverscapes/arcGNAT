@@ -1,14 +1,17 @@
 ﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Name:        Build Stream Network Topology                                  #
-# Purpose:                                                                    #
+# Purpose:     Generate a table of stream network segment topology            #
 #                                                                             #
-# Author:      Kelly Whitehead                                                #
+# Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
-# Created:     2014-Sept-8                                                     #
-# Version:     0.1          Modified:                                         #
-# Copyright:   (c) Kelly Whitehead 2014                                       #                                                #
+# Created:     2014-Sept-08                                                   #
+# Version:     1.1                                                            #
+# Modified:    2014-Sept-08                                                   #
+#                                                                             #
+# Copyright:   (c) Kelly Whitehead 2014                                       #
+#                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
 

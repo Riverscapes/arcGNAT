@@ -1,13 +1,16 @@
 ﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Name:        Divide Polygon By Segments Tool                                #
-# Purpose:     Divides a channel or valley polygon by centerline segments.    #
+# Name:        Change Starting Vertex Tool                                    #
+# Purpose:     Changes the First Vertex in a polygon(s) based on an           #
+#              intersecting point(s).                                         #
 #                                                                             #
-# Author:      Kelly Whitehead                                                #
+# Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     0.1          Modified: 2015-Jan-08                             #
+# Version:     1.1                                                            #
+# Modified:    2015-Jan-08                                                    #
+#                                                                             #
 # Copyright:   (c) Kelly Whitehead 2015                                       #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -18,10 +21,12 @@ import sys
 import arcpy
 #import gis_tools
 
-def main(fcInputPoints,fcInputPolygons):
-
+# # Main Function # #
+def main(fcInputPoints,
+         fcInputPolygons):
+    
+    ## Create Geometry Object for Processing input points.
     g = arcpy.Geometry()
-
     geomPoints = arcpy.CopyFeatures_management(fcInputPoints,g)
 
     listPointCoords = []
@@ -67,8 +72,8 @@ def main(fcInputPoints,fcInputPolygons):
 
     return
 
+# # Run as Script # #
 if __name__ == "__main__":
 
     main(sys.argv[1],
-         sys.argv[2],
-         )
+         sys.argv[2])

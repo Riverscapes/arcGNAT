@@ -1,14 +1,17 @@
 ﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Name:        Find Braided Reaches in Stream Network                         #
-# Purpose:                                                                    #
+# Purpose:     Find Braided Reaches as part of network preprocessing steps.   #
 #                                                                             #
-# Author:      Kelly Whitehead                                                #
+# Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2014-Sept-30                                                   #
-# Version:     0.1          Modified:                                         #
-# Copyright:   (c) Kelly Whitehead 2014                                       #                                                #
+# Version:     1.1                                                            #
+# Modified:    2015-Apr-27                                                    #
+#                                                                             #
+# Copyright:   (c) Kelly Whitehead 2014                                       #
+#                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
 
@@ -31,11 +34,28 @@ import os
 import sys
 import arcpy
 
-# # Script Parameters # #
-listBraidedReaches = [] ## Reaches part of a braided system
+# # Main Function # #
+def main(fcStreamNetwork):
 
-# # Functions # #
+    # Data Paths
+    descStreamNetwork = arcpy.Describe(fcStreamNetwork)
+    fileGDB = descStreamNetwork.path
+
+    # PolylinePrep
+    listFields = arcpy.ListFields(fcStreamNetwork,"IsBraidedReach")
+    if len(listFields) is not 1:
+        arcpy.AddField_management(fcStreamNetwork,"IsBraidedReach","SHORT")
+    else:
+        arcpy.CalculateField_management(fcStreamNetwork,"IsBraidedReach",0,"PYTHON") #clear field
+
+    # Process
+    findBraidedReaches(fcStreamNetwork)
+
+    return
+
+# # Other Functions # #
 def findBraidedReaches(fcLines):
+
     # Clear temp data
     if arcpy.Exists("in_memory//DonutPolygons"):
         arcpy.Delete_management("in_memory//DonutPolygons")
@@ -51,32 +71,7 @@ def findBraidedReaches(fcLines):
     arcpy.SelectLayerByLocation_management("lyrBraidedReaches","SHARE_A_LINE_SEGMENT_WITH","lyrDonuts",'',"NEW_SELECTION")
     arcpy.CalculateField_management("lyrBraidedReaches","IsBraidedReach",1,"PYTHON")
 
-def main(fcStreamNetwork):
-
-    # Data Paths
-    descStreamNetwork = arcpy.Describe(fcStreamNetwork)
-    fileGDB = descStreamNetwork.path
-
-    # Validation
-    
-
-    # PolylinePrep
-    listFields = arcpy.ListFields(fcStreamNetwork,"IsBraidedReach")
-    if len(listFields) is not 1:
-        arcpy.AddField_management(fcStreamNetwork,"IsBraidedReach","SHORT")
-    else:
-        arcpy.CalculateField_management(fcStreamNetwork,"IsBraidedReach",0,"PYTHON") #clear field
-
-    # Process
-    findBraidedReaches(fcStreamNetwork)
-
-
-    # Cleanup
-
-    return
-
 # # Run as Script # # 
 if __name__ == "__main__":
-    inputPolylineFC = sys.argv[1] # Str Feature class path
 
-    main(inputPolylineFC)
+    main(sys.argv[1])

@@ -1,14 +1,17 @@
 ﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Name:        Valley Confinement Tool                                        #
-# Purpose:     Calculate Valley Confinement Along a Stream                    #
+# Purpose:     Calculate Valley Confinement Along a Stream Network            #
 #                                                                             #
-# Author:      Kelly Whitehead                                                #
+# Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2014-Nov-01                                                    #
-# Version:     0.6          Modified: 2015-Feb-12                             #
+# Version:     1.1                                                            #
+# Modified:    2015-Apr-23                                                    #
+#                                                                             #
 # Copyright:   (c) Kelly Whitehead 2014-15                                    #
+#                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
 
@@ -17,22 +20,25 @@ import sys
 import arcpy
 import gis_tools
 
-def main(fcInputFlowline,
+# # Main Function # #
+def main(fcInputStreamLineNetwork,
          fcInputValleyBottomPolygon,
          fcInputChannelPolygon,
-         fcOutputConfinementFlowline,
+         fcOutputConfinementLineNetwork,
          fcOutputConfinementSegments,
          boolConfinementbySegment,
          boolChannelIsSegmented,
          scratchWorkspace=arcpy.env.scratchWorkspace,
          maxXSectionWidth=500.0):
 
+    ## Reload modules and Prepare processing environments
     reload(gis_tools)
     arcpy.AddMessage("RiverStyles Confinement Tool")
-    arcpy.AddMessage("Saving Centerline Results to: " + fcOutputConfinementFlowline)
-    arcpy.AddMessage("Saving Segment Results to: " + fcOutputConfinementSegments)
+    arcpy.AddMessage("Saving Flowline Confinement Results to: " + fcOutputConfinementLineNetwork)
+    arcpy.AddMessage("Saving Segment Confinement Results to: " + fcOutputConfinementSegments)
     arcpy.AddMessage("Saving Temporary Files to: " + scratchWorkspace)
     arcpy.AddMessage("Status of confinement by segment " + str(boolConfinementbySegment))
+
     # Create Confined Channel Polygon
     fcConfinedChannel = gis_tools.newGISDataset(scratchWorkspace,"ChannelConfined")
     arcpy.Clip_analysis(fcInputChannelPolygon,fcInputValleyBottomPolygon,fcConfinedChannel)
@@ -44,20 +50,20 @@ def main(fcInputFlowline,
     # Copy Line Network for Final Output and Prepare Fields
     if arcpy.Exists(fcOutputConfinementSegments):
        arcpy.Delete_management(fcOutputConfinementSegments)
-    arcpy.CopyFeatures_management(fcInputFlowline,fcOutputConfinementSegments)
-    ##Standard Outputs
-    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_Summed","DOUBLE")
-    arcpy.AddField_management(fcOutputConfinementSegments,"Con_Margin_L","DOUBLE")
-    arcpy.AddField_management(fcOutputConfinementSegments,"Total_Margin_L","DOUBLE")
-    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_L","DOUBLE")
-    arcpy.AddField_management(fcOutputConfinementSegments,"Con_Margin_R","DOUBLE")
-    arcpy.AddField_management(fcOutputConfinementSegments,"Total_Margin_R","DOUBLE")
-    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_R","DOUBLE")
-    ##Confinement Centerline Outputs
-    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_Centerline","DOUBLE")
-    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_Centerline_Both","DOUBLE")
-    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_Centerline_Left","DOUBLE")
-    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_Centerline_Right","DOUBLE")
+    arcpy.CopyFeatures_management(fcInputStreamLineNetwork,fcOutputConfinementSegments)
+    ##Confinement By Margins Outputs
+    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_Margin_Summed","DOUBLE")
+    arcpy.AddField_management(fcOutputConfinementSegments,"Length_ConfinedMargin_Left","DOUBLE")
+    arcpy.AddField_management(fcOutputConfinementSegments,"Length_ChannelMargin_Left","DOUBLE")
+    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_Margin_Left","DOUBLE")
+    arcpy.AddField_management(fcOutputConfinementSegments,"Length_ConfinedMargin_Right","DOUBLE")
+    arcpy.AddField_management(fcOutputConfinementSegments,"Length_ChannelMargin_Right","DOUBLE")
+    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_Margin_Right","DOUBLE")
+    ##Confinement By LineNetwork Outputs
+    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_LineNetwork_All","DOUBLE")
+    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_LineNetwork_Both","DOUBLE")
+    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_LineNetwork_Left","DOUBLE")
+    arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_LineNetwork_Right","DOUBLE")
 
     # Create Confinement Edges
     fcConfinementMargins = gis_tools.newGISDataset(scratchWorkspace, "ConfinementMargins")
@@ -66,52 +72,52 @@ def main(fcInputFlowline,
     # Merge segments in PolyineCenter to create Route Layer
     tempZFlag = arcpy.env.outputZFlag
     arcpy.env.outputZFlag = "Disabled" # 'empty' z values can cause problem with dissolve
-    fcCenterlineDissolved = gis_tools.newGISDataset(scratchWorkspace,"CenterlineDissolved") ### one feature per 'section between trib or branch junctions'
-    arcpy.Dissolve_management(fcInputFlowline,fcCenterlineDissolved,multi_part="SINGLE_PART",unsplit_lines="UNSPLIT_LINES")
+    fcStreamNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"StreamNetworkDissolved") ### one feature per 'section between trib or branch junctions'
+    arcpy.Dissolve_management(fcInputStreamLineNetwork,fcStreamNetworkDissolved,multi_part="SINGLE_PART",unsplit_lines="UNSPLIT_LINES")
     arcpy.env.outputZFlag = tempZFlag
 
-    fcCenterlineSegmentPoints = gis_tools.newGISDataset(scratchWorkspace,"CenterlineSegmentPoints")
-    arcpy.FeatureVerticesToPoints_management(fcInputFlowline,fcCenterlineSegmentPoints,"END")
-    fcCenterlineDangles = gis_tools.newGISDataset(scratchWorkspace,"CenterlineDangles")
-    arcpy.FeatureVerticesToPoints_management(fcInputFlowline,fcCenterlineDangles,"DANGLE")
+    fcNetworkSegmentPoints = gis_tools.newGISDataset(scratchWorkspace,"StreamNetworkSegmentPoints")
+    arcpy.FeatureVerticesToPoints_management(fcInputStreamLineNetwork,fcNetworkSegmentPoints,"END")
+    fcStreamNetworkDangles = gis_tools.newGISDataset(scratchWorkspace,"StreamNetworkDangles")
+    arcpy.FeatureVerticesToPoints_management(fcInputStreamLineNetwork,fcStreamNetworkDangles,"DANGLE")
 
     # # Segmentation of Channel Polygon by Perpendicular Cross Sections # #
     if boolChannelIsSegmented is not True:
-        # Find clip points (ends of segments) along Centerline
-        fcCenterlineJunctions = gis_tools.newGISDataset(scratchWorkspace,"CenterlineJunctions")
-        arcpy.FeatureVerticesToPoints_management(fcCenterlineDissolved,fcCenterlineJunctions,"BOTH_ENDS")
-        lyrCenterlineDangles = gis_tools.newGISDataset('Layer',"lyrCenterlineDangles")
-        lyrCenterlineJunctions = gis_tools.newGISDataset('Layer',"lyrCenterlineJunctions")
-        arcpy.MakeFeatureLayer_management(fcCenterlineDangles,lyrCenterlineDangles)
-        arcpy.MakeFeatureLayer_management(fcCenterlineJunctions,lyrCenterlineJunctions)
-        arcpy.SelectLayerByLocation_management(lyrCenterlineJunctions,"INTERSECT",lyrCenterlineDangles,selection_type="NEW_SELECTION")
-        arcpy.DeleteFeatures_management(lyrCenterlineJunctions)
-        arcpy.SelectLayerByLocation_management(lyrCenterlineDangles,"INTERSECT",fcChannelMargins,selection_type="NEW_SELECTION")
-        arcpy.DeleteFeatures_management(lyrCenterlineDangles)
-        arcpy.Append_management(fcCenterlineDangles,fcCenterlineSegmentPoints,"NO_TEST")
-        lyrCenterlineSegmentPoints = gis_tools.newGISDataset("Layer","lyrCenterlineSegmentPoints")
-        arcpy.MakeFeatureLayer_management(fcCenterlineSegmentPoints,lyrCenterlineSegmentPoints)
-        arcpy.SelectLayerByLocation_management(lyrCenterlineSegmentPoints,"INTERSECT",lyrCenterlineJunctions,selection_type="NEW_SELECTION")
-        arcpy.DeleteFeatures_management(lyrCenterlineSegmentPoints)
-        arcpy.AddXY_management(fcCenterlineSegmentPoints)
+        # Find clip points (ends of segments) along Stream Network
+        fcStreamNetworkJunctions = gis_tools.newGISDataset(scratchWorkspace,"StreamNetworkJunctions")
+        arcpy.FeatureVerticesToPoints_management(fcStreamNetworkDissolved,fcStreamNetworkJunctions,"BOTH_ENDS")
+        lyrStreamNetworkDangles = gis_tools.newGISDataset('Layer',"lyrStreamNetworkDangles")
+        lyrStreamNetworkJunctions = gis_tools.newGISDataset('Layer',"lyrStreamNetworkJunctions")
+        arcpy.MakeFeatureLayer_management(fcStreamNetworkDangles,lyrStreamNetworkDangles)
+        arcpy.MakeFeatureLayer_management(fcStreamNetworkJunctions,lyrStreamNetworkJunctions)
+        arcpy.SelectLayerByLocation_management(lyrStreamNetworkJunctions,"INTERSECT",lyrStreamNetworkDangles,selection_type="NEW_SELECTION")
+        arcpy.DeleteFeatures_management(lyrStreamNetworkJunctions)
+        arcpy.SelectLayerByLocation_management(lyrStreamNetworkDangles,"INTERSECT",fcChannelMargins,selection_type="NEW_SELECTION")
+        arcpy.DeleteFeatures_management(lyrStreamNetworkDangles)
+        arcpy.Append_management(fcStreamNetworkDangles,fcNetworkSegmentPoints,"NO_TEST")
+        lyrStreamNetworkSegmentPoints = gis_tools.newGISDataset("Layer","lyrStreamNetworkSegmentPoints")
+        arcpy.MakeFeatureLayer_management(fcNetworkSegmentPoints,lyrStreamNetworkSegmentPoints)
+        arcpy.SelectLayerByLocation_management(lyrStreamNetworkSegmentPoints,"INTERSECT",lyrStreamNetworkJunctions,selection_type="NEW_SELECTION")
+        arcpy.DeleteFeatures_management(lyrStreamNetworkSegmentPoints)
+        arcpy.AddXY_management(fcNetworkSegmentPoints)
 
         # Create Clip lines perpendicular to route layer
-        arcpy.AddMessage("Find Perpendicular Angle of Points on Centerline.")
-        arcpy.AddField_management(fcCenterlineDissolved,"Route","LONG")
-        arcpy.CalculateField_management(fcCenterlineDissolved,"Route","!OBJECTID!","PYTHON")
-        fcCenterlineRouted = gis_tools.newGISDataset(scratchWorkspace,"CenterlineRouted")
-        arcpy.CreateRoutes_lr(fcCenterlineDissolved,"Route",fcCenterlineRouted,"LENGTH","#","#","UPPER_LEFT","1","0","IGNORE","INDEX")
-        tblCenterlineRoutes = gis_tools.newGISDataset(scratchWorkspace,"CenterlineRoutesTable")
-        arcpy.LocateFeaturesAlongRoutes_lr(fcCenterlineSegmentPoints,fcCenterlineRouted,"Route","0 Meters",tblCenterlineRoutes,"RID POINT MEAS","FIRST","DISTANCE","ZERO","FIELDS","M_DIRECTON")
-        lyrCenterlineEvents = gis_tools.newGISDataset("Layer","lyrCenterlineRouteTable_Events")
-        arcpy.MakeRouteEventLayer_lr(fcCenterlineRouted,"Route",tblCenterlineRoutes,"RID POINT MEAS",lyrCenterlineEvents,"#","NO_ERROR_FIELD","ANGLE_FIELD","NORMAL","ANGLE","LEFT","POINT")
-        arcpy.AddField_management(lyrCenterlineEvents,"PointID","LONG")
-        arcpy.CalculateField_management(lyrCenterlineEvents,"PointID","!OBJECTID!","PYTHON")
+        arcpy.AddMessage("Find Perpendicular Angle of Points on Stream Network.")
+        arcpy.AddField_management(fcStreamNetworkDissolved,"Route","LONG")
+        arcpy.CalculateField_management(fcStreamNetworkDissolved,"Route","!OBJECTID!","PYTHON")
+        fcStreamNetworkRouted = gis_tools.newGISDataset(scratchWorkspace,"StreamNetworkRouted")
+        arcpy.CreateRoutes_lr(fcStreamNetworkDissolved,"Route",fcStreamNetworkRouted,"LENGTH","#","#","UPPER_LEFT","1","0","IGNORE","INDEX")
+        tblStreamNetworkRoutes = gis_tools.newGISDataset(scratchWorkspace,"StreamNetworkRoutesTable")
+        arcpy.LocateFeaturesAlongRoutes_lr(fcNetworkSegmentPoints,fcStreamNetworkRouted,"Route","0 Meters",tblStreamNetworkRoutes,"RID POINT MEAS","FIRST","DISTANCE","ZERO","FIELDS","M_DIRECTON")
+        lyrStreamNetworkEvents = gis_tools.newGISDataset("Layer","lyrStreamNetworkRouteTable_Events")
+        arcpy.MakeRouteEventLayer_lr(fcStreamNetworkRouted,"Route",tblStreamNetworkRoutes,"RID POINT MEAS",lyrStreamNetworkEvents,"#","NO_ERROR_FIELD","ANGLE_FIELD","NORMAL","ANGLE","LEFT","POINT")
+        arcpy.AddField_management(lyrStreamNetworkEvents,"PointID","LONG")
+        arcpy.CalculateField_management(lyrStreamNetworkEvents,"PointID","!OBJECTID!","PYTHON")
 
         # Extend Valley Width Cross Sections and clip to channel
-        arcpy.AddMessage("Extending Valley Width Cross Sections.")
+        arcpy.AddMessage("Extending Confined Channel Cross Sections.")
         fcCrossSections = gis_tools.newGISDataset(scratchWorkspace,"CrossSectionsRaw")
-        gis_tools.calculatePerpendicularAngles(lyrCenterlineEvents,fcCrossSections,"LOC_ANGLE",float(maxXSectionWidth),"PointID")
+        gis_tools.calculatePerpendicularAngles(lyrStreamNetworkEvents,fcCrossSections,"LOC_ANGLE",float(maxXSectionWidth),"PointID")
         fcCrossSectionsClipped = gis_tools.newGISDataset(scratchWorkspace,"CrossSectionsClipped")
         arcpy.Clip_analysis(fcCrossSections,fcConfinedChannel,fcCrossSectionsClipped) #fcChannelDissolve for fcConfinedChannel
 
@@ -143,9 +149,9 @@ def main(fcInputFlowline,
         fcChannelBankNearLines = gis_tools.newGISDataset(scratchWorkspace,"Bank_NearLines")
         arcpy.Copy_management(fcConfinedChannel,fcChannelSegmentPolygons)
         arcpy.PolygonToLine_management(fcChannelSegmentPolygons,fcChannelSegmentPolygonLines)
-        arcpy.Near_analysis(fcCenterlineDangles,fcChannelSegmentPolygonLines,location="LOCATION")
-        arcpy.AddXY_management(fcCenterlineDangles)
-        arcpy.XYToLine_management(fcCenterlineDangles,
+        arcpy.Near_analysis(fcStreamNetworkDangles,fcChannelSegmentPolygonLines,location="LOCATION")
+        arcpy.AddXY_management(fcStreamNetworkDangles)
+        arcpy.XYToLine_management(fcStreamNetworkDangles,
                                   fcChannelBankNearLines,
                                   "POINT_X",
                                   "POINT_Y",
@@ -192,7 +198,8 @@ def main(fcInputFlowline,
     fcFilterSplitPoints = gis_tools.newGISDataset(scratchWorkspace,"FilterSplitPoints")
     arcpy.FeatureVerticesToPoints_management(fcConfinementMargin_Segments,fcFilterSplitPoints,"BOTH_ENDS")
 
-    # Prepare Centerline Confinement ##
+    # Prepare Continuous Confinement ##
+    arcpy.AddMessage("Determining Continuous Confinement along Stream Network.")
     fcConfinementMarginSegmentsBankSide = gis_tools.newGISDataset(scratchWorkspace,"ConfinementMarginSegmentsBank")
     lyrConfinementMarginSegmentsBankside = gis_tools.newGISDataset("Layer","lyrConfinementMarginSegmentsBankside")
     arcpy.SpatialJoin_analysis(fcConfinementMargin_Segments,
@@ -205,57 +212,57 @@ def main(fcInputFlowline,
     arcpy.MakeFeatureLayer_management(fcConfinementMarginSegmentsBankSide,lyrConfinementMarginSegmentsBankside)
     arcpy.SelectLayerByAttribute_management(lyrConfinementMarginSegmentsBankside,"NEW_SELECTION",""" "BankSide" = 'LEFT'""")
     
-    fcCenterlineConfinementLeft = transfer_line(lyrConfinementMarginSegmentsBankside,fcCenterlineDissolved,"LEFT")
+    fcStreamNetworkConfinementLeft = transfer_line(lyrConfinementMarginSegmentsBankside,fcStreamNetworkDissolved,"LEFT")
     arcpy.SelectLayerByAttribute_management(lyrConfinementMarginSegmentsBankside,"NEW_SELECTION",""" "BankSide" = 'RIGHT'""")
-    fcCenterlineConfinementRight = transfer_line(lyrConfinementMarginSegmentsBankside,fcCenterlineDissolved,"RIGHT")
+    fcStreamNetworkConfinementRight = transfer_line(lyrConfinementMarginSegmentsBankside,fcStreamNetworkDissolved,"RIGHT")
 
-    fcConfinementCenterlineIntersected = gis_tools.newGISDataset(scratchWorkspace,"ConfinementCenterlineIntersected")
-    arcpy.Intersect_analysis([fcCenterlineConfinementLeft,fcCenterlineConfinementRight],fcConfinementCenterlineIntersected,"ALL")
+    fcConfinementStreamNetworkIntersected = gis_tools.newGISDataset(scratchWorkspace,"ConfinementStreamNetworkIntersected")
+    arcpy.Intersect_analysis([fcStreamNetworkConfinementLeft,fcStreamNetworkConfinementRight],fcConfinementStreamNetworkIntersected,"ALL")
 
     #resplit centerline by segments
-    arcpy.AddMessage(" Calculating Confinement Along Centerline.")
-    if arcpy.Exists(fcOutputConfinementFlowline):
-       arcpy.Delete_management(fcOutputConfinementFlowline)# = outputLineFC#gis_tools.newGISDataset(outputLineFC,"ConfinementCenterline")
-    arcpy.SplitLineAtPoint_management(fcConfinementCenterlineIntersected,
-                                      fcCenterlineSegmentPoints,
-                                      fcOutputConfinementFlowline,
+    arcpy.AddMessage(" Calculating Confinement For Stream Network Segments.")
+    if arcpy.Exists(fcOutputConfinementLineNetwork):
+       arcpy.Delete_management(fcOutputConfinementLineNetwork)# = outputLineFC#gis_tools.newGISDataset(outputLineFC,"ConfinementCenterline")
+    arcpy.SplitLineAtPoint_management(fcConfinementStreamNetworkIntersected,
+                                      fcNetworkSegmentPoints,
+                                      fcOutputConfinementLineNetwork,
                                       "10 Meters")
 
     #Table and Attributes
-    arcpy.AddField_management(fcOutputConfinementFlowline,"Confinement_Type","TEXT",field_length="6")
-    arcpy.AddField_management(fcOutputConfinementFlowline,"IsConfined","LONG")
+    arcpy.AddField_management(fcOutputConfinementLineNetwork,"Confinement_Type","TEXT",field_length="6")
+    arcpy.AddField_management(fcOutputConfinementLineNetwork,"IsConfined","LONG")
 
-    lyrConfinementCenterline1 = gis_tools.newGISDataset("Layer","lyrConfinementCenterline1")
-    arcpy.MakeFeatureLayer_management(fcOutputConfinementFlowline,lyrConfinementCenterline1)
-    arcpy.SelectLayerByAttribute_management(lyrConfinementCenterline1,"NEW_SELECTION",""" "Confinement_LEFT" = 1""")
-    arcpy.CalculateField_management(lyrConfinementCenterline1,"Confinement_Type","'LEFT'","PYTHON")
-    arcpy.SelectLayerByAttribute_management(lyrConfinementCenterline1,"NEW_SELECTION",""" "Confinement_RIGHT" = 1""")
-    arcpy.CalculateField_management(lyrConfinementCenterline1,"Confinement_Type","'RIGHT'","PYTHON")
-    arcpy.SelectLayerByAttribute_management(lyrConfinementCenterline1,"NEW_SELECTION",""" "Confinement_LEFT" = 1 AND "Confinement_RIGHT" = 1""")
-    arcpy.CalculateField_management(lyrConfinementCenterline1,"Confinement_Type","'BOTH'","PYTHON")
-    arcpy.SelectLayerByAttribute_management(lyrConfinementCenterline1,"NEW_SELECTION",""" "Confinement_LEFT" = 1 OR "Confinement_RIGHT" = 1""")
-    arcpy.CalculateField_management(lyrConfinementCenterline1,"IsConfined","1","PYTHON")
-    arcpy.SelectLayerByAttribute_management(lyrConfinementCenterline1,"SWITCH_SELECTION")
-    arcpy.CalculateField_management(lyrConfinementCenterline1,"IsConfined","0","PYTHON")
-    arcpy.CalculateField_management(lyrConfinementCenterline1,"Confinement_Type","'NONE'","PYTHON")
+    lyrConfinementStreamNetwork1 = gis_tools.newGISDataset("Layer","lyrStreamNetworkCenterline1")
+    arcpy.MakeFeatureLayer_management(fcOutputConfinementLineNetwork,lyrConfinementStreamNetwork1)
+    arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"NEW_SELECTION",""" "Confinement_LEFT" = 1""")
+    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Confinement_Type","'LEFT'","PYTHON")
+    arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"NEW_SELECTION",""" "Confinement_RIGHT" = 1""")
+    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Confinement_Type","'RIGHT'","PYTHON")
+    arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"NEW_SELECTION",""" "Confinement_LEFT" = 1 AND "Confinement_RIGHT" = 1""")
+    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Confinement_Type","'BOTH'","PYTHON")
+    arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"NEW_SELECTION",""" "Confinement_LEFT" = 1 OR "Confinement_RIGHT" = 1""")
+    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"IsConfined","1","PYTHON")
+    arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"SWITCH_SELECTION")
+    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"IsConfined","0","PYTHON")
+    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Confinement_Type","'NONE'","PYTHON")
 
     # Loop through Segments to Calculate Confinement for Each Segment
     if boolConfinementbySegment:
         arcpy.AddMessage(" Calculating Confinement Along Segments.")
         desc_fcOutputSegments = arcpy.Describe(fcOutputConfinementSegments)
         with arcpy.da.UpdateCursor(fcOutputConfinementSegments,[str(desc_fcOutputSegments.OIDFieldName), #0
-                                                     "Confinement_Summed", #1
+                                                     "Confinement_Margin_Summed", #1
                                                      "SHAPE@LENGTH", #2
-                                                     "Con_Margin_L", #3
-                                                     "Total_Margin_L", #4
-                                                     "Confinement_L",#5
-                                                     "Con_Margin_R", #6
-                                                     "Total_Margin_R", #7
-                                                     "Confinement_R", #8
-                                                     "Confinement_Centerline", #9
-                                                     "Confinement_Centerline_Both", #10
-                                                     "Confinement_Centerline_Left", #11
-                                                     "Confinement_Centerline_Right" #12
+                                                     "Length_ConfinedMargin_Left", #3
+                                                     "Length_ChannelMargin_Left", #4
+                                                     "Confinement_Margin_Left",#5
+                                                     "Length_ConfinedMargin_Right", #6
+                                                     "Length_ChannelMargin_Right", #7
+                                                     "Confinement_Margin_Right", #8
+                                                     "Confinement_LineNetwork_All", #9
+                                                     "Confinement_LineNetwork_Both", #10
+                                                     "Confinement_LineNetwork_Left", #11
+                                                     "Confinement_LineNetwork_Right" #12
                                                      ]) as ucSegments:
             for segment in ucSegments:
                 lyrCurrentSegment = gis_tools.newGISDataset("Layer","lyrCurrentSegment")
@@ -278,7 +285,7 @@ def main(fcInputFlowline,
                 dblChannelEdges = sum([r[0] for r in arcpy.da.SearchCursor(lyrChannelEdgeSegments,["SHAPE@LENGTH"])])
 
                 segment[1] = calculate_confinement(dblConfinementEdges,dblChannelEdges)
-                arcpy.AddMessage("Segment #" + str(segment[0]) + " | Confinement Summed: " + str(segment[1]))
+                arcpy.AddMessage("Segment #" + str(segment[0]) + " | Confinement Margins Summed: " + str(segment[1]))
 
                 ## Calculate Confinement for each bank separately
                 #LeftBank
@@ -305,32 +312,32 @@ def main(fcInputFlowline,
                 segment[7] = dblChannelEdgesR
                 segment[8] = calculate_confinement(dblConfinementEdgesR,dblChannelEdgesR)
 
-                ## Calculate Centerline Confinement
+                ## Calculate Confinement from continuous stream network
                 # Is Confined
-                lyrCenterlineConfinement = gis_tools.newGISDataset("Layer","lyrCenterlineConfinement")
-                arcpy.MakeFeatureLayer_management(fcOutputConfinementFlowline,lyrCenterlineConfinement,""" "IsConfined" = 1""")
-                arcpy.SelectLayerByLocation_management(lyrCenterlineConfinement,"SHARE_A_LINE_SEGMENT_WITH",lyrCurrentSegment,selection_type="NEW_SELECTION")
-                dblConfinementCenterline = sum([r[0] for r in arcpy.da.SearchCursor(lyrCenterlineConfinement,["SHAPE@LENGTH"])])
-                segment[9] = calculate_confinement(dblConfinementCenterline,float(segment[2]))
+                lyrLineNetworkConfinement = gis_tools.newGISDataset("Layer","lyrLineNetworkConfinement")
+                arcpy.MakeFeatureLayer_management(fcOutputConfinementLineNetwork,lyrLineNetworkConfinement,""" "IsConfined" = 1""")
+                arcpy.SelectLayerByLocation_management(lyrLineNetworkConfinement,"SHARE_A_LINE_SEGMENT_WITH",lyrCurrentSegment,selection_type="NEW_SELECTION")
+                dblConfinementLineNetwork = sum([r[0] for r in arcpy.da.SearchCursor(lyrLineNetworkConfinement,["SHAPE@LENGTH"])])
+                segment[9] = calculate_confinement(dblConfinementLineNetwork,float(segment[2]))
 
                 # Both
-                lyrCenterlineConfinementBoth = gis_tools.newGISDataset("Layer","lyrCenterlineConfinementBoth")
-                arcpy.MakeFeatureLayer_management(fcOutputConfinementFlowline,lyrCenterlineConfinementBoth,""" "Confinement_Type" = 'BOTH'""")
-                arcpy.SelectLayerByLocation_management(lyrCenterlineConfinementBoth,"SHARE_A_LINE_SEGMENT_WITH",lyrCurrentSegment,selection_type="NEW_SELECTION")
-                dblConfinementCenterlineBoth = sum([r[0] for r in arcpy.da.SearchCursor(lyrCenterlineConfinementBoth,["SHAPE@LENGTH"])])
-                segment[10] = calculate_confinement(dblConfinementCenterlineBoth,float(segment[2]))
+                lyrLineNetworkConfinementBoth = gis_tools.newGISDataset("Layer","lyrLineNetworkConfinementBoth")
+                arcpy.MakeFeatureLayer_management(fcOutputConfinementLineNetwork,lyrLineNetworkConfinementBoth,""" "Confinement_Type" = 'BOTH'""")
+                arcpy.SelectLayerByLocation_management(lyrLineNetworkConfinementBoth,"SHARE_A_LINE_SEGMENT_WITH",lyrCurrentSegment,selection_type="NEW_SELECTION")
+                dblConfinementLineNetworkBoth = sum([r[0] for r in arcpy.da.SearchCursor(lyrLineNetworkConfinementBoth,["SHAPE@LENGTH"])])
+                segment[10] = calculate_confinement(dblConfinementLineNetworkBoth,float(segment[2]))
                 # Left
-                lyrCenterlineConfinementLeft = gis_tools.newGISDataset("Layer","lyrCenterlineConfinementLeft")
-                arcpy.MakeFeatureLayer_management(fcOutputConfinementFlowline,lyrCenterlineConfinementLeft,""" "Confinement_Type" = 'LEFT'""")
-                arcpy.SelectLayerByLocation_management(lyrCenterlineConfinementLeft,"SHARE_A_LINE_SEGMENT_WITH",lyrCurrentSegment,selection_type="NEW_SELECTION")
-                dblConfinementCenterlineLeft = sum([r[0] for r in arcpy.da.SearchCursor(lyrCenterlineConfinementLeft,["SHAPE@LENGTH"])])
-                segment[11] = calculate_confinement(dblConfinementCenterlineLeft,float(segment[2]))
+                lyrLineNetworkConfinementLeft = gis_tools.newGISDataset("Layer","lyrLineNetworkConfinementLeft")
+                arcpy.MakeFeatureLayer_management(fcOutputConfinementLineNetwork,lyrLineNetworkConfinementLeft,""" "Confinement_Type" = 'LEFT'""")
+                arcpy.SelectLayerByLocation_management(lyrLineNetworkConfinementLeft,"SHARE_A_LINE_SEGMENT_WITH",lyrCurrentSegment,selection_type="NEW_SELECTION")
+                dblConfinementLineNetworkLeft = sum([r[0] for r in arcpy.da.SearchCursor(lyrLineNetworkConfinementLeft,["SHAPE@LENGTH"])])
+                segment[11] = calculate_confinement(dblConfinementLineNetworkLeft,float(segment[2]))
                 # Right
-                lyrCenterlineConfinementRight = gis_tools.newGISDataset("Layer","lyrCenterlineConfinementRight")
-                arcpy.MakeFeatureLayer_management(fcOutputConfinementFlowline,lyrCenterlineConfinementRight,""" "Confinement_Type" = 'RIGHT'""")
-                arcpy.SelectLayerByLocation_management(lyrCenterlineConfinementRight,"SHARE_A_LINE_SEGMENT_WITH",lyrCurrentSegment,selection_type="NEW_SELECTION")
-                dblConfinementCenterlineRight = sum([r[0] for r in arcpy.da.SearchCursor(lyrCenterlineConfinementRight,["SHAPE@LENGTH"])])
-                segment[12] = calculate_confinement(dblConfinementCenterlineRight,float(segment[2]))
+                lyrLineNetworkConfinementRight = gis_tools.newGISDataset("Layer","lyrLineNetworkConfinementRight")
+                arcpy.MakeFeatureLayer_management(fcOutputConfinementLineNetwork,lyrLineNetworkConfinementRight,""" "Confinement_Type" = 'RIGHT'""")
+                arcpy.SelectLayerByLocation_management(lyrLineNetworkConfinementRight,"SHARE_A_LINE_SEGMENT_WITH",lyrCurrentSegment,selection_type="NEW_SELECTION")
+                dblConfinementLineNetworkRight = sum([r[0] for r in arcpy.da.SearchCursor(lyrLineNetworkConfinementRight,["SHAPE@LENGTH"])])
+                segment[12] = calculate_confinement(dblConfinementLineNetworkRight,float(segment[2]))
 
                 ## Update Row
                 ucSegments.updateRow(segment)
@@ -350,9 +357,9 @@ def calculate_confinement(dblConfinedMarginLength,dblTotalLength):
 
 def transfer_line(fcInLine,fcToLine,strStreamSide):
     outputWorkspace = arcpy.Describe(fcInLine).path
-    fcOutput = gis_tools.newGISDataset(outputWorkspace,"CenterlineConfinement" + strStreamSide)
+    fcOutput = gis_tools.newGISDataset(outputWorkspace,"LineNetworkConfinement" + strStreamSide)
     
-    # Split Centerline by Line Ends 
+    # Split Line Network by Line Ends 
     fcSplitPoints = gis_tools.newGISDataset(outputWorkspace,"SplitPoints_Confinement" + strStreamSide)
     arcpy.FeatureVerticesToPoints_management(fcInLine,fcSplitPoints,"BOTH_ENDS")
     tblNearPointsConfinement = gis_tools.newGISDataset(outputWorkspace,"NearPointsConfinement" + strStreamSide)
@@ -382,4 +389,12 @@ def transfer_line(fcInLine,fcToLine,strStreamSide):
 
 if __name__ == "__main__":
     
-    main(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6])
+    main(sys.argv[1],
+         sys.argv[2],
+         sys.argv[3],
+         sys.argv[4],
+         sys.argv[5],
+         sys.argv[6],
+         sys.argv[7],
+         sys.argv[8],
+         sys.argv[9])

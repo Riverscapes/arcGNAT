@@ -2,12 +2,14 @@
 # Name:        Transfer Linework Attributes Tool                              #
 # Purpose:     Transfer attributes from one line layer to another             #
 #                                                                             #
-# Author:      Kelly Whitehead                                                #
+# Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     0.1          Modified: 2015-Jan-08                             #
+# Version:     1.1                                                            #
+# Modified:    2015-Apr-27                                                    #
+#                                                                             #
 # Copyright:   (c) Kelly Whitehead 2015                                       #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -18,19 +20,23 @@ import sys
 import arcpy
 import gis_tools
 
+# # Main Function # #
 def main(inputFCPolylineNetwork,
          inputDownstreamID,
          outputFCPolylineStreamOrder,
          scratchWorkspace=arcpy.env.scratchWorkspace):
 
+    # Initialize Stream Order
     intCurrentOrder = 1
 
     if arcpy.Exists(outputFCPolylineStreamOrder):
        arcpy.Delete_management(outputFCPolylineStreamOrder)
 
     # Preprocess Network
-    fcNetworkDissolved = inputFCPolylineNetwork#gis_tools.newGISDataset(scratchWorkspace,"NetworkDissolved")
-    #arcpy.Dissolve_management(inputFCPolylineNetwork,fcNetworkDissolved,multi_part="SINGLE_PART",unsplit_lines="UNSPLIT_LINES")
+    ### This section could stall ArcGIS 10.1 with dissolve... 
+    fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"NetworkDissolved")
+    arcpy.Dissolve_management(inputFCPolylineNetwork,fcNetworkDissolved,multi_part="SINGLE_PART",unsplit_lines="UNSPLIT_LINES")
+    ###
 
     listFields = arcpy.ListFields(fcNetworkDissolved,"Stream_Order")
     if len(listFields) == 0:
@@ -56,7 +62,6 @@ def main(inputFCPolylineNetwork,
     arcpy.CalculateField_management(lyrA,"Stream_Order",intCurrentOrder,"PYTHON")
     
     fcStreamOrderTransistionPoints = gis_tools.newGISDataset(scratchWorkspace,"StreamOrderTransistionPoints")
-
 
     # Iterate through stream orders
     arcpy.AddMessage("Evaluating Stream Order: " + str(intCurrentOrder))
@@ -105,6 +110,7 @@ def main(inputFCPolylineNetwork,
     arcpy.DeleteIdentical_management(fcStreamOrderTransistionPoints,"Shape")
     return
 
+# # Other Functions # #
 def newListPairs(number):
     list = []
     for i1 in range(1,number + 1):
@@ -112,11 +118,10 @@ def newListPairs(number):
             list.append(tuple([i1,i2]))
     return list
 
-
+# # Run as Script # #
 if __name__ == "__main__":
 
     main(sys.argv[1],
          sys.argv[2],
          sys.argv[3],
-         sys.argv[4]
-         )
+         sys.argv[4])

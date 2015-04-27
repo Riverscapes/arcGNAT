@@ -1,28 +1,31 @@
 ﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Name:        Check Network Connectivity                                     #
-# Purpose:                                                                    #
+# Purpose:     Make sure all segments and branches are connected in a line    #
+#              Network.                                                       #
 #                                                                             #
-# Author:      Kelly Whitehead                                                #
+# Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
-# Created:     2014-Oct-16                                                    #
-# Version:     0.2          Modified: 2014-dec-22                             #
-# Copyright:   (c) Kelly Whitehead 2014                                       #                                     
+# Created:     2014-Oct-16                                                    # 
+# Version:     1.1                                                            #
+# Modified:    2015-Apr-27                                                    #
+#                                                                             #
+# Copyright:   (c) Kelly Whitehead 2014                                       #
+#                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
-
 
 # # Import Modules # #
 import os
 import sys
 import arcpy
 
-lyrLineNetwork = "lyrLineNetwork"
+# # Main Function # # 
+def main(fcLineNetwork,
+         intOutflowReachID):
 
-
-def main(fcLineNetwork,intOutflowReachID):
-
+    lyrLineNetwork = "lyrLineNetwork"
     if arcpy.Exists(lyrLineNetwork):
         arcpy.Delete_management(lyrLineNetwork)
     arcpy.MakeFeatureLayer_management(fcLineNetwork,lyrLineNetwork)
@@ -48,11 +51,8 @@ def main(fcLineNetwork,intOutflowReachID):
 
     return
 
-
 # # Run as Script # # 
 if __name__ == "__main__":
-    inputPolylineFC = sys.argv[1] # Str Feature class path
-    inputOutflowReachID = sys.argv[2] # Int
-    #boolClearTable = sys.argv[3]
 
-    main(sys.argv[1],sys.argv[2])
+    main(sys.argv[1],
+         sys.argv[2])

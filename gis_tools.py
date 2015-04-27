@@ -2,12 +2,14 @@
 # Name:        GIS Tools Module                                               #
 # Purpose:     Support components for Riverstyles and Stream Network Toolbox  #
 #                                                                             #
-# Author:      Kelly Whitehead                                                #
+# Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     0.1          Modified: 2015-Jan-08                             #
+# Version:     1.1                                                            #
+# Modified:    2015-Jan-08                                                    #
+#                                                                             #
 # Copyright:   (c) Kelly Whitehead 2015                                       #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -177,3 +179,6 @@ def findSegmentJunctions(inputFCCenterline,strOutputJunctionPointsFC,strType="TR
     arcpy.Merge_management(mergeList,strOutputJunctionPointsFC)
 
     return strOutputJunctionPointsFC
+
+if __name__ == "__main__":
+    print("gis_tools.py is not an executable python script.")

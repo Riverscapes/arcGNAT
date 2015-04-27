@@ -2,25 +2,29 @@
 # Name:        Sinuosity Tool                                                 #
 # Purpose:     Calculate Sinuosity Along Segments in a Stream                 #
 #                                                                             #
-# Author:      Kelly Whitehead                                                #
+# Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     0.1          Modified: 2015-Jan-08                             #
+# Version:     1.1                                                            #
+# Modified:    2015-Apr-27                                                    #
+#                                                                             #
 # Copyright:   (c) Kelly Whitehead 2015                                       #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
-
 
 # # Import Modules # #
 import sys
 import arcpy
 import gis_tools
 
-def main(fcCenterline,fieldName="Sinuosity"):
+# # Main Function # #
+def main(fcCenterline,
+         fieldName="Sinuosity"):
     
+    # Set Temp Workspace
     workspaceTemp=arcpy.env.scratchWorkspace
 
     lyrCenterlineSegments = gis_tools.newGISDataset("Layer","lyrCenterlineSegments")
@@ -58,16 +62,18 @@ def main(fcCenterline,fieldName="Sinuosity"):
                                     fieldSinuosity,
                                     "calculateSinuosity(!" + fieldSegmentLength + "!,!SegmentDistances." + fieldDistance + "!)",
                                     "PYTHON",
-                                    codeblock
-                                    )
+                                    codeblock)
 
     return
 
+# # Other Functions # #
 def calculateSinuosity(dblLegnthSegment,dblLengthDistance):
     dblSinuosity = dblLegnthSegment / dblLengthDistance
 
     return dblSinuosity
 
+# # Run as Script # #
 if __name__ == "__main__":
 
-    main(sys.argv[1],sys.argv[2])
+    main(sys.argv[1],
+         sys.argv[2])

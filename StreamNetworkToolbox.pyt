@@ -3,14 +3,16 @@
 # Purpose:     Tools for generating a Stream Network and for calculating      #  
 #              Riverstyles Metrics.                                           #
 #                                                                             #
-# Author:      Kelly Whitehead                                                #
+# Authors:     Kelly Whitehead (kelly@southforkresearch.org)                  #
+#              Jesse Langdon (jesse@southforkresearch.org)                    #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     0.9          Modified: 2015-Mar-03                             #
-# Copyright:   (c) Kelly Whitehead 2015                                       #
-# License:                                                                    #
+# Version:     1.1                                                            #
+# Released:    2015-Apr-27                                                    #
+#                                                                             #
+# License:     Free to use.                                                   #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
@@ -57,8 +59,7 @@ class Toolbox(object):
                       ChangeStartingVertexTool,
                       TransferLineAttributesTool,
                       FluvialCorridorCenterlineTool,
-                      CombineAttributesTool
-                      ]
+                      CombineAttributesTool]
 
 # Stream Network Tools #
 class StreamOrderTool(object):
@@ -122,8 +123,7 @@ class StreamOrderTool(object):
         StreamOrder.main(p[0].valueAsText,
                          p[1].valueAsText,
                          p[2].valueAsText,
-                         p[3].valueAsText,)
-
+                         p[3].valueAsText)
         return
 
 class CheckNetworkConnectivityTool(object):
@@ -178,7 +178,7 @@ class CheckNetworkConnectivityTool(object):
 class FindBraidedNetworkTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Find Braideds In Stream Network"
+        self.label = "Find Braids In Stream Network"
         self.description = "Find braided segments in a stream network."
         self.canRunInBackground = True
         self.category = "Stream Network Tools"
@@ -284,23 +284,23 @@ class CalculateRiverStylesTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Segmented Stream Flowline (Segments for Sinuosity/Planform)",
-            name="InputFCCenterline",
+            displayName="Input Stream Network (Segmented for Sinuosity/Planform)",
+            name="InputFCStreamNetworkSegSin",
             datatype="GPFeatureLayer", 
             parameterType="Required",
             direction="Input")
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Segmented Stream Flowline (Segments for Confinement)",
-            name="InputFCCenterlineSmall",
+            displayName="Input Stream Network (Segmented for Confinement)",
+            name="InputFCStreamNetworkSegCon",
             datatype="GPFeatureLayer", 
             parameterType="Required",
             direction="Input")
         param1.filter.list = ["Polyline"]
 
         param2 = arcpy.Parameter(
-            displayName="Segmented Valley Centerline",
+            displayName="Input Valley Centerline (Segmented for Sinuosity/Planform)",
             name="InputFCValleyCenterline",
             datatype="GPFeatureLayer", 
             parameterType="Optional",
@@ -333,7 +333,7 @@ class CalculateRiverStylesTool(object):
         param5.filter.list = ["Local Database"]
 
         param6 = arcpy.Parameter(
-            displayName="RiverStyles to Calculate",
+            displayName="RiverStyles Attributes to Calculate",
             name="CalculateRiverstyles",
             datatype="GPString",
             parameterType="Required",
@@ -382,7 +382,7 @@ class CalculateRiverStylesTool(object):
         fcOutputConfinementSegments = p[5].valueAsText + "\\ConfinementBySegments"
         fcOutputChannelSinuosity = p[5].valueAsText + "\\ChannelSinuosity"
         fcOutputValleySinuosity = p[5].valueAsText + "\\ValleySinuosity"
-        fcOutputChannelPlanform = p[5].valueAsText + "\\ChannelPlanform"
+        fcOutputValleyPlanform = p[5].valueAsText + "\\ValleyPlanform"
         fcOutputFinalRiverStyles = p[5].valueAsText + "\\RiverStylesOutput"
 
         listCombineLineFCs = []
@@ -432,10 +432,10 @@ class CalculateRiverStylesTool(object):
                                 fcfcValleyBottomPolygon,
                                 fcOutputChannelSinuosity,
                                 fcOutputValleySinuosity,
-                                fcOutputChannelPlanform
+                                fcOutputValleyPlanform
                                 )
 
-            listCombineLineFCs.append(fcOutputChannelPlanform)
+            listCombineLineFCs.append(fcOutputValleyPlanform)
 
         if "Sinuosity" in p[6].valueAsText and "Planform" not in p[6].valueAsText: # do not calculate sinuosity if calculating planform
             arcpy.AddMessage("RiverStyles Attributes: Starting Sinuosity Calcluation...")
@@ -471,7 +471,7 @@ class ConfinementTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Segmented Stream Network Flowline",
+            displayName="Input Segmented Stream Network",
             name="InputFCCenterline",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -495,7 +495,7 @@ class ConfinementTool(object):
         param2.filter.list = ["Polygon"]
 
         param3 = arcpy.Parameter(
-            displayName="Output Confinement by Centerline Feature Class",
+            displayName="Output Line Network Confinement Feature Class",
             name="outputConCenterlineFC",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -573,8 +573,7 @@ class ConfinementTool(object):
                                p[5].valueAsText,
                                p[6].valueAsText,
                                p[7].valueAsText,
-                               p[8].valueAsText
-                               )
+                               p[8].valueAsText)
         return
 
 class PlanformTool(object):
@@ -588,8 +587,8 @@ class PlanformTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Stream Centerline",
-            name="InputFCCenterline",
+            displayName="Input Stream Network",
+            name="InputFCStreamNetwork",
             datatype="GPFeatureLayer", 
             parameterType="Required",
             direction="Input")
@@ -663,8 +662,7 @@ class PlanformTool(object):
                             p[2].valueAsText,
                             p[3].valueAsText,
                             p[4].valueAsText,
-                            p[5].valueAsText,
-                            )
+                            p[5].valueAsText)
         return
 
 # Utilities #
@@ -882,7 +880,7 @@ class SinuosityTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Stream Network or Centerline",
+            displayName="Input Stream Network or Centerline",
             name="InputFCCenterline",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -895,6 +893,7 @@ class SinuosityTool(object):
             datatype="GPString", 
             parameterType="Required",
             direction="Input")
+        param1.value = "Sinuosity"
         
         return [param0,param1]
 
@@ -919,9 +918,9 @@ class SinuosityTool(object):
         reload(Sinuosity)
         setEnvironmentSettings()
 
-        Sinuosity.main(p[0].valueAsText,
-                       p[1].valueAsText
-                       )
+        Sinuosity.main(
+            p[0].valueAsText,
+            p[1].valueAsText)
 
         return
 
@@ -956,8 +955,7 @@ class DividePolygonBySegmentsTool(object):
             name="fcSegmentedPolygons",
             datatype="DEFeatureClass",
             parameterType="Required",
-            direction="Output",
-            )
+            direction="Output")
         param2.filter.list = ["Polygon"]
 
         param3 = arcpy.Parameter(
@@ -1011,8 +1009,7 @@ class DividePolygonBySegmentsTool(object):
                                     p[2].valueAsText,
                                     p[3].valueAsText,
                                     p[4].valueAsText,
-                                    p[5].valueAsText
-                                    )
+                                    p[5].valueAsText)
 
         return
 
@@ -1065,8 +1062,8 @@ class ChangeStartingVertexTool(object):
         reload(ChangeStartingVertex)
 
         ChangeStartingVertex.main(p[0].valueAsText,
-                                  p[1].valueAsText
-                                  )
+                                  p[1].valueAsText)
+
         return
 
 class TransferLineAttributesTool(object):
@@ -1231,8 +1228,8 @@ class FluvialCorridorCenterlineTool(object):
                                   p[2].valueAsText,
                                   p[3].valueAsText,
                                   p[4].valueAsText,
-                                  p[5].valueAsText
-                                  )
+                                  p[5].valueAsText)
+
         return
 
 class CombineAttributesTool(object):

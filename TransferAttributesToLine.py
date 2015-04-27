@@ -2,12 +2,14 @@
 # Name:        Transfer Linework Attributes Tool                              #
 # Purpose:     Transfer attributes from one line layer to another             #
 #                                                                             #
-# Author:      Kelly Whitehead                                                #
+# Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     0.1          Modified: 2015-Jan-08                             #
+# Version:     1.1                                                            #
+# Modified:    2015-Apr-27                                                    #
+#                                                                             #
 # Copyright:   (c) Kelly Whitehead 2015                                       #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -21,17 +23,21 @@ import DividePolygonBySegment
 
 def main(fcFromLine,fcToLine,fcRawBoundingPolygon,bool_IsSegmented,fcOutputLineNetwork):
 
+    # Set temp workspace
     workspaceTemp=arcpy.env.scratchWorkspace
     
+    # Copy Temp Line Network
     fcTempLine = gis_tools.newGISDataset(workspaceTemp,"Transfer_01_TempLine")
     arcpy.CopyFeatures_management(fcFromLine,fcTempLine)
     
+    # Segment Boundary Polygon in not segmented
     if bool_IsSegmented is not True:
         fcSegmentedBoundingPolygons = gis_tools.newGISDataset(workspaceTemp,"Transfer_02_SegmentedBoundingPolygons")
         DividePolygonBySegment.main(fcFromLine,fcRawBoundingPolygon,fcSegmentedBoundingPolygons,workspaceTemp)
     else: 
         fcSegmentedBoundingPolygons = fcRawBoundingPolygon
 
+    # Split Points of ToLine at intersection of Polygon Segments
     fcIntersectSplitPoints = gis_tools.newGISDataset(workspaceTemp,"Transfer_03_IntersectSplitPoints")
     arcpy.Intersect_analysis([fcToLine,fcSegmentedBoundingPolygons],fcIntersectSplitPoints,output_type="POINT")
 
@@ -40,6 +46,7 @@ def main(fcFromLine,fcToLine,fcRawBoundingPolygon,bool_IsSegmented,fcOutputLineN
 
     #fcSplitLinesJoinFID = gis_tools.newGISDataset(workspaceTemp,"Transfer_05_SplitLinesJoinFID")
 
+    # Spatial Join Lines based on common FID, as transfered by Segmented Polygon
     descTempLine = arcpy.Describe(fcTempLine)
 
     if arcpy.Exists(fcOutputLineNetwork):
@@ -52,14 +59,12 @@ def main(fcFromLine,fcToLine,fcRawBoundingPolygon,bool_IsSegmented,fcOutputLineN
                                "JOIN_ONE_TO_ONE",
                                "KEEP_ALL",
                                #"""JOIN_FID "JOIN_FID" true true false 4 Long 0 0 ,First,#,""" + str(fcSegmentedBoundingPolygons) + """,JOIN_FID,-1,-1""",
-                               match_option="WITHIN"
-                               )
+                               match_option="WITHIN")
 
     arcpy.JoinField_management(fcSplitLinesJoinFID,
                                "JOIN_FID",
                                fcTempLine,
-                               str(descTempLine.OIDFieldName),
-                               )
+                               str(descTempLine.OIDFieldName),)
     
     return
 
@@ -68,5 +73,5 @@ if __name__ == "__main__":
     main(sys.argv[1],
          sys.argv[2],
          sys.argv[3],
-         sys.argv[4]
-         )
+         sys.argv[4],
+         sys.argv[5])

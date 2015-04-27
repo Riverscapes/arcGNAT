@@ -2,12 +2,14 @@
 # Name:        Divide Polygon By Segments Tool                                #
 # Purpose:     Divides a channel or valley polygon by centerline segments.    #
 #                                                                             #
-# Author:      Kelly Whitehead                                                #
+# Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     0.1          Modified: 2015-Jan-08                             #
+# Version:     1                                                              #
+# Modified:    2015-Apr-27                                                    #
+#                                                                             #
 # Copyright:   (c) Kelly Whitehead 2015                                       #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -19,18 +21,24 @@ import arcpy
 import gis_tools
 import ChangeStartingVertex
 
-def main(fcInputCenterline,fcInputPolygon,fcSegmentedPolygons,workspaceTemp=arcpy.env.scratchWorkspace,dblPointDensity=10.0,dblJunctionBuffer=120.00):
+# # Main Function # #
+def main(fcInputCenterline,
+         fcInputPolygon,
+         fcSegmentedPolygons,
+         workspaceTemp=arcpy.env.scratchWorkspace,
+         dblPointDensity=10.0,
+         dblJunctionBuffer=120.00):
     
     arcpy.AddMessage("RiverStyles PolygonSegmentation Tool")
-    arcpy.AddMessage("Saving Polygon Results to: " + fcSegmentedPolygons)
-    arcpy.AddMessage("Saving Temporary Files to: " + workspaceTemp)
+    arcpy.AddMessage(" Saving Polygon Results to: " + fcSegmentedPolygons)
+    arcpy.AddMessage(" Saving Temporary Files to: " + workspaceTemp)
 
     ## Copy Centerline to Temp Workspace
     fcCenterline = gis_tools.newGISDataset(workspaceTemp,"Centerline")
     arcpy.CopyFeatures_management(fcInputCenterline,fcCenterline)
 
-    arcpy.env.extent = fcInputPolygon
-
+    ## Build Thiessan Polygons
+    arcpy.env.extent = fcInputPolygon ## Set full extent to build Thiessan polygons over entire line network.
     arcpy.Densify_edit(fcCenterline,"DISTANCE",str(dblPointDensity) + " METERS")
 
     fcTribJunctionPoints = gis_tools.newGISDataset(workspaceTemp,"TribJunctionPoints") # All Segment Junctions??
@@ -45,6 +53,7 @@ def main(fcInputCenterline,fcInputPolygon,fcSegmentedPolygons,workspaceTemp=arcp
 
     fcThiessanPoly = gis_tools.newGISDataset(workspaceTemp,"ThiessanPoly")
     arcpy.CreateThiessenPolygons_analysis(lyrThiessanPoints,fcThiessanPoly,"ONLY_FID")
+
     fcThiessanPolyClip = gis_tools.newGISDataset(workspaceTemp,"TheissanPolyClip")
     arcpy.Clip_analysis(fcThiessanPoly,fcInputPolygon,fcThiessanPolyClip)
 
@@ -115,9 +124,12 @@ def main(fcInputCenterline,fcInputPolygon,fcSegmentedPolygons,workspaceTemp=arcp
 
     return
 
+# # Run as Script # #
 if __name__ == "__main__":
 
     main(sys.argv[1],
          sys.argv[2],
          sys.argv[3],
-         sys.argv[4])
+         sys.argv[4],
+         sys.argv[5],
+         sys.argv[6])

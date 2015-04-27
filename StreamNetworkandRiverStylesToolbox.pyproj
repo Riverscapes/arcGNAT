@@ -47,6 +47,7 @@
     <Compile Include="Centerline.py" />
     <Compile Include="ChangeStartingVertex.py" />
     <Compile Include="CheckNetworkConnectivity.py" />
+    <Compile Include="CombineAttributes.py" />
     <Compile Include="def__Export.py" />
     <Compile Include="def__ExtremePoints.py" />
     <Compile Include="def__ScratchWPathName.py" />
