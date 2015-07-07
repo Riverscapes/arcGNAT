@@ -35,6 +35,7 @@ import TransferAttributesToLine
 import StreamOrder
 import Centerline
 import CombineAttributes
+import MovingWindow_Events
 
 class Toolbox(object):
     def __init__(self):
@@ -59,7 +60,8 @@ class Toolbox(object):
                       ChangeStartingVertexTool,
                       TransferLineAttributesTool,
                       FluvialCorridorCenterlineTool,
-                      CombineAttributesTool]
+                      CombineAttributesTool,
+                      MovingWindowTool]
 
 # Stream Network Tools #
 class StreamOrderTool(object):
@@ -273,6 +275,92 @@ class BuildNetworkTopologyTool(object):
         return
 
 # RiverStyles Tools #
+class MovingWindowTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Moving Window"
+        self.description = "Calculate the Valley Confinement using a Moving Window on a Raw Confinement Polyline FC."
+        self.canRunInBackground = True
+        self.category = "Riverstyles Tools"
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input Stream Network with Confinement",
+            name="lineNetwork",
+            datatype="GPFeatureLayer", 
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Stream ID Field",
+            name="fieldStreamID",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+
+        param2 = arcpy.Parameter(
+            displayName="Attribute Field (Confinement)",
+            name="fieldAttribute",
+            datatype="GPString", 
+            parameterType="Required",
+            direction="Input")
+
+        param3 = arcpy.Parameter(
+            displayName="Seed Point Distance",
+            name="dblSeedPointDistance",
+            datatype="GPDouble",
+            parameterType="Required",
+            direction="Input")
+        param3.value = 25
+
+        param4 = arcpy.Parameter(
+            displayName="Window Sizes",
+            name="inputWindowSizes",
+            datatype="GPDouble",
+            parameterType="Required",
+            direction="Input",
+            multiValue=True)
+        param4.value = [50,100]
+
+        params = [param0,param1,param2,param3,param4]
+        return params
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        if parameters[0].value:
+            fields = arcpy.Describe(parameters[0].value).fields
+            listFields = []
+            for f in fields:
+                listFields.append(f.name)
+            parameters[1].filter.list=listFields
+            parameters[2].filter.list=listFields
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(MovingWindow_Events)
+        setEnvironmentSettings()
+
+        MovingWindow_Events.main(p[0].valueAsText,
+                               p[1].valueAsText,
+                               p[2].valueAsText,
+                               p[3].valueAsText,
+                               p[4].valueAsText)
+        return
+
 class CalculateRiverStylesTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""

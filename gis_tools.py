@@ -52,6 +52,7 @@ def getGISDataset(workspace,inputDatasetName):
             return inputDataset
 
 def resetField(inTable,FieldName,FieldType,TextLength=0):
+    """clear or create new field.  FieldType = TEXT, FLOAT, DOUBLE, SHORT, LONG, etc."""
     
     if arcpy.Describe(inTable).dataType == "ShapeFile":
         FieldName = FieldName[:10]
@@ -63,7 +64,7 @@ def resetField(inTable,FieldName,FieldType,TextLength=0):
             arcpy.CalculateField_management(inTable,FieldName,"0","PYTHON")
         #arcpy.DeleteField_management(inTable,FieldName) #lots of 999999 errors 
     
-    else: #Create Table if does not exist
+    else: #Create Field if it does not exist
         if FieldType == "TEXT":
             arcpy.AddField_management(inTable,FieldName,"TEXT",field_length=TextLength)
         else:
@@ -179,6 +180,72 @@ def findSegmentJunctions(inputFCCenterline,strOutputJunctionPointsFC,strType="TR
     arcpy.Merge_management(mergeList,strOutputJunctionPointsFC)
 
     return strOutputJunctionPointsFC
+
+def pointsAlongLine(fcInputLineNetwork,
+                    dblDistance,
+                    fcOutputPoints):
+    """Generate Points along a line network.
+
+    Generate a series of point along a line network based on a specified 
+    distance or specified number of points (equally spaced). If set distance 
+    is used, the last section (remainder) will be smaller than the set 
+    distance. For this reason, line direction is important. 
+
+    Points at the ends of the lines are also included.
+
+    Arguments:
+    fcInputLineNetwork -- line network to generate points along. This should be
+    dissolved as needed, since this tool will generate a new set of points per
+    line feature.
+    inDistanceOrNumberofPoints -- the distance or number of points to use.
+    """
+
+    resetData(fcOutputPoints)
+
+    arrayNewPoints = []
+    arrayAttributes = []
+    with arcpy.da.SearchCursor(fcInputLineNetwork,["OID@","SHAPE@","SHAPE@LENGTH"]) as scLineNetwork:
+        for line in scLineNetwork:
+            lineFeat = line[1]
+            lengthCurrent = 0
+            pointPosition = 0
+            while lengthCurrent < line[2]:
+                arrayNewPoints.append(lineFeat.positionAlongLine(lengthCurrent))
+                arrayAttributes.append([line[0],pointPosition])
+                lengthCurrent = lengthCurrent + dblDistance
+                pointPosition = pointPosition + 1
+
+            arrayNewPoints.append(arcpy.PointGeometry(lineFeat.lastPoint))
+            arrayAttributes.append([line[0],pointPosition])
+
+    arcpy.CopyFeatures_management(arrayNewPoints,fcOutputPoints)
+
+    arcpy.AddField_management(fcOutputPoints,"LineID","LONG")
+    arcpy.AddField_management(fcOutputPoints,"Position","LONG")
+
+    with arcpy.da.UpdateCursor(fcOutputPoints,["LineID","Position"]) as ucOutputPoints:
+        i = 0
+        for row in ucOutputPoints:
+            row[0] = arrayAttributes[i][0]
+            row[1] = arrayAttributes[i][1]
+            ucOutputPoints.updateRow(row)
+            i=i+1
+
+    return arrayAttributes
+
+def addUniqueIDField(fcInputFeatureClass,fieldName):
+
+    resetField(fcInputFeatureClass,fieldName,"LONG")
+    arcpy.AddField_management(fcInputFeatureClass,fieldName,"LONG")
+    codeBlock = """
+        counter = 0
+        def UniqueID():
+            global counter
+            counter += 1
+            return counter"""
+    arcpy.CalculateField_management(fcInputFeatureClass,fieldName,"UniqueID()","PYTHON",codeBlock)
+
+    return fieldName
 
 if __name__ == "__main__":
     print("gis_tools.py is not an executable python script.")
