@@ -35,7 +35,7 @@ import TransferAttributesToLine
 import StreamOrder
 import Centerline
 import CombineAttributes
-import MovingWindow_Events
+import MovingWindow
 
 class Toolbox(object):
     def __init__(self):
@@ -313,7 +313,7 @@ class MovingWindowTool(object):
             datatype="GPDouble",
             parameterType="Required",
             direction="Input")
-        param3.value = 25
+        #param3.value = 50
 
         param4 = arcpy.Parameter(
             displayName="Window Sizes",
@@ -322,9 +322,16 @@ class MovingWindowTool(object):
             parameterType="Required",
             direction="Input",
             multiValue=True)
-        param4.value = [50,100]
+        #param4.value = [50,100]
 
-        params = [param0,param1,param2,param3,param4]
+        param5 = arcpy.Parameter(
+            displayName="Output Workspace",
+            name="strOutputWorkspace",
+            datatype="DEWorkspace",
+            parameterType="Optional",
+            direction="Input")
+        param5.value = str(arcpy.env.scratchWorkspace)
+        params = [param0,param1,param2,param3,param4,param5]
         return params
 
     def isLicensed(self):
@@ -354,11 +361,12 @@ class MovingWindowTool(object):
         reload(MovingWindow_Events)
         setEnvironmentSettings()
 
-        MovingWindow_Events.main(p[0].valueAsText,
-                               p[1].valueAsText,
-                               p[2].valueAsText,
-                               p[3].valueAsText,
-                               p[4].valueAsText)
+        MovingWindow.main(p[0].valueAsText,
+                          p[1].valueAsText,
+                          p[2].valueAsText,
+                          p[3].valueAsText,
+                          p[4].valueAsText,
+                          p[5].valueAsText)
         return
 
 class CalculateRiverStylesTool(object):

@@ -57,7 +57,6 @@
     <Compile Include="DynamicSegmentation.py" />
     <Compile Include="FindBraidedNetwork.py" />
     <Compile Include="gis_tools.py" />
-    <Compile Include="MovingWindow_Events.py" />
     <Compile Include="MovingWindow.py" />
     <Compile Include="NetworkSegmentation.py" />
     <Compile Include="Sinuosity.py" />
