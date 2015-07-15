@@ -39,6 +39,7 @@ def main(
     arcpy.Dissolve_management(fcLineNetwork,fcLineNetworkDissolved,fieldStreamRouteID,multi_part=False,unsplit_lines=True)
 
     listLineGeometries = arcpy.CopyFeatures_management(fcLineNetworkDissolved,arcpy.Geometry())
+    
     listWindows = []
     listSeeds = []
     listWindowEvents = []

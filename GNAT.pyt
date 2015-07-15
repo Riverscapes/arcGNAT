@@ -41,9 +41,9 @@ class Toolbox(object):
     def __init__(self):
         """Define the toolbox (the name of the toolbox is the name of the
         .pyt file)."""
-        self.label = "Stream Network and Riverstyles Toolbox"
-        self.alias = 'Stream Network and Riverstyles'
-        self.description = "Tools for generating a Stream Network and for calculating Riverstyles Metrics."
+        self.label = "Geomorphic Network and Analysis Toolbox"
+        self.alias = 'GNAT'
+        self.description = "Tools for generating a Stream Network and for generating Geomorphic Attributes."
 
         # List of tool classes associated with this toolbox
         self.tools = [StreamOrderTool,
@@ -52,7 +52,7 @@ class Toolbox(object):
                       BuildNetworkTopologyTool,
                       #NetworkSegmentationTool,
                       #DynamicSegmentationTool,
-                      CalculateRiverStylesTool,
+                      CalculateGeomorphicAttributesTool,
                       ConfinementTool,
                       PlanformTool,
                       SinuosityTool,
@@ -274,14 +274,14 @@ class BuildNetworkTopologyTool(object):
 
         return
 
-# RiverStyles Tools #
+# Geomorphic Attributes Tools #
 class MovingWindowTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
         self.label = "Moving Window"
         self.description = "Calculate the Valley Confinement using a Moving Window on a Raw Confinement Polyline FC."
         self.canRunInBackground = True
-        self.category = "Riverstyles Tools"
+        self.category = "Geomorphic Attributes Tools"
 
     def getParameterInfo(self):
         """Define parameter definitions"""
@@ -369,13 +369,13 @@ class MovingWindowTool(object):
                           p[5].valueAsText)
         return
 
-class CalculateRiverStylesTool(object):
+class CalculateGeomorphicAttributesTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Calculate RiverStyles Attributes"
-        self.description = "Calculate Selected RiverStyles for segmented reaches."
+        self.label = "Calculate Geomorphic Attributes"
+        self.description = "Calculate Selected Geomorphic for segmented reaches."
         self.canRunInBackground = True
-        self.category = "Riverstyles Tools"
+        self.category = "Geomorphic Attributes Tools"
 
     def getParameterInfo(self):
         """Define parameter definitions"""
@@ -562,7 +562,7 @@ class ConfinementTool(object):
         self.label = "Valley Confinement"
         self.description = "Calculate the Valley Confinement for segmented reaches using the Stream Centerline, Channel Buffer, and Valley Bottom Polygon."
         self.canRunInBackground = True
-        self.category = "Riverstyles Tools"
+        self.category = "Geomorphic Attributes Tools"
 
     def getParameterInfo(self):
         """Define parameter definitions"""
@@ -678,7 +678,7 @@ class PlanformTool(object):
         self.label = "Stream Sinuosity and Planform"
         self.description = ""
         self.canRunInBackground = True
-        self.category = "Riverstyles Tools"
+        self.category = "Geomorphic Attributes Tools"
 
     def getParameterInfo(self):
         """Define parameter definitions"""

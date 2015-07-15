@@ -24,6 +24,7 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="GNAT.pyt" />
     <Content Include="readme.md" />
     <Content Include="StreamNetworkToolbox.BuildNetworkTopologyTool.pyt.xml" />
     <Content Include="StreamNetworkToolbox.CalculateRiverStylesTool.pyt.xml" />
@@ -35,7 +36,6 @@
     <Content Include="StreamNetworkToolbox.FindBraidedNetworkTool.pyt.xml" />
     <Content Include="StreamNetworkToolbox.NetworkSegmentationTool.pyt.xml" />
     <Content Include="StreamNetworkToolbox.PlanformTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.pyt" />
     <Content Include="StreamNetworkToolbox.pyt.xml" />
     <Content Include="StreamNetworkToolbox.SinuosityTool.pyt.xml" />
     <Content Include="StreamNetworkToolbox.StreamPlanformTool.pyt.xml" />
