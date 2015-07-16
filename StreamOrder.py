@@ -24,8 +24,11 @@ import gis_tools
 def main(inputFCPolylineNetwork,
          inputDownstreamID,
          outputFCPolylineStreamOrder,
-         outputFCPolygonJunctionPoints,
+         outputFCJunctionPoints,
          scratchWorkspace=arcpy.env.scratchWorkspace):
+
+    # Set Processing Environments
+    arcpy.env.outputZflag = "Disabled"
 
     # Initialize Stream Order
     intCurrentOrder = 1
