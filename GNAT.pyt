@@ -81,14 +81,14 @@ class StreamOrderTool(object):
             parameterType="Required",
             direction="Input")
         param1 = arcpy.Parameter(
-            displayName="Downstream Reach ID (in FID field)",
+            displayName="Downstream Reach ID",
             name="DownstreamReach",
             datatype="GPLong", #Integer
             parameterType="Required",
             direction="Input")
 
         param2 = arcpy.Parameter(
-            displayName="Output Stream Order Feature Class",
+            displayName="Output Line Network with Stream Order",
             name="outputStreamOrderFC",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -96,13 +96,23 @@ class StreamOrderTool(object):
         param2.filter.list = ["Polyline"]
 
         param3 = arcpy.Parameter(
+            displayName="Output Junction Points",
+            name="outputJunctionPointsFC",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Output")
+        param2.filter.list = ["Point"]
+
+        param4 = arcpy.Parameter(
             displayName="Scratch Workspace",
             name="InputTempWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
-        param3.filter.list = ["Local Database"]
-        return [param0,param1,param2,param3]
+        param4.filter.list = ["Local Database"]
+        param4.value = str(arcpy.env.scratchWorkspace)
+
+        return [param0,param1,param2,param3,param4]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -125,7 +135,8 @@ class StreamOrderTool(object):
         StreamOrder.main(p[0].valueAsText,
                          p[1].valueAsText,
                          p[2].valueAsText,
-                         p[3].valueAsText)
+                         p[3].valueAsText,
+                         p[4].valueAsText)
         return
 
 class CheckNetworkConnectivityTool(object):
