@@ -1418,6 +1418,7 @@ class CombineAttributesTool(object):
 
         return
 
+# Other Functions # 
 def setEnvironmentSettings():
     arcpy.env.OutputMFlag = "Disabled"
     arcpy.env.OutputZFlag = "Disabled"
