@@ -354,12 +354,18 @@ class MovingWindowTool(object):
         validation is performed.  This method is called whenever a parameter
         has been changed."""
         if parameters[0].value:
+            # Get Fields
             fields = arcpy.Describe(parameters[0].value).fields
             listFields = []
             for f in fields:
                 listFields.append(f.name)
             parameters[1].filter.list=listFields
             parameters[2].filter.list=listFields
+            # Test Projection
+            if arcpy.Describe(parameters[0].value).spatialReference.type <> u"Projected":
+                parameters[0].setErrorMessage("Input " + parameters[0].name + " must be in a Projected Coordinate System.")
+
+
         return
 
     def updateMessages(self, parameters):
@@ -369,7 +375,7 @@ class MovingWindowTool(object):
 
     def execute(self, p, messages):
         """The source code of the tool."""
-        reload(MovingWindow_Events)
+        reload(MovingWindow)
         setEnvironmentSettings()
 
         MovingWindow.main(p[0].valueAsText,

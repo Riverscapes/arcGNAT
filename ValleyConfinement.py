@@ -247,7 +247,7 @@ def main(fcInputStreamLineNetwork,
     arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Confinement_Type","'NONE'","PYTHON")
 
     # Loop through Segments to Calculate Confinement for Each Segment
-    if boolConfinementbySegment:
+    if boolConfinementbySegment is True:
         arcpy.AddMessage(" Calculating Confinement Along Segments.")
         desc_fcOutputSegments = arcpy.Describe(fcOutputConfinementSegments)
         with arcpy.da.UpdateCursor(fcOutputConfinementSegments,[str(desc_fcOutputSegments.OIDFieldName), #0
