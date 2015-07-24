@@ -36,6 +36,7 @@ import StreamOrder
 import Centerline
 import CombineAttributes
 import MovingWindow
+import FindCrossingLines
 
 class Toolbox(object):
     def __init__(self):
@@ -49,6 +50,7 @@ class Toolbox(object):
         self.tools = [StreamOrderTool,
                       CheckNetworkConnectivityTool,
                       FindBraidedNetworkTool,
+                      FindCrossingLinesTool,
                       BuildNetworkTopologyTool,
                       #NetworkSegmentationTool,
                       #DynamicSegmentationTool,
@@ -285,12 +287,78 @@ class BuildNetworkTopologyTool(object):
 
         return
 
+class FindCrossingLinesTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Find Crossing Lines"
+        self.description = ""
+        self.canRunInBackground = True
+        self.category = "Stream Network Tools"
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input Stream Network",
+            name="InputStreamNetwork",
+            datatype="GPFeatureLayer", 
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Output Workspace",
+            name="Output Workspace",
+            datatype="DEWorkspace",
+            parameterType="Required",
+            direction="Input")
+
+        param2 = arcpy.Parameter(
+            displayName="Output Polygon Name",
+            name="Output Polygon",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+
+        param3 = arcpy.Parameter(
+            displayName="Scratch Workspace",
+            name="ScratchWorkspace",
+            datatype="DEWorkspace",
+            parameterType="Required",
+            direction="Input")
+
+        return [param0,param1,param2,param3]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        reload(FindCrossingLines)
+        FindCrossingLines.main(parameters[0].valueAsText,
+                               parameters[1].valueAsText,
+                               parameters[2].valueAsText,
+                               parameters[3].valueAsText)
+
+        return
+
 # Geomorphic Attributes Tools #
 class MovingWindowTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
         self.label = "Moving Window"
-        self.description = "Calculate the Valley Confinement using a Moving Window on a Raw Confinement Polyline FC."
+        self.description = "Calculate the Valley Confinement using a Moving Window on a Raw Confinement Polyline FC.  Tool Documentation: https://bitbucket.org/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/MovingWindow"
         self.canRunInBackground = True
         self.category = "Geomorphic Attributes Tools"
 

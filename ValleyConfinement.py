@@ -34,11 +34,11 @@ def main(fcInputStreamLineNetwork,
 
     ## Reload modules and Prepare processing environments
     reload(gis_tools)
-    arcpy.AddMessage("RiverStyles Confinement Tool")
-    arcpy.AddMessage("Saving Flowline Confinement Results to: " + fcOutputConfinementLineNetwork)
-    arcpy.AddMessage("Saving Segment Confinement Results to: " + fcOutputConfinementSegments)
-    arcpy.AddMessage("Saving Temporary Files to: " + scratchWorkspace)
-    arcpy.AddMessage("Status of confinement by segment " + str(boolConfinementbySegment))
+    arcpy.AddMessage("GNAT Confinement Tool")
+    arcpy.AddMessage("GNAT CON: Saving Flowline Confinement Results to: " + fcOutputConfinementLineNetwork)
+    arcpy.AddMessage("GNAT CON: Saving Segment Confinement Results to: " + fcOutputConfinementSegments)
+    arcpy.AddMessage("GNAT CON: Saving Temporary Files to: " + scratchWorkspace)
+    arcpy.AddMessage("GNAT CON: Status of confinement by segment " + str(boolConfinementbySegment))
 
     # Create Confined Channel Polygon
     fcConfinedChannel = gis_tools.newGISDataset(scratchWorkspace,"ChannelConfined")
@@ -125,13 +125,13 @@ def main(fcInputStreamLineNetwork,
     #    arcpy.FeatureToPolygon_management(fcChannelBankLines,fcChannelBankPolygons)
     #    # # End Segmentation # # 
     #else:
-
+    arcpy.AddMessage("GNAT CON: Preparing Segmented Polygons")
     fcChannelBankLines = gis_tools.newGISDataset(scratchWorkspace,"Bank_Lines")
     fcChannelBankPolygons = gis_tools.newGISDataset(scratchWorkspace,"Bank_Polygons")
     fcChannelSegmentPolygons = gis_tools.newGISDataset(scratchWorkspace,"SegmentPolygons")
     fcChannelSegmentPolygonLines = gis_tools.newGISDataset(scratchWorkspace,"SegmentPolygonLines")
     fcChannelBankNearLines = gis_tools.newGISDataset(scratchWorkspace,"Bank_NearLines")
-    DividePolygonBySegment.main(fcInputStreamLineNetwork,fcChannelConfined,fcChannelSegmentPolygons,scratchWorkspace)
+    DividePolygonBySegment.main(fcInputStreamLineNetwork,fcConfinedChannel,fcChannelSegmentPolygons,scratchWorkspace)
     #arcpy.Copy_management(fcConfinedChannel,fcChannelSegmentPolygons)
     arcpy.PolygonToLine_management(fcChannelSegmentPolygons,fcChannelSegmentPolygonLines)
     arcpy.Near_analysis(fcStreamNetworkDangles,fcChannelSegmentPolygonLines,location="LOCATION")
@@ -147,6 +147,7 @@ def main(fcInputStreamLineNetwork,
     arcpy.FeatureToPolygon_management(fcChannelBankLines,fcChannelBankPolygons)
         
     # Intersect and Split Channel polygon fcchanneledges and PolylineConfinement using cross section lines
+    arcpy.AddMessage("GNAT CON: Intersect and Split Channel Polygons")
     fcIntersectPoints_ChannelMargins = gis_tools.newGISDataset(scratchWorkspace,"IntersectPoints_ChannelMargins")
     fcIntersectPoints_ConfinementMargins = gis_tools.newGISDataset(scratchWorkspace,"IntersectPoints_ConfinementMargins")
     arcpy.Intersect_analysis([fcConfinementMargins,fcChannelSegmentPolygonLines],fcIntersectPoints_ConfinementMargins,output_type="POINT")
@@ -157,7 +158,7 @@ def main(fcInputStreamLineNetwork,
     arcpy.SplitLineAtPoint_management(fcChannelMargins,fcIntersectPoints_ChannelMargins,fcChannelMargin_Segments,search_radius="10 Meters")
 
     # Create River Side buffer to select right or left banks
-    arcpy.AddMessage(" Determining Sides of Bank.")
+    arcpy.AddMessage("GNAT CON: Determining Sides of Bank.")
     fcChannelBankSideBuffer = gis_tools.newGISDataset(scratchWorkspace,"BankSide_Buffer")
     fcChannelBankSidePoints = gis_tools.newGISDataset(scratchWorkspace,"BankSidePoints")
     arcpy.Buffer_analysis(fcInputStreamLineNetwork,fcChannelBankSideBuffer,"1 Meter","LEFT","FLAT","NONE")
@@ -183,7 +184,7 @@ def main(fcInputStreamLineNetwork,
     arcpy.FeatureVerticesToPoints_management(fcConfinementMargin_Segments,fcFilterSplitPoints,"BOTH_ENDS")
 
     # Prepare Continuous Confinement ##
-    arcpy.AddMessage("Determining Continuous Confinement along Stream Network.")
+    arcpy.AddMessage("GNAT CON: Determining Continuous Confinement along Stream Network.")
     fcConfinementMarginSegmentsBankSide = gis_tools.newGISDataset(scratchWorkspace,"ConfinementMarginSegmentsBank")
     lyrConfinementMarginSegmentsBankside = gis_tools.newGISDataset("Layer","lyrConfinementMarginSegmentsBankside")
     arcpy.SpatialJoin_analysis(fcConfinementMargin_Segments,
@@ -204,7 +205,7 @@ def main(fcInputStreamLineNetwork,
     arcpy.Intersect_analysis([fcStreamNetworkConfinementLeft,fcStreamNetworkConfinementRight],fcConfinementStreamNetworkIntersected,"ALL")
 
     #resplit centerline by segments
-    arcpy.AddMessage(" Calculating Confinement For Stream Network Segments.")
+    arcpy.AddMessage("GNAT CON: Calculating Confinement For Stream Network Segments.")
     if arcpy.Exists(fcOutputConfinementLineNetwork):
        arcpy.Delete_management(fcOutputConfinementLineNetwork)# = outputLineFC#gis_tools.newGISDataset(outputLineFC,"ConfinementCenterline")
     arcpy.SplitLineAtPoint_management(fcConfinementStreamNetworkIntersected,
@@ -252,7 +253,7 @@ def main(fcInputStreamLineNetwork,
         arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_LineNetwork_Right","DOUBLE")
 
 
-        arcpy.AddMessage(" Calculating Confinement Along Segments.")
+        arcpy.AddMessage("GNAT CON: Calculating Confinement Along Segments.")
         desc_fcOutputSegments = arcpy.Describe(fcOutputConfinementSegments)
         with arcpy.da.UpdateCursor(fcOutputConfinementSegments,[str(desc_fcOutputSegments.OIDFieldName), #0
                                                      "Confinement_Margin_Summed", #1
@@ -343,7 +344,7 @@ def main(fcInputStreamLineNetwork,
                 ## Update Row
                 ucSegments.updateRow(segment)
 
-        arcpy.AddMessage("Confinement Calculations Complete.")
+        arcpy.AddMessage("GNAT CON: Confinement Calculations Complete.")
 
     return
 

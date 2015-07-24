@@ -41,6 +41,7 @@
     <Compile Include="DividePolygonBySegment.py" />
     <Compile Include="DynamicSegmentation.py" />
     <Compile Include="FindBraidedNetwork.py" />
+    <Compile Include="FindCrossingLines.py" />
     <Compile Include="gis_tools.py" />
     <Compile Include="MovingWindow.py" />
     <Compile Include="NetworkSegmentation.py" />
