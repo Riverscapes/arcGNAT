@@ -83,6 +83,7 @@ def main(Polygon,Polyline,DisaggregationStep,Smoothing,Output,DeleteTF):
     arcpy.AddMessage("Looking for the longer distance between extreme points and the polygon - Step " + str(ncurrentstep) + "/" + str(nstep))
     NearTable = arcpy.GenerateNearTable_analysis(ExtremePoints, PolyToLine, "%ScratchWorkspace%\\NearTable", "", "LOCATION", "NO_ANGLE")### Added NearTable to Scratch Workspace to see results
     NearPoints = arcpy.MakeXYEventLayer_management(NearTable,"NEAR_X","NEAR_Y","NearPoints",ExtremePoints)### Convert the xy points to a layer to use for splitting the lines.
+    arcpy.CopyFeatures_management("NearPoints","%ScratchWorkspace%\\NearPoints")
     ### Removed this Section. It appears to find the max distance in the table, for use in splitting the lines?
     #rows = arcpy.SearchCursor(NearTable)
     # Counter = 0

@@ -24,13 +24,19 @@ import gis_tools
 def main(inputFCPolylineNetwork,
          inputDownstreamID,
          outputFCPolylineStreamOrder,
+         outputFCJunctionPoints,
          scratchWorkspace=arcpy.env.scratchWorkspace):
+
+    # Set Processing Environments
+    arcpy.env.outputZflag = "Disabled"
 
     # Initialize Stream Order
     intCurrentOrder = 1
 
     if arcpy.Exists(outputFCPolylineStreamOrder):
        arcpy.Delete_management(outputFCPolylineStreamOrder)
+    if arcpy.Exists(outputFCJunctionPoints):
+        arcpy.Delete_management(outputFCJunctionPoints)
 
     # Preprocess Network
     ### This section could stall ArcGIS 10.1 with dissolve... 
@@ -108,6 +114,7 @@ def main(inputFCPolylineNetwork,
 
     arcpy.CopyFeatures_management(fcNetworkDissolved,outputFCPolylineStreamOrder)
     arcpy.DeleteIdentical_management(fcStreamOrderTransistionPoints,"Shape")
+    arcpy.CopyFeatures_management(fcStreamOrderTransistionPoints,outputFCJunctionPoints)
     return
 
 # # Other Functions # #
@@ -124,4 +131,5 @@ if __name__ == "__main__":
     main(sys.argv[1],
          sys.argv[2],
          sys.argv[3],
-         sys.argv[4])
+         sys.argv[4],
+         sys.argv[5])

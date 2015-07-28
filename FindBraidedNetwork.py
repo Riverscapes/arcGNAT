@@ -42,11 +42,10 @@ def main(fcStreamNetwork):
     fileGDB = descStreamNetwork.path
 
     # PolylinePrep
-    listFields = arcpy.ListFields(fcStreamNetwork,"IsBraidedReach")
+    listFields = arcpy.ListFields(fcStreamNetwork,"IsBraided")
     if len(listFields) is not 1:
-        arcpy.AddField_management(fcStreamNetwork,"IsBraidedReach","SHORT")
-    else:
-        arcpy.CalculateField_management(fcStreamNetwork,"IsBraidedReach",0,"PYTHON") #clear field
+        arcpy.AddField_management(fcStreamNetwork,"IsBraided","SHORT")
+    arcpy.CalculateField_management(fcStreamNetwork,"IsBraided",0,"PYTHON") #clear field
 
     # Process
     findBraidedReaches(fcStreamNetwork)
@@ -69,7 +68,7 @@ def findBraidedReaches(fcLines):
     arcpy.MakeFeatureLayer_management(fcLines,"lyrBraidedReaches")
     arcpy.MakeFeatureLayer_management("in_memory/DonutPolygons","lyrDonuts")
     arcpy.SelectLayerByLocation_management("lyrBraidedReaches","SHARE_A_LINE_SEGMENT_WITH","lyrDonuts",'',"NEW_SELECTION")
-    arcpy.CalculateField_management("lyrBraidedReaches","IsBraidedReach",1,"PYTHON")
+    arcpy.CalculateField_management("lyrBraidedReaches","IsBraided",1,"PYTHON")
 
 # # Run as Script # # 
 if __name__ == "__main__":

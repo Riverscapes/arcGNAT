@@ -24,23 +24,8 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="GNAT.pyt" />
     <Content Include="readme.md" />
-    <Content Include="StreamNetworkToolbox.BuildNetworkTopologyTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.CalculateRiverStylesTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.ChangeStartingVertexTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.CheckNetworkConnectivityTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.ConfinementTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.DividePolygonBySegmentsTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.DynamicSegmentationTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.FindBraidedNetworkTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.NetworkSegmentationTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.PlanformTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.pyt" />
-    <Content Include="StreamNetworkToolbox.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.SinuosityTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.StreamPlanformTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.TransferLineAttributesTool.pyt.xml" />
-    <Content Include="StreamNetworkToolbox.ValleyConfinementTool.pyt.xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BuildNetworkTopology.py" />
@@ -56,7 +41,9 @@
     <Compile Include="DividePolygonBySegment.py" />
     <Compile Include="DynamicSegmentation.py" />
     <Compile Include="FindBraidedNetwork.py" />
+    <Compile Include="FindCrossingLines.py" />
     <Compile Include="gis_tools.py" />
+    <Compile Include="MovingWindow.py" />
     <Compile Include="NetworkSegmentation.py" />
     <Compile Include="Sinuosity.py" />
     <Compile Include="StreamOrder.py">

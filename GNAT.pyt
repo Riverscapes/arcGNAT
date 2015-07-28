@@ -35,23 +35,26 @@ import TransferAttributesToLine
 import StreamOrder
 import Centerline
 import CombineAttributes
+import MovingWindow
+import FindCrossingLines
 
 class Toolbox(object):
     def __init__(self):
         """Define the toolbox (the name of the toolbox is the name of the
         .pyt file)."""
-        self.label = "Stream Network and Riverstyles Toolbox"
-        self.alias = 'Stream Network and Riverstyles'
-        self.description = "Tools for generating a Stream Network and for calculating Riverstyles Metrics."
+        self.label = "Geomorphic Network and Analysis Toolbox"
+        self.alias = 'GNAT'
+        self.description = "Tools for generating a Stream Network and for generating Geomorphic Attributes."
 
         # List of tool classes associated with this toolbox
         self.tools = [StreamOrderTool,
                       CheckNetworkConnectivityTool,
                       FindBraidedNetworkTool,
+                      FindCrossingLinesTool,
                       BuildNetworkTopologyTool,
                       #NetworkSegmentationTool,
                       #DynamicSegmentationTool,
-                      CalculateRiverStylesTool,
+                      CalculateGeomorphicAttributesTool,
                       ConfinementTool,
                       PlanformTool,
                       SinuosityTool,
@@ -59,7 +62,8 @@ class Toolbox(object):
                       ChangeStartingVertexTool,
                       TransferLineAttributesTool,
                       FluvialCorridorCenterlineTool,
-                      CombineAttributesTool]
+                      CombineAttributesTool,
+                      MovingWindowTool]
 
 # Stream Network Tools #
 class StreamOrderTool(object):
@@ -79,14 +83,14 @@ class StreamOrderTool(object):
             parameterType="Required",
             direction="Input")
         param1 = arcpy.Parameter(
-            displayName="Downstream Reach ID (in FID field)",
+            displayName="Downstream Reach ID",
             name="DownstreamReach",
             datatype="GPLong", #Integer
             parameterType="Required",
             direction="Input")
 
         param2 = arcpy.Parameter(
-            displayName="Output Stream Order Feature Class",
+            displayName="Output Line Network with Stream Order",
             name="outputStreamOrderFC",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -94,13 +98,23 @@ class StreamOrderTool(object):
         param2.filter.list = ["Polyline"]
 
         param3 = arcpy.Parameter(
+            displayName="Output Junction Points",
+            name="outputJunctionPointsFC",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Output")
+        param2.filter.list = ["Point"]
+
+        param4 = arcpy.Parameter(
             displayName="Scratch Workspace",
             name="InputTempWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
-        param3.filter.list = ["Local Database"]
-        return [param0,param1,param2,param3]
+        param4.filter.list = ["Local Database"]
+        param4.value = str(arcpy.env.scratchWorkspace)
+
+        return [param0,param1,param2,param3,param4]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -123,7 +137,8 @@ class StreamOrderTool(object):
         StreamOrder.main(p[0].valueAsText,
                          p[1].valueAsText,
                          p[2].valueAsText,
-                         p[3].valueAsText)
+                         p[3].valueAsText,
+                         p[4].valueAsText)
         return
 
 class CheckNetworkConnectivityTool(object):
@@ -272,14 +287,180 @@ class BuildNetworkTopologyTool(object):
 
         return
 
-# RiverStyles Tools #
-class CalculateRiverStylesTool(object):
+class FindCrossingLinesTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Calculate RiverStyles Attributes"
-        self.description = "Calculate Selected RiverStyles for segmented reaches."
+        self.label = "Find Crossing Lines"
+        self.description = ""
         self.canRunInBackground = True
-        self.category = "Riverstyles Tools"
+        self.category = "Stream Network Tools"
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input Stream Network",
+            name="InputStreamNetwork",
+            datatype="GPFeatureLayer", 
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Output Workspace",
+            name="Output Workspace",
+            datatype="DEWorkspace",
+            parameterType="Required",
+            direction="Input")
+
+        param2 = arcpy.Parameter(
+            displayName="Output Polygon Name",
+            name="Output Polygon",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+
+        param3 = arcpy.Parameter(
+            displayName="Scratch Workspace",
+            name="ScratchWorkspace",
+            datatype="DEWorkspace",
+            parameterType="Required",
+            direction="Input")
+
+        return [param0,param1,param2,param3]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        reload(FindCrossingLines)
+        FindCrossingLines.main(parameters[0].valueAsText,
+                               parameters[1].valueAsText,
+                               parameters[2].valueAsText,
+                               parameters[3].valueAsText)
+
+        return
+
+# Geomorphic Attributes Tools #
+class MovingWindowTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Moving Window"
+        self.description = "Calculate the Valley Confinement using a Moving Window on a Raw Confinement Polyline FC.  Tool Documentation: https://bitbucket.org/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/MovingWindow"
+        self.canRunInBackground = True
+        self.category = "Geomorphic Attributes Tools"
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input Stream Network with Confinement",
+            name="lineNetwork",
+            datatype="GPFeatureLayer", 
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Stream ID Field",
+            name="fieldStreamID",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+
+        param2 = arcpy.Parameter(
+            displayName="Attribute Field (Confinement)",
+            name="fieldAttribute",
+            datatype="GPString", 
+            parameterType="Required",
+            direction="Input")
+
+        param3 = arcpy.Parameter(
+            displayName="Seed Point Distance",
+            name="dblSeedPointDistance",
+            datatype="GPDouble",
+            parameterType="Required",
+            direction="Input")
+        #param3.value = 50
+
+        param4 = arcpy.Parameter(
+            displayName="Window Sizes",
+            name="inputWindowSizes",
+            datatype="GPDouble",
+            parameterType="Required",
+            direction="Input",
+            multiValue=True)
+        #param4.value = [50,100]
+
+        param5 = arcpy.Parameter(
+            displayName="Output Workspace",
+            name="strOutputWorkspace",
+            datatype="DEWorkspace",
+            parameterType="Optional",
+            direction="Input")
+        param5.value = str(arcpy.env.scratchWorkspace)
+        params = [param0,param1,param2,param3,param4,param5]
+        return params
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        if parameters[0].value:
+            # Get Fields
+            fields = arcpy.Describe(parameters[0].value).fields
+            listFields = []
+            for f in fields:
+                listFields.append(f.name)
+            parameters[1].filter.list=listFields
+            parameters[2].filter.list=listFields
+            # Test Projection
+            if arcpy.Describe(parameters[0].value).spatialReference.type <> u"Projected":
+                parameters[0].setErrorMessage("Input " + parameters[0].name + " must be in a Projected Coordinate System.")
+
+
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(MovingWindow)
+        setEnvironmentSettings()
+
+        MovingWindow.main(p[0].valueAsText,
+                          p[1].valueAsText,
+                          p[2].valueAsText,
+                          p[3].valueAsText,
+                          p[4].valueAsText,
+                          p[5].valueAsText)
+        return
+
+class CalculateGeomorphicAttributesTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Calculate Geomorphic Attributes"
+        self.description = "Calculate Selected Geomorphic for segmented reaches."
+        self.canRunInBackground = True
+        self.category = "Geomorphic Attributes Tools"
 
     def getParameterInfo(self):
         """Define parameter definitions"""
@@ -466,7 +647,7 @@ class ConfinementTool(object):
         self.label = "Valley Confinement"
         self.description = "Calculate the Valley Confinement for segmented reaches using the Stream Centerline, Channel Buffer, and Valley Bottom Polygon."
         self.canRunInBackground = True
-        self.category = "Riverstyles Tools"
+        self.category = "Geomorphic Attributes Tools"
 
     def getParameterInfo(self):
         """Define parameter definitions"""
@@ -582,7 +763,7 @@ class PlanformTool(object):
         self.label = "Stream Sinuosity and Planform"
         self.description = ""
         self.canRunInBackground = True
-        self.category = "Riverstyles Tools"
+        self.category = "Geomorphic Attributes Tools"
 
     def getParameterInfo(self):
         """Define parameter definitions"""
@@ -1305,6 +1486,7 @@ class CombineAttributesTool(object):
 
         return
 
+# Other Functions # 
 def setEnvironmentSettings():
     arcpy.env.OutputMFlag = "Disabled"
     arcpy.env.OutputZFlag = "Disabled"
