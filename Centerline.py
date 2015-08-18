@@ -63,7 +63,7 @@ def main(Polygon,Polyline,DisaggregationStep,Smoothing,Output,DeleteTF):
     arcpy.AddMessage("Looking for the extreme points of the input polyline - Step "  + str(ncurrentstep) + "/" + str(nstep))
 
     ExtremePoints = arcpy.FeatureVerticesToPoints_management(Polyline, "%ScratchWorkspace%\\ExtremePoints", "DANGLE") ### Simplified the method for finding Extreme Points to use line "dangles". This appears to have removed a bunch of extra extreme points found in the temp data.
-    ### Removed this section, I do not fully understand how this functions, but it does not appear to break the process.
+    ### KMW: Removed this section, I do not fully understand how this functions, but it does not appear to break the process.
     # arcpy.AddXY_management(ExtremePoints) 
     # arcpy.AddField_management(ExtremePoints, "Del", "SHORT")
     # ExtPts.ExtremePoints(ExtremePoints)

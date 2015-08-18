@@ -109,12 +109,19 @@ def main(inputFCPolylineNetwork,
 
         # Set up next round
         arcpy.SelectLayerByAttribute_management(lyrCalculate,"NEW_SELECTION",'"Stream_Order" = 0')
-        intFeaturesRemaining = int(arcpy.GetCount_management(lyrCalculate).getOutput(0))
+        intFeaturesCurrent = int(arcpy.GetCount_management(lyrCalculate).getOutput(0))
+        if intFeaturesRemaining == intFeaturesCurrent:
+            arcpy.AddError("The nuber of features remaining (" + str(intFeaturesCurrent) + " is the same as the last iteration.")
+        else:
+            intFeaturesRemaining = intFeaturesCurrent
         intIteration = intIteration + 1
 
-    arcpy.CopyFeatures_management(fcNetworkDissolved,outputFCPolylineStreamOrder)
+    # Outputs
+    arcpy.Intersect_analysis([fcNetworkDissolved,inputFCPolylineNetwork],outputFCPolylineStreamOrder)
+        
     arcpy.DeleteIdentical_management(fcStreamOrderTransistionPoints,"Shape")
     arcpy.CopyFeatures_management(fcStreamOrderTransistionPoints,outputFCJunctionPoints)
+    
     return
 
 # # Other Functions # #

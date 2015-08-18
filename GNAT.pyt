@@ -5,6 +5,7 @@
 #                                                                             #
 # Authors:     Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              Jesse Langdon (jesse@southforkresearch.org)                    #
+#              Jean Olson (jean@southforkresearch.org                         #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
@@ -37,6 +38,7 @@ import Centerline
 import CombineAttributes
 import MovingWindow
 import FindCrossingLines
+import GenerateStreamBranches
 
 class Toolbox(object):
     def __init__(self):
@@ -48,13 +50,14 @@ class Toolbox(object):
 
         # List of tool classes associated with this toolbox
         self.tools = [StreamOrderTool,
+                      StreamBranchesTool,
                       CheckNetworkConnectivityTool,
                       FindBraidedNetworkTool,
                       FindCrossingLinesTool,
-                      BuildNetworkTopologyTool,
+                      #BuildNetworkTopologyTool,
                       #NetworkSegmentationTool,
                       #DynamicSegmentationTool,
-                      CalculateGeomorphicAttributesTool,
+                      #CalculateGeomorphicAttributesTool,
                       ConfinementTool,
                       PlanformTool,
                       SinuosityTool,
@@ -69,7 +72,7 @@ class Toolbox(object):
 class StreamOrderTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Generate Stream Order for the Stream Network"
+        self.label = "Calculate Stream Order"
         self.description = "Generate Stream Order for the Stream Network."
         self.canRunInBackground = True
         self.category = "Stream Network Tools"
@@ -82,6 +85,7 @@ class StreamOrderTool(object):
             datatype="GPFeatureLayer",
             parameterType="Required",
             direction="Input")
+
         param1 = arcpy.Parameter(
             displayName="Downstream Reach ID",
             name="DownstreamReach",
@@ -103,7 +107,7 @@ class StreamOrderTool(object):
             datatype="DEFeatureClass",
             parameterType="Required",
             direction="Output")
-        param2.filter.list = ["Point"]
+        param3.filter.list = ["Point"]
 
         param4 = arcpy.Parameter(
             displayName="Scratch Workspace",
@@ -133,12 +137,109 @@ class StreamOrderTool(object):
 
     def execute(self, p, messages):
         """The source code of the tool."""
+
         reload(StreamOrder)
         StreamOrder.main(p[0].valueAsText,
                          p[1].valueAsText,
                          p[2].valueAsText,
                          p[3].valueAsText,
                          p[4].valueAsText)
+        return
+
+class StreamBranchesTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Generate Stream Branches"
+        self.description = "Generate Stream Branches for the Stream Network."
+        self.canRunInBackground = True
+        self.category = "Stream Network Tools"
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input Stream Network",
+            name="InputStreamNetwork",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Input Junction Points",
+            name="InputJunctionPoints",
+            datatype="GPFeatureLayer",
+            parameterType="Optional",
+            direction="Input")
+        param1.filter.list = ["Point","Multipoint"]
+
+        param2 = arcpy.Parameter(
+            displayName="Stream (GNIS) Name Field",
+            name="fieldStreamName",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+
+        param3 = arcpy.Parameter(
+            displayName="Output Line Network with Stream Order",
+            name="outputStreamOrderFC",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Output")
+        param3.filter.list = ["Polyline"]
+
+        param4 = arcpy.Parameter(
+            displayName="Scratch Workspace",
+            name="InputTempWorkspace",
+            datatype="DEWorkspace", 
+            parameterType="Optional",
+            direction="Input")
+        param4.filter.list = ["Local Database"]
+
+        return [param0,param1,param2,param3,param4]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+
+        if parameters[0].value:
+            if arcpy.Exists(parameters[0].value):
+                # Get Fields
+                fields = arcpy.Describe(parameters[0].value).fields
+                listFields = []
+                for f in fields:
+                    listFields.append(f.name)
+                parameters[2].filter.list=listFields
+                if not parameters[2].altered:
+                    if "GNIS_Name" in listFields:
+                        parameters[2].value="GNIS_Name"
+            else:
+                parameters[2].filter.list=[]
+                parameters[0].setErrorMessage("Dataset does not exist.")
+
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+
+        testProjected(parameters[0])
+        testProjected(parameters[1])
+
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(GenerateStreamBranches)
+        GenerateStreamBranches.main(p[0].valueAsText,
+                                    p[1].valueAsText,
+                                    p[2].valueAsText,
+                                    p[3].valueAsText,
+                                    getTempWorkspace(p[4].valueAsText))
         return
 
 class CheckNetworkConnectivityTool(object):
@@ -160,13 +261,20 @@ class CheckNetworkConnectivityTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Downstream Reach ID (in FID field)",
-            name="DownstreamReach",
-            datatype="GPLong", #Integer
+            displayName="ObjectID or FID field",
+            name="DownstreamReachField",
+            datatype="GPString",
             parameterType="Required",
             direction="Input")
 
-        return [param0,param1]
+        param2 = arcpy.Parameter(
+            displayName="Downstream Reach ID",
+            name="DownstreamReachID",
+            datatype="GPLong",
+            parameterType="Required",
+            direction="Input")
+
+        return [param0,param1,param2]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -176,18 +284,38 @@ class CheckNetworkConnectivityTool(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
+        
+        if parameters[0].value:
+            if arcpy.Exists(parameters[0].value):
+                # Get Fields
+                fields = arcpy.Describe(parameters[0].value).fields
+                listFields = []
+                for f in fields:
+                    listFields.append(f.name)
+                parameters[1].filter.list=listFields
+                if "OBJECTID" in listFields:
+                    parameters[1].value="OBJECTID"
+                elif "FID" in listFields:
+                    parameters[1].value="FID"
+            else:
+                parameters[1].filter.list=[]
+                parameters[0].setErrorMessage(" Dataset does not exist.")
         return
 
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
+        
+        testProjected(parameters[0])
+        
         return
 
     def execute(self, p, messages):
         """The source code of the tool."""
         reload(CheckNetworkConnectivity)
         CheckNetworkConnectivity.main(p[0].valueAsText,
-                                      p[1].valueAsText)
+                                      p[1].valueAsText,
+                                      p[2].valueAsText)
         return
 
 class FindBraidedNetworkTool(object):
@@ -222,6 +350,8 @@ class FindBraidedNetworkTool(object):
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
+        
+        testProjected(parameters[0])
         return
 
     def execute(self, parameters, messages):
@@ -341,6 +471,8 @@ class FindCrossingLinesTool(object):
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
+        
+        testProjected(parameters[0])
         return
 
     def execute(self, parameters, messages):
@@ -373,7 +505,7 @@ class MovingWindowTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Stream ID Field",
+            displayName="Stream Branch ID Field",
             name="fieldStreamID",
             datatype="GPString",
             parameterType="Required",
@@ -408,7 +540,9 @@ class MovingWindowTool(object):
             name="strOutputWorkspace",
             datatype="DEWorkspace",
             parameterType="Optional",
-            direction="Input")
+            direction="Input",
+            category="Outputs")
+
         param5.value = str(arcpy.env.scratchWorkspace)
         params = [param0,param1,param2,param3,param4,param5]
         return params
@@ -422,23 +556,28 @@ class MovingWindowTool(object):
         validation is performed.  This method is called whenever a parameter
         has been changed."""
         if parameters[0].value:
-            # Get Fields
-            fields = arcpy.Describe(parameters[0].value).fields
-            listFields = []
-            for f in fields:
-                listFields.append(f.name)
-            parameters[1].filter.list=listFields
-            parameters[2].filter.list=listFields
-            # Test Projection
-            if arcpy.Describe(parameters[0].value).spatialReference.type <> u"Projected":
-                parameters[0].setErrorMessage("Input " + parameters[0].name + " must be in a Projected Coordinate System.")
-
-
+            if arcpy.Exists(parameters[0].value):
+                # Get Fields
+                fields = arcpy.Describe(parameters[0].value).fields
+                listFields = []
+                for f in fields:
+                    listFields.append(f.name)
+                parameters[1].filter.list=listFields
+                if "BranchID" in listFields:
+                    parameters[1].value="BranchID"
+                parameters[2].filter.list=listFields
+            else:
+                parameters[1].filter.list=[]
+                parameters[2].filter.list=[]
+                parameters[0].setErrorMessage(" Dataset does not exist.")
         return
 
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
+
+        testProjected(parameters[0])
+
         return
 
     def execute(self, p, messages):
@@ -753,7 +892,7 @@ class ConfinementTool(object):
                                p[4].valueAsText,
                                p[5].valueAsText,
                                p[6].valueAsText,
-                               p[7].valueAsText,
+                               getTempWorkspace(p[7].valueAsText),
                                p[8].valueAsText)
         return
 
@@ -814,8 +953,16 @@ class PlanformTool(object):
             parameterType="Required",
             direction="Output")
         param5.filter.list = ["Polyline"]
+
+        param6 = arcpy.Parameter(
+            displayName="Save Temp Files to Scratch Workspace",
+            name="scratchWorkspace",
+            datatype="DEWorkspace", 
+            parameterType="Optional",
+            direction="Input")
+        param3.filter.list = ["Local Database"]
         
-        return [param0,param1,param2,param3,param4,param5]
+        return [param0,param1,param2,param3,param4,param5,param6]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -843,7 +990,8 @@ class PlanformTool(object):
                             p[2].valueAsText,
                             p[3].valueAsText,
                             p[4].valueAsText,
-                            p[5].valueAsText)
+                            p[5].valueAsText,
+                            getTempWorkspace(p[6].valueAsText))
         return
 
 # Utilities #
@@ -1075,8 +1223,16 @@ class SinuosityTool(object):
             parameterType="Required",
             direction="Input")
         param1.value = "Sinuosity"
+
+        param3 = arcpy.Parameter(
+            displayName="Save Temp Files to Scratch Workspace",
+            name="scratchWorkspace",
+            datatype="DEWorkspace", 
+            parameterType="Optional",
+            direction="Input")
+        param3.filter.list = ["Local Database"]
         
-        return [param0,param1]
+        return [param0,param1,param3]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -1101,7 +1257,8 @@ class SinuosityTool(object):
 
         Sinuosity.main(
             p[0].valueAsText,
-            p[1].valueAsText)
+            p[1].valueAsText,
+            getTempWorkspace(p[2].valueAsText))
 
         return
 
@@ -1296,8 +1453,16 @@ class TransferLineAttributesTool(object):
             parameterType="Required",
             direction="Output")
         param4.filter.list = ["Polyline"]
+
+        param5 = arcpy.Parameter(
+            displayName="Save Temp Files to Scratch Workspace",
+            name="scratchWorkspace",
+            datatype="DEWorkspace", 
+            parameterType="Optional",
+            direction="Input")
+        param5.filter.list = ["Local Database"]
         
-        return [param0,param1,param2,param3,param4]
+        return [param0,param1,param2,param3,param4,param5]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -1324,7 +1489,8 @@ class TransferLineAttributesTool(object):
                                       p[1].valueAsText,
                                       p[2].valueAsText,
                                       p[3].valueAsText,
-                                      p[4].valueAsText)
+                                      p[4].valueAsText,
+                                      getTempWorkspace(p[5].valueAsText))
 
         return
 
@@ -1492,3 +1658,21 @@ def setEnvironmentSettings():
     arcpy.env.OutputZFlag = "Disabled"
      
     return
+
+def getTempWorkspace(strWorkspaceParameter):
+
+    if strWorkspaceParameter == None or strWorkspaceParameter == "":
+        return "in_memory"
+    else:
+       return strWorkspaceParameter
+
+def testProjected(parameter):
+    
+    # Test Projection
+    if parameter.value:
+        if arcpy.Exists(parameter.value):
+            if arcpy.Describe(parameter.value).spatialReference.type <> u"Projected":
+                parameter.setErrorMessage("Input " + parameter.name + " must be in a Projected Coordinate System.")
+                return False
+            else:
+                return True

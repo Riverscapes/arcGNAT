@@ -29,7 +29,7 @@ def main(fcInputStreamLineNetwork,
          fcOutputConfinementSegments,
          boolConfinementbySegment,
          boolChannelIsSegmented,
-         scratchWorkspace=arcpy.env.scratchWorkspace,
+         scratchWorkspace,
          maxXSectionWidth=500.0):
 
     ## Reload modules and Prepare processing environments
@@ -134,9 +134,12 @@ def main(fcInputStreamLineNetwork,
     DividePolygonBySegment.main(fcInputStreamLineNetwork,fcConfinedChannel,fcChannelSegmentPolygons,scratchWorkspace)
     #arcpy.Copy_management(fcConfinedChannel,fcChannelSegmentPolygons)
     arcpy.PolygonToLine_management(fcChannelSegmentPolygons,fcChannelSegmentPolygonLines)
-    arcpy.Near_analysis(fcStreamNetworkDangles,fcChannelSegmentPolygonLines,location="LOCATION")
-    arcpy.AddXY_management(fcStreamNetworkDangles)
-    arcpy.XYToLine_management(fcStreamNetworkDangles,
+    lyrStreamNetworkDangles = gis_tools.newGISDataset("LAYER", "lyrStreamNetworkDangles")
+    arcpy.MakeFeatureLayer_management(fcStreamNetworkDangles,lyrStreamNetworkDangles)
+    arcpy.SelectLayerByLocation_management(lyrStreamNetworkDangles,"INTERSECT",fcConfinedChannel)
+    arcpy.Near_analysis(lyrStreamNetworkDangles,fcChannelSegmentPolygonLines,location="LOCATION")
+    arcpy.AddXY_management(lyrStreamNetworkDangles)
+    arcpy.XYToLine_management(lyrStreamNetworkDangles,
                                 fcChannelBankNearLines,
                                 "POINT_X",
                                 "POINT_Y",
@@ -232,7 +235,7 @@ def main(fcInputStreamLineNetwork,
     arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Confinement_Type","'NONE'","PYTHON")
 
     # Loop through Segments to Calculate Confinement for Each Segment
-    if boolConfinementbySegment is True:
+    if boolConfinementbySegment == "true":
 
         # Copy Line Network for Final Output and Prepare Fields
         if arcpy.Exists(fcOutputConfinementSegments):

@@ -33,6 +33,9 @@ def main(fcInputCenterline,
     arcpy.AddMessage("GNAT DPS: Saving Polygon Results to: " + fcSegmentedPolygons)
     arcpy.AddMessage("GNAT DPS: Saving Temporary Files to: " + workspaceTemp)
 
+    arcpy.env.OutputMFlag = "Disabled"
+    arcpy.env.OutputZFlag = "Disabled"
+
     ## Copy Centerline to Temp Workspace
     fcCenterline = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_Centerline")
     arcpy.CopyFeatures_management(fcInputCenterline,fcCenterline)
@@ -43,7 +46,8 @@ def main(fcInputCenterline,
     arcpy.Densify_edit(fcCenterline,"DISTANCE",str(dblPointDensity) + " METERS")
 
     fcTribJunctionPoints = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_TribJunctionPoints") # All Segment Junctions??
-    gis_tools.findSegmentJunctions(fcCenterline,fcTribJunctionPoints,"ALL")
+    #gis_tools.findSegmentJunctions(fcCenterline,fcTribJunctionPoints,"ALL")
+    arcpy.Intersect_analysis(fcCenterline,fcTribJunctionPoints,output_type="POINT")
 
     fcThiessanPoints = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_ThiessanPoints")
     arcpy.FeatureVerticesToPoints_management(fcCenterline,fcThiessanPoints,"ALL")

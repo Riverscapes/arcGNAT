@@ -8,8 +8,8 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     1.1                                                            #
-# Modified:    2015-Apr-23                                                    #
+# Version:     1.3                                                            #
+# Modified:    2015-Jul-29                                                    #
 #                                                                             #
 # Copyright:   (c) Kelly Whitehead 2015                                       #
 #                                                                             #
@@ -23,23 +23,23 @@ import gis_tools
 import Sinuosity
 import TransferAttributesToLine
 
-def main(fcStreamNetwork,fcValleyCenterline,fcValleyBottomPolygon,outputFCSinuosityChannel,outputFCSinuosityValley,outputFCPlanform):
+def main(fcStreamNetwork,fcValleyCenterline,fcValleyBottomPolygon,outputFCSinuosityChannel,outputFCSinuosityValley,outputFCPlanform,workspaceTemp="In_Memory"):
     
     ## Set Workspace and Reset Modules
-    tempWorkspace=arcpy.env.scratchWorkspace
     reload(TransferAttributesToLine)
+    reload(Sinuosity)
 
     ## Calculate Valley Sinuosity for each Channel Network segment
     if arcpy.Exists(outputFCSinuosityChannel):
         arcpy.Delete_management(outputFCSinuosityChannel)
     arcpy.CopyFeatures_management(fcStreamNetwork,outputFCSinuosityChannel)
-    Sinuosity.main(outputFCSinuosityChannel,"Channel_Sinuosity")
+    Sinuosity.main(outputFCSinuosityChannel,"Channel_Sinuosity",workspaceTemp)
     
     ## Calculate Centerline Sinuosity for each Valley centerline segment.
     if arcpy.Exists(outputFCSinuosityValley):
         arcpy.Delete_management(outputFCSinuosityValley)
     arcpy.CopyFeatures_management(fcValleyCenterline,outputFCSinuosityValley)
-    Sinuosity.main(outputFCSinuosityValley,"Valley_Sinuosity")
+    Sinuosity.main(outputFCSinuosityValley,"Valley_Sinuosity",workspaceTemp)
 
     ## Determine if Valley Polygon is Segmented
     #intRows = arcpy.GetCount_management(fcValleyBottomPolygon)
@@ -56,7 +56,8 @@ def main(fcStreamNetwork,fcValleyCenterline,fcValleyBottomPolygon,outputFCSinuos
                                   outputFCSinuosityChannel,
                                   fcValleyBottomPolygon,
                                   bool_IsSegmented,
-                                  outputFCPlanform)
+                                  outputFCPlanform,
+                                  workspaceTemp)
 
     ## Calculate Planform for each segment
     # Planform = channel sinuosity/valley sinuosity

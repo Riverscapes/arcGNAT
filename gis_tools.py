@@ -7,8 +7,8 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     1.1                                                            #
-# Modified:    2015-Jan-08                                                    #
+# Version:     1.3                                                            #
+# Modified:    2015-Aug-12                                                    #
 #                                                                             #
 # Copyright:   (c) Kelly Whitehead 2015                                       #
 #                                                                             #
@@ -29,13 +29,19 @@ def resetData(inputDataset):
     return
 
 def newGISDataset(workspace, inputDatasetName):
-    #arcpy.AddMessage("New GeoDataset: " + str(workspace) + " " + str(inputDatasetName))
-    if workspace == "Layer":
+    """ workspace = "LAYER", "in_memory", folder or gdb"""
+    if arcpy.Exists(workspace):
+        if arcpy.Describe(workspace).workspaceType == "LocalDatabase" or workspace == "in_memory":
+            ext = ""
+        else:
+            ext = ".shp"
+
+    if workspace == "LAYER" or workspace == "layer" or workspace == "Layer":
         inputDataset = inputDatasetName
         if arcpy.Exists(inputDataset):
             arcpy.Delete_management(inputDataset)
     else:
-        inputDataset = workspace + "\\" + inputDatasetName
+        inputDataset = workspace + "\\" + inputDatasetName + ext
         if arcpy.Exists(inputDataset):
             arcpy.Delete_management(inputDataset)
 
@@ -238,14 +244,55 @@ def addUniqueIDField(fcInputFeatureClass,fieldName):
     resetField(fcInputFeatureClass,fieldName,"LONG")
     arcpy.AddField_management(fcInputFeatureClass,fieldName,"LONG")
     codeBlock = """
-        counter = 0
-        def UniqueID():
-            global counter
-            counter += 1
-            return counter"""
+counter = 0
+def UniqueID():
+    global counter
+    counter += 1
+    return counter"""
+
     arcpy.CalculateField_management(fcInputFeatureClass,fieldName,"UniqueID()","PYTHON",codeBlock)
 
     return fieldName
 
+class WorkspaceManager(object):
+    """ object to manage files while geoprocessing """
+
+    def __init__(self,temporaryWorkspace,outputWorkspace):
+        
+        self.outputWorkspace = outputWorkspace
+        self.tempWorkspace = temporaryWorkspace
+        self.listTempFiles = []
+        self.listOutputFiles = []
+        return
+
+    def tempLayer(self,layerName):
+        if arcpy.Exists(layerName):
+            arcpy.Delete_management(layerName)
+        return layerName 
+
+    def outputDataset(self,filename):
+        
+        outputFileName = newGISDataset(self.outputWorkspace,filename)
+        self.listOutputFiles.append(outputFileName)
+        
+        return outputFileName
+
+    def tempDataset(self,filename):        
+        
+        tempFileName = newGISDataset(self.tempWorkspace,filename)
+        self.listTempFiles.append(tempFileName)
+
+        return tempFileName
+    
+    def clearTempWorkspace(self):
+
+        for file in self.listTempFiles:
+            if arcpy.Exists(file):
+                arcpy.Delete_management(file)
+            self.listTempFiles = self.listTempFiles.remove(file)
+        
+        return 
+
 if __name__ == "__main__":
     print("gis_tools.py is not an executable python script.")
+
