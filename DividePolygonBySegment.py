@@ -25,7 +25,7 @@ import ChangeStartingVertex
 def main(fcInputCenterline,
          fcInputPolygon,
          fcSegmentedPolygons,
-         workspaceTemp=arcpy.env.scratchWorkspace,
+         workspaceTemp,
          dblPointDensity=10.0,
          dblJunctionBuffer=120.00):
     
@@ -35,6 +35,8 @@ def main(fcInputCenterline,
 
     arcpy.env.OutputMFlag = "Disabled"
     arcpy.env.OutputZFlag = "Disabled"
+
+    arcpy.AddMessage("arcpy M Output Flag: " + str(arcpy.env.OutputMFlag))
 
     ## Copy Centerline to Temp Workspace
     fcCenterline = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_Centerline")

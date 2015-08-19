@@ -10,8 +10,8 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     1.1                                                            #
-# Released:    2015-Apr-27                                                    #
+# Version:     1.3                                                            #
+# Released:                                                        #
 #                                                                             #
 # License:     Free to use.                                                   #
 #                                                                             #
@@ -21,7 +21,6 @@
 # # Import Modules # #
 import arcpy
 from os import path
-#import gis_tools
 import BuildNetworkTopology
 import FindBraidedNetwork
 import CheckNetworkConnectivity
@@ -157,7 +156,7 @@ class StreamBranchesTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Input Stream Network",
+            displayName="Input Stream Network (with Stream Order)",
             name="InputStreamNetwork",
             datatype="GPFeatureLayer",
             parameterType="Required",
@@ -180,7 +179,7 @@ class StreamBranchesTool(object):
             direction="Input")
 
         param3 = arcpy.Parameter(
-            displayName="Output Line Network with Stream Order",
+            displayName="Output Line Network with Branch ID",
             name="outputStreamOrderFC",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -878,6 +877,14 @@ class ConfinementTool(object):
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
+        
+        testProjected(parameters[0])
+        testProjected(parameters[1])
+        testProjected(parameters[2])
+        testMValues(parameters[0])
+        testMValues(parameters[1])
+        testMValues(parameters[2])
+
         return
 
     def execute(self, p, messages):
@@ -1673,6 +1680,15 @@ def testProjected(parameter):
         if arcpy.Exists(parameter.value):
             if arcpy.Describe(parameter.value).spatialReference.type <> u"Projected":
                 parameter.setErrorMessage("Input " + parameter.name + " must be in a Projected Coordinate System.")
+                return False
+            else:
+                return True
+
+def testMValues(parameter):
+    if parameter.value:
+        if arcpy.Exists(parameter.value):
+            if arcpy.Describe(parameter.value).hasM is True:
+                parameter.setWarningMessage("Input " + parameter.name + " shoud not be M-enabled. Make sure to Disable M-values in the Environment Settings for this tool.")
                 return False
             else:
                 return True
