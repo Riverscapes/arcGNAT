@@ -421,7 +421,7 @@ class BuildNetworkTopologyTool(object):
 class FindCrossingLinesTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Find Crossing Lines"
+        self.label = "Find Crossing Network Lines"
         self.description = ""
         self.canRunInBackground = True
         self.category = "Stream Network Tools"
@@ -995,7 +995,7 @@ class PlanformTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Input Stream Network",
+            displayName="Input Segmented Stream Network",
             name="InputFCStreamNetwork",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -1003,7 +1003,7 @@ class PlanformTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Valley Centerline",
+            displayName="Input Segmented Valley Centerline",
             name="InputFCValleyCenterline",
             datatype="GPFeatureLayer",
             parameterType="Required",
@@ -1011,7 +1011,7 @@ class PlanformTool(object):
         param1.filter.list = ["Polyline"]
 
         param2 = arcpy.Parameter(
-            displayName="Valley Bottom Polygon",
+            displayName="Input Valley Bottom Polygon",
             name="InputFCValleyPolygon",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -1019,7 +1019,7 @@ class PlanformTool(object):
         param2.filter.list = ["Polygon"]
 
         param3 = arcpy.Parameter(
-            displayName="Output Stream Centerline with Sinuosity",
+            displayName="Output Stream Network with Sinuosity Attribute",
             name="OutputFCCenterline",
             datatype="DEFeatureClass", 
             parameterType="Required",
@@ -1027,7 +1027,7 @@ class PlanformTool(object):
         param3.filter.list = ["Polyline"]
 
         param4 = arcpy.Parameter(
-            displayName="Output Valley Centerline with Sinuosity",
+            displayName="Output Valley Centerline with Sinuosity Attribute",
             name="OutputFCValleyCenterline",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -1035,7 +1035,7 @@ class PlanformTool(object):
         param4.filter.list = ["Polyline"]
 
         param5 = arcpy.Parameter(
-            displayName="Output Planform Network",
+            displayName="Output Stream Netwokr with Planform Attribute",
             name="OutputFCPlanformCenterline",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -1043,7 +1043,7 @@ class PlanformTool(object):
         param5.filter.list = ["Polyline"]
 
         param6 = arcpy.Parameter(
-            displayName="Save Temp Files to Scratch Workspace",
+            displayName="Scratch Workspace",
             name="scratchWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
