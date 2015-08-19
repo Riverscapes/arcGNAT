@@ -38,6 +38,7 @@ import CombineAttributes
 import MovingWindow
 import FindCrossingLines
 import GenerateStreamBranches
+import OutsideValleyBottom
 
 class Toolbox(object):
     def __init__(self):
@@ -65,7 +66,8 @@ class Toolbox(object):
                       TransferLineAttributesTool,
                       FluvialCorridorCenterlineTool,
                       CombineAttributesTool,
-                      MovingWindowTool]
+                      MovingWindowTool,
+                      OutsideValleyBottomTool]
 
 # Stream Network Tools #
 class StreamOrderTool(object):
@@ -481,6 +483,85 @@ class FindCrossingLinesTool(object):
                                parameters[1].valueAsText,
                                parameters[2].valueAsText,
                                parameters[3].valueAsText)
+
+        return
+
+class OutsideValleyBottomTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Find Network Outside Polygon"
+        self.description = ""
+        self.canRunInBackground = True
+        self.category = "Stream Network Tools"
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+
+        param0 = arcpy.Parameter(
+            displayName="Input Stream Network",
+            name="InputStreamNetwork",
+            datatype="GPFeatureLayer", 
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Input Valley Bottom Polygon",
+            name="InputVBPolygon",
+            dataType="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        param1.filter.list = ["Polygon"]
+        
+        param2 = arcpy.Parameter(
+            displayName="Output Workspace",
+            name="Output Workspace",
+            datatype="DEWorkspace",
+            parameterType="Required",
+            direction="Input")
+
+        param3 = arcpy.Parameter(
+            displayName="Scratch Workspace",
+            name="ScratchWorkspace",
+            datatype="DEWorkspace",
+            parameterType="Required",
+            direction="Input")
+        
+        param4 = arcpy.Parameter(
+            displayName="Output Stream Network",
+            name="OutputStreamNetwork",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+
+        return [param0,param1,param2,param3,param4]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        
+        testProjected(parameters[0])
+        testProjected(parameters[1])
+        return
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        reload(OutsideValleyBottom)
+        OutsideValleyBottom.main(parameters[0].valueAsText,
+                                 parameters[1].valueAsText,
+                                 parameters[2].valueAsText,
+                                 parameters[3].valueAsText,
+                                 parameters[4].valueAsText)
 
         return
 
