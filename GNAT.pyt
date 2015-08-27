@@ -30,7 +30,7 @@ import ValleyConfinement
 import ValleyPlanform
 import Sinuosity
 import DividePolygonBySegment
-import ChangeStartingVertex
+#import ChangeStartingVertex
 import TransferAttributesToLine
 import StreamOrder
 import Centerline
@@ -39,6 +39,7 @@ import MovingWindow
 import FindCrossingLines
 import GenerateStreamBranches
 import OutsideValleyBottom
+import CopyBranchID
 
 class Toolbox(object):
     def __init__(self):
@@ -62,12 +63,13 @@ class Toolbox(object):
                       PlanformTool,
                       SinuosityTool,
                       DividePolygonBySegmentsTool,
-                      ChangeStartingVertexTool,
+                      #ChangeStartingVertexTool,
                       TransferLineAttributesTool,
                       FluvialCorridorCenterlineTool,
                       CombineAttributesTool,
                       MovingWindowTool,
-                      OutsideValleyBottomTool]
+                      OutsideValleyBottomTool,
+                      CopyBranchIDTool]
 
 # Stream Network Tools #
 class StreamOrderTool(object):
@@ -508,7 +510,7 @@ class OutsideValleyBottomTool(object):
         param1 = arcpy.Parameter(
             displayName="Input Valley Bottom Polygon",
             name="InputVBPolygon",
-            dataType="GPFeatureLayer",
+            datatype="GPFeatureLayer",
             parameterType="Required",
             direction="Input")
         param1.filter.list = ["Polygon"]
@@ -562,6 +564,87 @@ class OutsideValleyBottomTool(object):
                                  parameters[2].valueAsText,
                                  parameters[3].valueAsText,
                                  parameters[4].valueAsText)
+
+        return
+
+class CopyBranchIDTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Copy Stream BranchID"
+        self.description = "Copy the Stream Branch ID from one Network to another."
+        self.canRunInBackground = True
+        self.category = "Stream Network Tools"
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+
+        param0 = arcpy.Parameter(
+            displayName="Input Stream Network with BranchID",
+            name="InputStreamNetwork",
+            datatype="GPFeatureLayer", 
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Stream Branch ID Field",
+            name="fieldBranchID",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+        
+        param2 = arcpy.Parameter(
+            displayName="Input Target Line Network",
+            name="TargetLineNetwork",
+            datatype="GPFeatureLayer", 
+            parameterType="Required",
+            direction="Input")
+        param2.filter.list = ["Polyline"]
+        
+        param3 = arcpy.Parameter(
+            displayName="Output Line Network with Branch ID",
+            name="outputStreamOrderFC",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Output")
+        param3.filter.list = ["Polyline"]
+
+        param4 = arcpy.Parameter(
+            displayName="Scratch Workspace",
+            name="ScratchWorkspace",
+            datatype="DEWorkspace",
+            parameterType="Optional",
+            direction="Input")
+
+        return [param0,param1,param2,param3,param4]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        populateFields(parameters[0],parameters[1],"BranchID")
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        
+        testProjected(parameters[0])
+        testProjected(parameters[2])
+        return
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        reload(CopyBranchID)
+        CopyBranchID.main(parameters[0].valueAsText,
+                          parameters[1].valueAsText,
+                          parameters[2].valueAsText,
+                          parameters[3].valueAsText,
+                          getTempWorkspace(parameters[4].valueAsText))
 
         return
 
@@ -1439,58 +1522,58 @@ class DividePolygonBySegmentsTool(object):
 
         return
 
-class ChangeStartingVertexTool(object):
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "Change Starting Vertex of Polygons"
-        self.description = "Changes the Starting Vertex of a set of Polygons based on a point layer."
-        self.canRunInBackground = True
-        self.category = "Utilities"
+#class ChangeStartingVertexTool(object):
+#    def __init__(self):
+#        """Define the tool (tool name is the name of the class)."""
+#        self.label = "Change Starting Vertex of Polygons"
+#        self.description = "Changes the Starting Vertex of a set of Polygons based on a point layer."
+#        self.canRunInBackground = True
+#        self.category = "Utilities"
 
-    def getParameterInfo(self):
-        """Define parameter definitions"""
-        param0 = arcpy.Parameter(
-            displayName="First Vetex Points",
-            name="InputFCPoint",
-            datatype="GPFeatureLayer", 
-            parameterType="Required",
-            direction="Input")
-        param0.filter.list = ["Point"]
+#    def getParameterInfo(self):
+#        """Define parameter definitions"""
+#        param0 = arcpy.Parameter(
+#            displayName="First Vetex Points",
+#            name="InputFCPoint",
+#            datatype="GPFeatureLayer", 
+#            parameterType="Required",
+#            direction="Input")
+#        param0.filter.list = ["Point"]
 
-        param1 = arcpy.Parameter(
-            displayName="Polygons",
-            name="InputFCPolygon",
-            datatype="GPFeatureLayer", 
-            parameterType="Required",
-            direction="Input")
-        param1.filter.list = ["Polygon"]       
+#        param1 = arcpy.Parameter(
+#            displayName="Polygons",
+#            name="InputFCPolygon",
+#            datatype="GPFeatureLayer", 
+#            parameterType="Required",
+#            direction="Input")
+#        param1.filter.list = ["Polygon"]       
         
-        return [param0,param1]
+#        return [param0,param1]
 
-    def isLicensed(self):
-        """Set whether tool is licensed to execute."""
-        return True
+#    def isLicensed(self):
+#        """Set whether tool is licensed to execute."""
+#        return True
 
-    def updateParameters(self, parameters):
-        """Modify the values and properties of parameters before internal
-        validation is performed.  This method is called whenever a parameter
-        has been changed."""
+#    def updateParameters(self, parameters):
+#        """Modify the values and properties of parameters before internal
+#        validation is performed.  This method is called whenever a parameter
+#        has been changed."""
 
-        return
+#        return
 
-    def updateMessages(self, parameters):
-        """Modify the messages created by internal validation for each tool
-        parameter.  This method is called after internal validation."""
-        return
+#    def updateMessages(self, parameters):
+#        """Modify the messages created by internal validation for each tool
+#        parameter.  This method is called after internal validation."""
+#        return
 
-    def execute(self, p, messages):
-        """The source code of the tool."""
-        reload(ChangeStartingVertex)
+#    def execute(self, p, messages):
+#        """The source code of the tool."""
+#        reload(ChangeStartingVertex)
 
-        ChangeStartingVertex.main(p[0].valueAsText,
-                                  p[1].valueAsText)
+#        ChangeStartingVertex.main(p[0].valueAsText,
+#                                  p[1].valueAsText)
 
-        return
+#        return
 
 class TransferLineAttributesTool(object):
     def __init__(self):
@@ -1773,3 +1856,22 @@ def testMValues(parameter):
                 return False
             else:
                 return True
+
+def populateFields(parameterSource,parameterField,strDefaultFieldName):
+    if parameterSource.value:
+        if arcpy.Exists(parameterSource.value):
+            # Get Fields
+            fields = arcpy.Describe(parameterSource.value).fields
+            listFields = []
+            for f in fields:
+                listFields.append(f.name)
+            parameterField.filter.list=listFields
+            if strDefaultFieldName in listFields:
+                parameterField.value=strDefaultFieldName
+            else:
+                parameterField.value=""
+        else:
+            parameterField.filter.list=[]
+            parameterSource.setErrorMessage(" Dataset does not exist.")
+
+    return

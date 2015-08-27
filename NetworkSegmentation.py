@@ -19,6 +19,7 @@ import sys
 import math
 import arcpy
 from gis_tools import *
+import geometry_functions
 
 lyrLineNetwork = "lyrLineNetwork"
 outputPath = "C:\\GIS\\StreamNetwork"
@@ -171,7 +172,7 @@ def main(fcInputLineNetwork,intOutflowReachID,fcValleyPolygon,DEM,minSegmentLeng
         
         #resetData(fcAngleName)
         #arcpy.CopyFeatures_management(fcAngleLines,fcAngleName)
-        rotateFeatures(fcAngleLines,fcAngleName,angle)
+        geometry_functions.rotateFeatures(fcAngleLines,fcAngleName,angle)
     
     arcpy.AddMessage("Starting Clip of Rotated Angles")
     resetData(fcAngleName + "_Clipped")

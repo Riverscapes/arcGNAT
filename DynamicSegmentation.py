@@ -19,6 +19,7 @@ import sys
 import math
 import arcpy
 from gis_tools import *
+import geometry_functions
 
 outputPath = "C:\\GIS\\StreamNetwork"
 outputName = "OutputGeodatabase01.gdb"
@@ -136,7 +137,7 @@ def main(fcInputLineNetwork,fcValleyCenterline,fcValleyPolygon,DEM,strValleyBinT
     # Extend Valley Width Cross Sections
     arcpy.AddMessage("Extend Valley Width Cross Sections...")
     resetData(fcWidthCrossLines)
-    calculatePerpendicularAngles(lyrCenterlinesEvents,fcWidthCrossLines,"Angle_Loc",maxValleyWidth,"PointID")
+    geometry_functions.calculatePerpendicularAngles(lyrCenterlinesEvents,fcWidthCrossLines,"Angle_Loc",maxValleyWidth,"PointID")
 
     # Slice Valley Polygon and Attribute with Binned Width
     arcpy.AddMessage("")
