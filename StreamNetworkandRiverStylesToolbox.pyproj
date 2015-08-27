@@ -33,6 +33,9 @@
     <Compile Include="ChangeStartingVertex.py" />
     <Compile Include="CheckNetworkConnectivity.py" />
     <Compile Include="CombineAttributes.py" />
+    <Compile Include="CopyBranchID.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="def__Export.py" />
     <Compile Include="def__ExtremePoints.py" />
     <Compile Include="def__ScratchWPathName.py" />
@@ -48,6 +51,7 @@
     <Compile Include="gis_tools.py" />
     <Compile Include="MovingWindow.py" />
     <Compile Include="NetworkSegmentation.py" />
+    <Compile Include="OutsideValleyBottom.py" />
     <Compile Include="Sinuosity.py" />
     <Compile Include="StreamOrder.py">
       <SubType>Code</SubType>
