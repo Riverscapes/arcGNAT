@@ -1,6 +1,6 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Name:        Transfer Linework Attributes Tool                              #
-# Purpose:     Transfer attributes from one line layer to another             #
+# Name:        Generate Stream Order Tool                                     #
+# Purpose:     Generate Stream order for a stream network                     #
 #                                                                             #
 # Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              South Fork Research, Inc                                       #
