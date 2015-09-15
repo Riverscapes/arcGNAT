@@ -30,7 +30,6 @@ import ValleyConfinement
 import ValleyPlanform
 import Sinuosity
 import DividePolygonBySegment
-#import ChangeStartingVertex
 import TransferAttributesToLine
 import StreamOrder
 import Centerline
@@ -536,6 +535,9 @@ class StreamOrderTool(object):
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
+
+        testProjected(parameters[0])
+
         return
 
     def execute(self, p, messages):

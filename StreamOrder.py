@@ -1,4 +1,4 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Name:        Generate Stream Order Tool                                     #
 # Purpose:     Generate Stream order for a stream network                     #
 #                                                                             #
@@ -40,9 +40,15 @@ def main(inputFCPolylineNetwork,
 
     # Preprocess Network
     ### This section could stall ArcGIS 10.1 with dissolve... 
-    fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"NetworkDissolved")
-    arcpy.Dissolve_management(inputFCPolylineNetwork,fcNetworkDissolved,multi_part="SINGLE_PART",unsplit_lines="UNSPLIT_LINES")
-    ###
+    fcNetworkDissolvedUnsplit = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_NetworkDissolvedUnsplit")
+    arcpy.Dissolve_management(inputFCPolylineNetwork,fcNetworkDissolvedUnsplit,multi_part="SINGLE_PART",unsplit_lines="UNSPLIT_LINES")
+    
+    fcNetworkIntersectPoints = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_NetworkIntersectPoints")
+    arcpy.Intersect_analysis(fcNetworkDissolvedUnsplit,fcNetworkIntersectPoints,"ALL",output_type="POINT")
+    
+    fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"NetworkDissolved")###
+    arcpy.SplitLineAtPoint_management(fcNetworkDissolvedUnsplit,fcNetworkIntersectPoints,fcNetworkDissolved,"1 METERS")
+
 
     listFields = arcpy.ListFields(fcNetworkDissolved,"Stream_Order")
     if len(listFields) == 0:
@@ -58,7 +64,7 @@ def main(inputFCPolylineNetwork,
     arcpy.MakeFeatureLayer_management(fcNetworkDissolved,lyrCalculate)
 
     # Determine order 1 streams as initial condition
-    fcDangles = gis_tools.newGISDataset(scratchWorkspace,"Dangles")
+    fcDangles = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_Dangles")
     arcpy.FeatureVerticesToPoints_management(inputFCPolylineNetwork,fcDangles,"DANGLE")
     lyrDangles = gis_tools.newGISDataset("LAYER","lyrDangles")
     where = '"ORIG_FID" <> ' + str(inputDownstreamID)
@@ -67,7 +73,7 @@ def main(inputFCPolylineNetwork,
     arcpy.SelectLayerByLocation_management(lyrA,"INTERSECT",lyrDangles,selection_type="NEW_SELECTION")
     arcpy.CalculateField_management(lyrA,"Stream_Order",intCurrentOrder,"PYTHON")
     
-    fcStreamOrderTransistionPoints = gis_tools.newGISDataset(scratchWorkspace,"StreamOrderTransistionPoints")
+    fcStreamOrderTransistionPoints = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_StreamOrderTransistionPoints")
 
     # Iterate through stream orders
     arcpy.AddMessage("Evaluating Stream Order: " + str(intCurrentOrder))
@@ -81,7 +87,7 @@ def main(inputFCPolylineNetwork,
         listPairs = newListPairs(intCurrentOrder)
         for pair in listPairs:
             if pair not in listPairsRetired:
-                fcIntersectPoints = gis_tools.newGISDataset(scratchWorkspace,"IntersectPoints_" + str(intIteration) + "_Pair_" + str(pair[0]) + "_" + str(pair[1]) + "_Order_" + str(intCurrentOrder))
+                fcIntersectPoints = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_IntersectPoints_" + str(intIteration) + "_Pair_" + str(pair[0]) + "_" + str(pair[1]) + "_Order_" + str(intCurrentOrder))
                 lyrIntersectPoints = gis_tools.newGISDataset("LAYER","lyrIntersectPoints" + str(intIteration) + str(pair[0]) + str(pair[1]))
                 if pair[0] == pair[1]:
                     arcpy.SelectLayerByAttribute_management(lyrA,"NEW_SELECTION",'"Stream_Order" = ' + str(pair[0]))
