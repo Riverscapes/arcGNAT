@@ -30,7 +30,6 @@
   <ItemGroup>
     <Compile Include="BuildNetworkTopology.py" />
     <Compile Include="Centerline.py" />
-    <Compile Include="ChangeStartingVertex.py" />
     <Compile Include="CheckNetworkConnectivity.py" />
     <Compile Include="CombineAttributes.py" />
     <Compile Include="CopyBranchID.py">
@@ -45,7 +44,11 @@
     <Compile Include="DynamicSegmentation.py" />
     <Compile Include="FindBraidedNetwork.py" />
     <Compile Include="FindCrossingLines.py" />
+    <Compile Include="FindDangles.py" />
     <Compile Include="GenerateStreamBranches.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="geometry_functions.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="gis_tools.py" />

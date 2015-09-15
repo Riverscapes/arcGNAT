@@ -5,8 +5,8 @@
 		<CreaTime>13225100</CreaTime>
 		<ArcGISFormat>1.0</ArcGISFormat>
 		<SyncOnce>TRUE</SyncOnce>
-		<ModDate>20150826</ModDate>
-		<ModTime>141848</ModTime>
+		<ModDate>20150915</ModDate>
+		<ModTime>104939</ModTime>
 		<scaleRange>
 			<minScale>150000000</minScale>
 			<maxScale>5000</maxScale>
@@ -15,7 +15,7 @@
 	</Esri>
 	<dataIdInfo>
 		<idCitation>
-			<resTitle>Moving Window</resTitle>
+			<resTitle>Moving Window Analysis</resTitle>
 		</idCitation>
 		<searchKeys>
 			<keyword>GNAT</keyword>
@@ -28,7 +28,7 @@
 			</distorFormat>
 		</distributor>
 	</distInfo>
-	<tool name="MovingWindowTool" displayname="Moving Window" toolboxalias="GNAT" xmlns="">
+	<tool name="MovingWindowTool" displayname="Moving Window Analysis" toolboxalias="GNAT" xmlns="">
 		<parameters>
 			<param name="lineNetwork" displayname="Input Stream Network with Confinement" type="Required" direction="Input" datatype="Feature Layer" expression="lineNetwork"/>
 			<param name="fieldStreamID" displayname="Stream Branch ID Field" type="Required" direction="Input" datatype="String" expression="fieldStreamID"/>

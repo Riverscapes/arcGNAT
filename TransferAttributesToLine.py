@@ -30,13 +30,13 @@ def main(fcFromLine,
     ## Make Bounding Polygon
     fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FromLineBuffer")
     arcpy.Buffer_analysis(fcFromLine,fcFromLineBuffer,"10 Meters","FULL","ROUND","ALL")
-    fcToLineBuffer = gis_tools.newGISDatasetS(tempWorkspace,"GNAT_TLA_ToLineBuffer")
+    fcToLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_ToLineBuffer")
     arcpy.Buffer_analysis(fcToLine,fcToLineBuffer,"10 Meters","FULL","ROUND","ALL")
     fcUnionBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_UnionBuffer")
     arcpy.Union_analysis([fcToLineBuffer,fcFromLineBuffer],fcUnionBuffer)
     fcDissolveBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_DissolveBuffer")
     arcpy.Dissolve_management(fcUnionBuffer,fcDissolveBuffer)
-    fcFinalBuffer = gis_tools.newGISDataset(tempWorkspace,fcDissolveBuffer)
+    fcFinalBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FinalBuffer")
     arcpy.EliminatePolygonPart_management(fcDissolveBuffer,fcFinalBuffer,"PERCENT",part_area_percent="99.9",part_option="CONTAINED_ONLY")
 
     ## If Branch Field Exists, process each branch seperately
@@ -47,6 +47,7 @@ def main(fcFromLine,
         
         ## Loop Through BranchID's
         for branchID in listBranchIDs:
+            arcpy.AddMessage("GNAT TLA | Branch: " + str(branchID))
             lyrToLineBranch = gis_tools.newGISDataset("LAYER","lyrToLineBranch")
             lyrFromLineBranch = gis_tools.newGISDataset("LAYER","lyrFromLineBranch")
 
@@ -61,7 +62,7 @@ def main(fcFromLine,
 
             #Intersect
             fcIntersectBranch = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_IntersectToLineBranch_" + str(branchID))
-            arcpy.Intersect_analysis([fcBoundingBranch,lyrToLine],fcIntersectBranch)
+            arcpy.Intersect_analysis([fcBoundingBranch,lyrToLineBranch],fcIntersectBranch)
 
             # Join?
 

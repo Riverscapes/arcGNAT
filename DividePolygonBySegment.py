@@ -74,7 +74,7 @@ def main(fcInputCenterline,
     arcpy.Intersect_analysis([lyrTribThiessanPolys,fcCenterline],fcSplitPoints,output_type="POINT")
 
     arcpy.AddMessage("GNAT DPS: Moving Starting Vertices of Junction Polygons")
-    geometry_functions.changeStartingVertex.main(fcTribJunctionPoints,lyrTribThiessanPolys)
+    geometry_functions.changeStartingVertex(fcTribJunctionPoints,lyrTribThiessanPolys)
 
     arcpy.AddMessage("GNAT DPS: Vertices Moved.")
     fcThiessanTribPolyEdges = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_ThiessanTribPolyEdges")
