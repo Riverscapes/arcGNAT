@@ -38,6 +38,7 @@ import GenerateStreamBranches
 import OutsideValleyBottom
 import CopyBranchID
 import FindDangles
+import Segmentation
 
 strCatagoryStreamNetworkManagement = "Stream Network Management Tools"
 strCatagoryGeomorphicAnalysis = "Geomorphic Network Analysis Tools"
@@ -69,7 +70,8 @@ class Toolbox(object):
                       MovingWindowTool,
                       OutsideValleyBottomTool,
                       CopyBranchIDTool,
-                      FindDanglesandDuplicatesTool]
+                      FindDanglesandDuplicatesTool,
+                      SegmentationTool]
 
 # Stream Network Management Tools #
 
@@ -722,6 +724,108 @@ class CopyBranchIDTool(object):
                           parameters[3].valueAsText,
                           getTempWorkspace(parameters[4].valueAsText))
 
+        return
+
+class SegmentationTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Segmentation Tool"
+        self.description = "Segment the Stream Network."
+        self.canRunInBackground = True
+        self.category = strCatagoryStreamNetworkManagement
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        reload(Segmentation)
+        
+        param0 = arcpy.Parameter(
+            displayName="Input Stream Network",
+            name="InputStreamNetwork",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Segment Distance (Meters)",
+            name="InputSegmentDistance",
+            datatype="GPDouble",
+            parameterType="Required",
+            direction="Input")
+        param1.value = "100"
+
+        param2 = arcpy.Parameter(
+            displayName="Rule for Remainders",
+            name="strRemainderRule",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+        param2.filter.list = Segmentation.listStrRemainderRules
+
+        param3 = arcpy.Parameter(
+            displayName="Stream BranchID Field",
+            name="fieldStreamName",
+            datatype="GPString",
+            parameterType="Optional",
+            direction="Input")
+
+        param4 = arcpy.Parameter(
+            displayName="Output SegmentID Field",
+            name="fieldSegmentID",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+        param4.value = "SegmentID"
+
+        param5 = arcpy.Parameter(
+            displayName="Output Segmented Line Network",
+            name="outputStreamOrderFC",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Output")
+        param5.filter.list = ["Polyline"]
+
+        param6 = arcpy.Parameter(
+            displayName="Scratch Workspace",
+            name="InputTempWorkspace",
+            datatype="DEWorkspace", 
+            parameterType="Optional",
+            direction="Input")
+        param6.filter.list = ["Local Database"]
+
+        return [param0,param1,param2,param3,param4,param5,param6]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+
+        populateFields(parameters[0],parameters[3],"BranchID")
+
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+
+        testProjected(parameters[0])
+
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(Segmentation)
+        Segmentation.main(p[0].valueAsText,
+                          p[1].valueAsText,
+                          p[2].valueAsText,
+                          p[3].valueAsText,
+                          p[4].valueAsText,
+                          p[5].valueAsText,
+                          getTempWorkspace(p[6].valueAsText))
         return
 
 # Geomorphic Attributes Tools #
@@ -1694,9 +1798,10 @@ def populateFields(parameterSource,parameterField,strDefaultFieldName):
             parameterField.filter.list=listFields
             if strDefaultFieldName in listFields:
                 parameterField.value=strDefaultFieldName
-            else:
-                parameterField.value=""
+            #else:
+            #    parameterField.value=""
         else:
+            parameterField.value=""
             parameterField.filter.list=[]
             parameterSource.setErrorMessage(" Dataset does not exist.")
 

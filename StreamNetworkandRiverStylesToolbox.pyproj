@@ -41,7 +41,6 @@
     <Compile Include="def__SLEM.py" />
     <Compile Include="def__UpToDateShapeLengthField.py" />
     <Compile Include="DividePolygonBySegment.py" />
-    <Compile Include="DynamicSegmentation.py" />
     <Compile Include="FindBraidedNetwork.py" />
     <Compile Include="FindCrossingLines.py" />
     <Compile Include="FindDangles.py" />
@@ -53,8 +52,10 @@
     </Compile>
     <Compile Include="gis_tools.py" />
     <Compile Include="MovingWindow.py" />
-    <Compile Include="NetworkSegmentation.py" />
     <Compile Include="OutsideValleyBottom.py" />
+    <Compile Include="Segmentation.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Sinuosity.py" />
     <Compile Include="StreamOrder.py">
       <SubType>Code</SubType>
