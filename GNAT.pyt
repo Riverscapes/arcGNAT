@@ -583,22 +583,36 @@ class StreamBranchesTool(object):
             direction="Input")
 
         param3 = arcpy.Parameter(
+            displayName="Stream Order Field",
+            name="fieldStreamOrder",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+
+        param4 = arcpy.Parameter(
             displayName="Output Line Network with Branch ID",
             name="outputStreamOrderFC",
             datatype="DEFeatureClass",
             parameterType="Required",
             direction="Output")
-        param3.filter.list = ["Polyline"]
+        param4.filter.list = ["Polyline"]
 
-        param4 = arcpy.Parameter(
+        param5 = arcpy.Parameter(
+            displayName="Dissolve Output Network by BranchID?",
+            name="boolDissolve",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input")
+
+        param6 = arcpy.Parameter(
             displayName="Scratch Workspace",
             name="InputTempWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
-        param4.filter.list = ["Local Database"]
+        param6.filter.list = ["Local Database"]
 
-        return [param0,param1,param2,param3,param4]
+        return [param0,param1,param2,param3,param4,param5,param6]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -609,20 +623,8 @@ class StreamBranchesTool(object):
         validation is performed.  This method is called whenever a parameter
         has been changed."""
 
-        if parameters[0].value:
-            if arcpy.Exists(parameters[0].value):
-                # Get Fields
-                fields = arcpy.Describe(parameters[0].value).fields
-                listFields = []
-                for f in fields:
-                    listFields.append(f.name)
-                parameters[2].filter.list=listFields
-                if not parameters[2].altered:
-                    if "GNIS_Name" in listFields:
-                        parameters[2].value="GNIS_Name"
-            else:
-                parameters[2].filter.list=[]
-                parameters[0].setErrorMessage("Dataset does not exist.")
+        populateFields(parameters[0],parameters[2],"GNIS_Name")
+        populateFields(parameters[0],parameters[3],"StreamOrder")
 
         return
 
@@ -632,6 +634,8 @@ class StreamBranchesTool(object):
 
         testProjected(parameters[0])
         testProjected(parameters[1])
+        testLayerSelection(parameters[0])
+        testLayerSelection(parameters[1])
 
         return
 
@@ -642,7 +646,9 @@ class StreamBranchesTool(object):
                                     p[1].valueAsText,
                                     p[2].valueAsText,
                                     p[3].valueAsText,
-                                    getTempWorkspace(p[4].valueAsText))
+                                    p[4].valueAsText,
+                                    p[5].valueAsText,
+                                    getTempWorkspace(p[6].valueAsText))
         return
 
 class CopyBranchIDTool(object):
@@ -1806,6 +1812,20 @@ def populateFields(parameterSource,parameterField,strDefaultFieldName):
             parameterSource.setErrorMessage(" Dataset does not exist.")
 
     return
+
+def testLayerSelection(parameter):
+    if parameter.value:
+        if arcpy.Exists(parameter.value):
+            desc=arcpy.Describe(parameter.value)
+            if desc.dataType == "FeatureLayer":
+                if desc.FIDSet:
+                    parameter.setWarningMessage("Input layer " + parameter.name + " contains a selection. Clear the selection in order to run this tool on all features in the layer.")
+    
+    return 
+
+
+
+
 
 #def GNAT_Control_Parameters():
 

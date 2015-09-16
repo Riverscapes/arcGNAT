@@ -1,4 +1,4 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Name:        Generate Branches for Stream Network                           #
 # Purpose:     Dissolve by Stream Order and Stream Name                       #
 #                                                                             #
@@ -26,11 +26,12 @@ def main(
     fcLineNetwork,
     fcSplitPoints,
     fieldStreamName,
+    fieldStreamOrder,
     fcOutputStreamNetwork,
+    boolDissolve,
     tempWorkspace):
 
     reload(gis_tools)
-    fieldStreamOrder = "Stream_Order"
 
     # Preprocessing
     gis_tools.resetData(fcOutputStreamNetwork)
@@ -50,15 +51,16 @@ def main(
     # Dissolve by Stream Order
     arcpy.SelectLayerByAttribute_management(lyrStreamSelection,"SWITCH_SELECTION")
 
-    if len(arcpy.ListFields(fcLineNetwork,"fieldStramOrder")) == 1:
-        fcDissolveByStreamOrder = gis_tools.newGISDataset(tempWorkspace,"GNAT_BRANCHES_DissolveByStreamOrder")
-        arcpy.Dissolve_management(lyrStreamSelection,fcDissolveByStreamOrder,fieldStreamOrder)
+    if fieldStreamOrder:
+        if len(arcpy.ListFields(fcLineNetwork,fieldStreamOrder)) == 1:
+            fcDissolveByStreamOrder = gis_tools.newGISDataset(tempWorkspace,"GNAT_BRANCHES_DissolveByStreamOrder")
+            arcpy.Dissolve_management(lyrStreamSelection,fcDissolveByStreamOrder,fieldStreamOrder)
 
     # Split Stream Order Junctions
         if arcpy.Exists(fcSplitPoints):
             fcDissolveByStreamOrderSplit = gis_tools.newGISDataset(tempWorkspace,"GNAT_BRANCHES_DissolveByStreamOrderSplit")
             arcpy.SplitLineAtPoint_management(fcDissolveByStreamOrder,fcSplitPoints,fcDissolveByStreamOrderSplit,"1 METER")
-            fcDissolveByStreamOrder.append(fcDissolveByStreamOrderSplit)
+            listfcMerge.append(fcDissolveByStreamOrderSplit)
         else:
             listfcMerge.append(fcDissolveByStreamOrder)
     else:
@@ -74,8 +76,16 @@ def main(
     arcpy.AddField_management(fcMerged,"BranchID","LONG")
     gis_tools.addUniqueIDField(fcMerged,"BranchID")
 
+    ## Delete remaining fields from fcMerged not BranchID,or GNIS or StreamOrder
+
     # Final Output
-    arcpy.CopyFeatures_management(fcMerged,fcOutputStreamNetwork)
+    if boolDissolve == "true":
+        arcpy.AddMessage("Dissolving " + str(boolDissolve))
+        arcpy.CopyFeatures_management(fcMerged,fcOutputStreamNetwork)
+    else:
+
+        arcpy.AddMessage("NOT Dissolving " + str(boolDissolve))
+        arcpy.Intersect_analysis([fcMerged,fcLineNetwork],fcOutputStreamNetwork,"ALL")
 
     return
 
