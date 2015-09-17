@@ -76,13 +76,17 @@ def main(
     arcpy.AddField_management(fcMerged,"BranchID","LONG")
     gis_tools.addUniqueIDField(fcMerged,"BranchID")
 
-    ## Delete remaining fields from fcMerged not BranchID,or GNIS or StreamOrder
 
     # Final Output
     if boolDissolve == "true":
         arcpy.AddMessage("Dissolving " + str(boolDissolve))
         arcpy.CopyFeatures_management(fcMerged,fcOutputStreamNetwork)
     else:
+        ## Delete remaining fields from fcMerged not BranchID, or Requried Fields fieldStreamName,fieldStreamOrder,
+        descFCMerged = arcpy.Describe(fcMerged)
+        for field in descFCMerged.fields:
+            if field.name not in ["BranchID",descFCMerged.OIDFieldName,descFCMerged.shapeFieldName,"Shape_Length"]:
+                arcpy.DeleteField_management(fcMerged,field.name)
 
         arcpy.AddMessage("NOT Dissolving " + str(boolDissolve))
         arcpy.Intersect_analysis([fcMerged,fcLineNetwork],fcOutputStreamNetwork,"ALL")
