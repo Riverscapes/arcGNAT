@@ -953,8 +953,8 @@ class ConfinementTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Input Segmented Stream Network",
-            name="InputFCCenterline",
+            displayName="Input Stream Network (Segmentation Optional)",
+            name="InputFCStreamNetwork",
             datatype="GPFeatureLayer", 
             parameterType="Required",
             direction="Input")
@@ -962,7 +962,7 @@ class ConfinementTool(object):
 
         param1 = arcpy.Parameter(
             displayName="Input Valley Bottom Polygon",
-            name="InputConfinementEdges",
+            name="InputValleyBottomPolygon",
             datatype="GPFeatureLayer", #Integer
             parameterType="Required",
             direction="Input")
@@ -977,7 +977,7 @@ class ConfinementTool(object):
         param2.filter.list = ["Polygon"]
 
         param3 = arcpy.Parameter(
-            displayName="Output Line Network Confinement Feature Class",
+            displayName="Output Raw Confining State Along Stream Network",
             name="outputConCenterlineFC",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -985,46 +985,30 @@ class ConfinementTool(object):
         param3.filter.list = ["Polyline"]
 
         param4 = arcpy.Parameter(
-            displayName="Output Confinement by Segments Feature Class",
+            displayName="Output Confinement Calculated by Segments",
             name="outputConSegmentsFC",
             datatype="DEFeatureClass",
-            parameterType="Required",
+            parameterType="Optional",
             direction="Output")
-        param4.filter.list = ["Polyline"]
+        #param4.filter.list = ["Polyline"]
 
         param5 = arcpy.Parameter(
-            displayName="Calculate Confinement for each Segment?",
-            name="boolCalculateConfinement",
-            datatype="GPBoolean",
+            displayName="Output Confining Margins",
+            name="fcOutputConfiningMargins",
+            datatype="DEFeatureClass",
             parameterType="Optional",
-            direction="Input")
-        param5.value = True
+            direction="Output")
+        #param5.filter.FeatureClass = ["Polyline"]
 
         param6 = arcpy.Parameter(
-            displayName="Channel Polygon Is Already Segmented?",
-            name="boolChannelPolygonSegmented",
-            datatype="GPBoolean",
-            parameterType="Optional",
-            direction="Input")
-        #param6.value = False
-
-        param7 = arcpy.Parameter(
             displayName="Scratch Workspace",
             name="InputTempWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
-        param7.filter.list = ["Local Database"]
+        param6.filter.list = ["Local Database"]
 
-        param8 = arcpy.Parameter(
-            displayName="Maximum Cross Section Width (Meters)",
-            name="CrossSectionLength",
-            datatype="GPDouble", 
-            parameterType="Optional",
-            direction="Input")
-        param8.value = "200.00"
-
-        return [param0,param1,param2,param3,param4,param5,param6,param7,param8]
+        return [param0,param1,param2,param3,param4,param5,param6]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -1047,7 +1031,9 @@ class ConfinementTool(object):
         testMValues(parameters[0])
         testMValues(parameters[1])
         testMValues(parameters[2])
-
+        testLayerSelection(parameters[0])
+        testLayerSelection(parameters[1])
+        testLayerSelection(parameters[2])
         return
 
     def execute(self, p, messages):
@@ -1061,9 +1047,7 @@ class ConfinementTool(object):
                                p[3].valueAsText,
                                p[4].valueAsText,
                                p[5].valueAsText,
-                               p[6].valueAsText,
-                               getTempWorkspace(p[7].valueAsText),
-                               p[8].valueAsText)
+                               getTempWorkspace(p[6].valueAsText))
         return
 
 class PlanformTool(object):
