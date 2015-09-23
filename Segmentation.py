@@ -1,4 +1,4 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Name:        GNAT Segmentation Tool                                         #
 # Purpose:     Segment the Stream Network using distance Intervals            #
 #                                                                             #
@@ -30,7 +30,7 @@ def main(inputFCStreamNetwork,
          inputBranchField,
          outputSegmentIDField,
          fcOutputStreamNetwork,
-         scratchWorkspace=arcpy.env.scratchWorkspace):
+         scratchWorkspace):
 
     gis_tools.resetData(fcOutputStreamNetwork)
 
@@ -38,7 +38,7 @@ def main(inputFCStreamNetwork,
     if inputBranchField:
         arcpy.AddMessage(" Dissolving by " +str(inputBranchField))
         fcDissolvedStreamBranch = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SEG_DissolveByStreamBranch")
-        arcpy.Dissolve_management(inputFCStreamNetwork,fcDissolvedStreamBranch,multi_part="SINGLE_PART")
+        arcpy.Dissolve_management(inputFCStreamNetwork,fcDissolvedStreamBranch,inputBranchField,multi_part="SINGLE_PART")
     else:
         fcDissolvedStreamBranch = inputFCStreamNetwork
 
