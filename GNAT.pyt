@@ -306,6 +306,7 @@ class FindCrossingLinesTool(object):
         parameter.  This method is called after internal validation."""
         
         testProjected(parameters[0])
+        testWorkspacePath(parameters[3])
         return
 
     def execute(self, parameters, messages):
@@ -384,6 +385,7 @@ class OutsideValleyBottomTool(object):
         
         testProjected(parameters[0])
         testProjected(parameters[1])
+        testWorkspacePath(parameters[3])
         return
 
     def execute(self, parameters, messages):
@@ -454,6 +456,7 @@ class FindDanglesandDuplicatesTool(object):
         parameter.  This method is called after internal validation."""
         
         testProjected(parameters[0])
+        testWorkspacePath(parameters[3])
 
         return
 
@@ -513,8 +516,8 @@ class StreamOrderTool(object):
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
-        param4.filter.list = ["Local Database"]
-        param4.value = str(arcpy.env.scratchWorkspace)
+        #param4.filter.list = ["Local Database"]
+        #param4.value = str(arcpy.env.scratchWorkspace)
 
         #listControlParams = GNAT_Control_Parameters()
 
@@ -535,7 +538,7 @@ class StreamOrderTool(object):
         parameter.  This method is called after internal validation."""
 
         testProjected(parameters[0])
-
+        testWorkspacePath(parameters[4])
         return
 
     def execute(self, p, messages):
@@ -636,6 +639,7 @@ class StreamBranchesTool(object):
         testProjected(parameters[1])
         testLayerSelection(parameters[0])
         testLayerSelection(parameters[1])
+        testWorkspacePath(parameters[6])
 
         return
 
@@ -719,6 +723,7 @@ class CopyBranchIDTool(object):
         
         testProjected(parameters[0])
         testProjected(parameters[2])
+        testWorkspacePath(parameters[4])
         return
 
     def execute(self, parameters, messages):
@@ -819,7 +824,7 @@ class SegmentationTool(object):
         parameter.  This method is called after internal validation."""
 
         testProjected(parameters[0])
-
+        testWorkspacePath(parameters[6])
         return
 
     def execute(self, p, messages):
@@ -926,7 +931,7 @@ class MovingWindowTool(object):
         parameter.  This method is called after internal validation."""
 
         testProjected(parameters[0])
-
+        testWorkspacePath(parameters[5])
         return
 
     def execute(self, p, messages):
@@ -1034,6 +1039,7 @@ class ConfinementTool(object):
         testLayerSelection(parameters[0])
         testLayerSelection(parameters[1])
         testLayerSelection(parameters[2])
+        testWorkspacePath(parameters[6])
         return
 
     def execute(self, p, messages):
@@ -1132,6 +1138,7 @@ class PlanformTool(object):
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
+        testWorkspacePath(parameters[6])
         return
 
     def execute(self, p, messages):
@@ -1273,6 +1280,7 @@ class SinuosityTool(object):
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
+        testWorkspacePath(parameters[3])
         return
 
     def execute(self, p, messages):
@@ -1361,6 +1369,7 @@ class DividePolygonBySegmentsTool(object):
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
+        testWorkspacePath(parameters[3])
         return
 
     def execute(self, p, messages):
@@ -1453,7 +1462,7 @@ class TransferLineAttributesTool(object):
         testProjected(parameters[1])
         if not parameters[2].altered:
             populateFields(parameters[0],parameters[2],"StreamBranchID")
-        
+        testWorkspacePath(parameters[4])
         return
 
     def execute(self, p, messages):
@@ -1807,9 +1816,22 @@ def testLayerSelection(parameter):
     
     return 
 
+def testWorkspacePath(parameterWorkspace):
 
-
-
+    if parameterWorkspace.value:
+        if arcpy.Exists(parameterWorkspace.value):
+            desc = arcpy.Describe(parameterWorkspace.value)
+            if desc.dataType == "Workspace" or desc.dataType == "Folder":
+                if desc.workspaceType == "LocalDatabase":
+                    strPath = desc.path
+                elif desc.workspaceType == "FileSystem":
+                    strPath = str(parameterWorkspace.value)
+                else:
+                    parameterWorkspace.setWarningMessage("Cannot identify workspace type for " + parameterWorkspace.name + ".")
+                    return
+                if " " in strPath:
+                    parameterWorkspace.setWarningMessage(parameterWorkspace.name + " contains a space in the file path name and could cause Geoprocessing issues. Please use a different workspace that does not contain a space in the path name.")
+    return
 
 #def GNAT_Control_Parameters():
 
