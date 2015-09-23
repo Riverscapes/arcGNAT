@@ -23,13 +23,13 @@ import gis_tools
 
 # # Main Function # # 
 def main(fcStreamNetwork,
-         strFieldID,
+         fieldDownstreamID,
          intOutflowReachID):
     
     strConField = "IsCon"
     #strNetworkIDField = "NetworkID"
 
-    lyrStreamNetwork = gis_tools.newDataset("LAYER","lyrStreamNetwork")
+    lyrStreamNetwork = gis_tools.newGISDataset("LAYER","lyrStreamNetwork")
     arcpy.MakeFeatureLayer_management(fcStreamNetwork,lyrStreamNetwork)
 
     gis_tools.resetField(lyrStreamNetwork,strConField ,"LONG")
@@ -37,7 +37,7 @@ def main(fcStreamNetwork,
 
     #gis_tools.resetField(lyrStreamNetwork,strNetworkIDField,"LONG")
 
-    fieldOID = arcpy.AddFieldDelimiters(fcStreamNetwork,strFieldID)
+    fieldOID = arcpy.AddFieldDelimiters(fcStreamNetwork,fieldDownstreamID)
     #fieldNetworkID = arcpy.AddFieldDelimiters(fcStreamNetwork,strNetworkIDField)
 
     #for intOutflowReachID in list_intOutflowReachID:
@@ -47,11 +47,11 @@ def main(fcStreamNetwork,
     
     while iPrevious <> iCurrent:
         iPrevious = iCurrent
-        arcpy.SelectLayerByLocation_management(lyrLineNetwork,"INTERSECT",lyrLineNetwork,'',"ADD_TO_SELECTION")
-        iCurrent = int(arcpy.GetCount_management(lyrLineNetwork).getOutput(0))
+        arcpy.SelectLayerByLocation_management(lyrStreamNetwork,"INTERSECT",lyrStreamNetwork,'',"ADD_TO_SELECTION")
+        iCurrent = int(arcpy.GetCount_management(lyrStreamNetwork).getOutput(0))
         arcpy.AddMessage(str(iPrevious) + " | " + str(iCurrent))
 
-        arcpy.CalculateField_management(lyrLineNetwork,"IsCon",1,"PYTHON")
+        arcpy.CalculateField_management(lyrStreamNetwork,"IsCon",1,"PYTHON")
         
     return
 
