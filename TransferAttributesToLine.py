@@ -27,26 +27,19 @@ def main(fcFromLine,
          fcOutputLineNetwork,
          tempWorkspace):
     
-    ## Make Bounding Polygon
-    fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FromLineBuffer")
-    arcpy.Buffer_analysis(fcFromLine,fcFromLineBuffer,"10 Meters","FULL","ROUND","ALL")
-    fcToLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_ToLineBuffer")
-    arcpy.Buffer_analysis(fcToLine,fcToLineBuffer,"10 Meters","FULL","ROUND","ALL")
-    fcUnionBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_UnionBuffer")
-    arcpy.Union_analysis([fcToLineBuffer,fcFromLineBuffer],fcUnionBuffer)
-    fcDissolveBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_DissolveBuffer")
-    arcpy.Dissolve_management(fcUnionBuffer,fcDissolveBuffer)
-    fcFinalBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FinalBuffer")
-    arcpy.EliminatePolygonPart_management(fcDissolveBuffer,fcFinalBuffer,"PERCENT",part_area_percent="99.9",part_option="CONTAINED_ONLY")
+
+
+    gis_tools.resetData(fcOutputLineNetwork)
 
     ## If Branch Field Exists, process each branch seperately
     if fieldBranchID:
     
         ## Get list of Unique BranchIDs
         listBranchIDs = gis_tools.unique_values(fcFromLine,fieldBranchID)
-        
+        list_fcIntersectBranches = []
         ## Loop Through BranchID's
         for branchID in listBranchIDs:
+            arcpy.env.extent = "MAXOF"
             arcpy.AddMessage("GNAT TLA | Branch: " + str(branchID))
             lyrToLineBranch = gis_tools.newGISDataset("LAYER","lyrToLineBranch")
             lyrFromLineBranch = gis_tools.newGISDataset("LAYER","lyrFromLineBranch")
@@ -56,24 +49,70 @@ def main(fcFromLine,
             arcpy.MakeFeatureLayer_management(fcToLine,lyrToLineBranch,whereTo)
             arcpy.MakeFeatureLayer_management(fcFromLine,lyrFromLineBranch,whereFrom)
 
+            ## Generate Bounding Polygon for Branch
+            fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FromLineBuffer_" + str(branchID))
+            arcpy.Buffer_analysis(lyrFromLineBranch,fcFromLineBuffer,"10 Meters","FULL","ROUND","ALL")
+            fcToLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_ToLineBuffer_" + str(branchID))
+            arcpy.Buffer_analysis(lyrToLineBranch,fcToLineBuffer,"10 Meters","FULL","ROUND","ALL")
+            fcUnionBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_UnionBuffer_" + str(branchID))
+            arcpy.Union_analysis([fcToLineBuffer,fcFromLineBuffer],fcUnionBuffer)
+            fcDissolveBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_DissolveBuffer_" + str(branchID))
+            arcpy.Dissolve_management(fcUnionBuffer,fcDissolveBuffer)
+            fcFinalBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FinalBuffer_" + str(branchID))
+            arcpy.EliminatePolygonPart_management(fcDissolveBuffer,fcFinalBuffer,"PERCENT",part_area_percent="99.9",part_option="CONTAINED_ONLY")
 
             fcBoundingBranch = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_BoundingBranchPolygon_" + str(branchID))
             DividePolygonBySegment.main(lyrFromLineBranch,fcFinalBuffer,fcBoundingBranch,tempWorkspace)
 
+            fcBoundingBranchWithAttributes = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_BoundingBranchPolygonAttributes_" + str(branchID))
+            arcpy.SpatialJoin_analysis(fcBoundingBranch,
+                        lyrFromLineBranch,
+                        fcBoundingBranchWithAttributes,
+                        "JOIN_ONE_TO_ONE",
+                        "KEEP_ALL",
+                        match_option="CONTAINS")
+
             #Intersect
             fcIntersectBranch = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_IntersectToLineBranch_" + str(branchID))
-            arcpy.Intersect_analysis([fcBoundingBranch,lyrToLineBranch],fcIntersectBranch)
+            arcpy.Intersect_analysis([fcBoundingBranchWithAttributes,lyrToLineBranch],fcIntersectBranch)
 
-            # Join?
+            listFields = arcpy.ListFields(fcIntersectBranch,"FID_GNAT_TLA_*")
+            for field in listFields:
+                arcpy.DeleteField_management(fcIntersectBranch,field.name)
+            
+            # Join Attributes
+            #fcIntersectBranchWithAttributes = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_IntersectToLineBranchAttributes_" + str(branchID))
+            #arcpy.SpatialJoin_analysis(fcIntersectBranch,
+            #                       fcBoundingBranch,
+            #                       fcIntersectBranchWithAttributes,
+            #                       "JOIN_ONE_TO_ONE",
+            #                       "KEEP_ALL",
+            #                       match_option="WITHIN")
 
+            #arcpy.JoinField_management(fcIntersectBranchWithAttributes,
+            #                       "JOIN_FID",
+            #                       fcFromLine,
+            #                       str(arcpy.Describe(fcFromLine).OIDFieldName))
+            list_fcIntersectBranches.append(fcIntersectBranch)
+        
+        arcpy.env.extent = "MAXOF"
+        arcpy.Merge_management(list_fcIntersectBranches,fcOutputLineNetwork)
     else:
 
-        # Segment Boundary Polygon in not segmented
-        if bool_IsSegmented is not True:
-            fcSegmentedBoundingPolygons = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_02_SegmentedBoundingPolygons")
-            DividePolygonBySegment.main(fcFromLine,fcRawBoundingPolygon,fcSegmentedBoundingPolygons,tempWorkspace)
-        else: 
-            fcSegmentedBoundingPolygons = fcRawBoundingPolygon
+            ## Make Bounding Polygon
+        fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FromLineBuffer")
+        arcpy.Buffer_analysis(fcFromLine,fcFromLineBuffer,"10 Meters","FULL","ROUND","ALL")
+        fcToLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_ToLineBuffer")
+        arcpy.Buffer_analysis(fcToLine,fcToLineBuffer,"10 Meters","FULL","ROUND","ALL")
+        fcUnionBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_UnionBuffer")
+        arcpy.Union_analysis([fcToLineBuffer,fcFromLineBuffer],fcUnionBuffer)
+        fcDissolveBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_DissolveBuffer")
+        arcpy.Dissolve_management(fcUnionBuffer,fcDissolveBuffer)
+        fcFinalBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FinalBuffer")
+        arcpy.EliminatePolygonPart_management(fcDissolveBuffer,fcFinalBuffer,"PERCENT",part_area_percent="99.9",part_option="CONTAINED_ONLY")
+
+        fcSegmentedBoundingPolygons = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_02_SegmentedBoundingPolygons")
+        DividePolygonBySegment.main(fcFromLine,fcFinalBuffer,fcSegmentedBoundingPolygons,tempWorkspace)
 
 
     #if version == "OLD":    

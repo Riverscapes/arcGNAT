@@ -579,7 +579,7 @@ class StreamBranchesTool(object):
         param1.filter.list = ["Point","Multipoint"]
 
         param2 = arcpy.Parameter(
-            displayName="Stream (GNIS) Name Field",
+            displayName="Primary Stream Name Field (i.e. GNIS Name)",
             name="fieldStreamName",
             datatype="GPString",
             parameterType="Required",
@@ -589,7 +589,7 @@ class StreamBranchesTool(object):
             displayName="Stream Order Field",
             name="fieldStreamOrder",
             datatype="GPString",
-            parameterType="Required",
+            parameterType="Optional",
             direction="Input")
 
         param4 = arcpy.Parameter(
@@ -690,21 +690,28 @@ class CopyBranchIDTool(object):
         param2.filter.list = ["Polyline"]
         
         param3 = arcpy.Parameter(
+            displayName="Search Radius",
+            name="inputSearchRadius",
+            datatype="GPDouble",
+            parameterType="Optional",
+            direction="Input")
+        
+        param4 = arcpy.Parameter(
             displayName="Output Line Network with Branch ID",
             name="outputStreamOrderFC",
             datatype="DEFeatureClass",
             parameterType="Required",
             direction="Output")
-        param3.filter.list = ["Polyline"]
+        param4.filter.list = ["Polyline"]
 
-        param4 = arcpy.Parameter(
+        param5 = arcpy.Parameter(
             displayName="Scratch Workspace",
             name="ScratchWorkspace",
             datatype="DEWorkspace",
             parameterType="Optional",
             direction="Input")
 
-        return [param0,param1,param2,param3,param4]
+        return [param0,param1,param2,param3,param4,param5]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -723,7 +730,7 @@ class CopyBranchIDTool(object):
         
         testProjected(parameters[0])
         testProjected(parameters[2])
-        testWorkspacePath(parameters[4])
+        testWorkspacePath(parameters[5])
         return
 
     def execute(self, parameters, messages):
@@ -733,7 +740,8 @@ class CopyBranchIDTool(object):
                           parameters[1].valueAsText,
                           parameters[2].valueAsText,
                           parameters[3].valueAsText,
-                          getTempWorkspace(parameters[4].valueAsText))
+                          parameters[4].valueAsText,
+                          getTempWorkspace(parameters[5].valueAsText))
 
         return
 
@@ -1281,7 +1289,7 @@ class SinuosityTool(object):
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
-        testWorkspacePath(parameters[3])
+        testWorkspacePath(parameters[2])
         return
 
     def execute(self, p, messages):

@@ -69,8 +69,7 @@ def main(inputFCStreamNetwork,
         for point in listPoints:
             icSplitPoints.insertRow([point])
     arcpy.AddMessage(" Out of Point Insert Cursor")
-    arcpy.SplitLineAtPoint_management(inputFCStreamNetwork,fcSplitPoints,fcOutputStreamNetwork,"1 Meters")
-
+    arcpy.SplitLineAtPoint_management(fcDissolvedStreamBranch,fcSplitPoints,fcOutputStreamNetwork,"1 Meters")
     gis_tools.addUniqueIDField(fcOutputStreamNetwork,outputSegmentIDField)
 
 

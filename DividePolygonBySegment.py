@@ -130,6 +130,8 @@ def main(fcInputCenterline,
     arcpy.SelectLayerByAttribute_management(lyrPolygonsDissolved,"NEW_SELECTION",""" "JOIN_FID" = -1 """)
 
     arcpy.Eliminate_management(lyrPolygonsDissolved,fcSegmentedPolygons,"LENGTH")
+
+
     arcpy.AddMessage("GNAT DPS: Tool Complete.")
     return
 

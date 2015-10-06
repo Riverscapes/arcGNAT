@@ -1,4 +1,4 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Name:        Transfer Line Branch ID Tool                                   #
 # Purpose:     Transfer Line Branch ID from one line layer to another         #
 #                                                                             #
@@ -24,11 +24,12 @@ import gis_tools
 def main(inputStreamBranchNetwork,
          inputBranchIDFieldName,
          inputTargetLineNetwork,
+         inputSearchRadius,
          outputTransferredNetwork,
          scratchWorkspace):
 
     gis_tools.resetData(outputTransferredNetwork)
-    arcpy.Copy_management(inputTargetLineNetwork,outputTransferredNetwork)
+    arcpy.CopyFeatures_management(inputTargetLineNetwork,outputTransferredNetwork)
 
     if len(arcpy.ListFields(outputTransferredNetwork,inputBranchIDFieldName)) == 1:
         arcpy.DeleteField_management(outputTransferredNetwork,inputBranchIDFieldName)
@@ -36,7 +37,7 @@ def main(inputStreamBranchNetwork,
     fcCentroids = gis_tools.newGISDataset(scratchWorkspace,"GNAT_CBID_Centroids")
     arcpy.FeatureVerticesToPoints_management(outputTransferredNetwork,fcCentroids,"MID")
 
-    arcpy.Near_analysis(fcCentroids,inputStreamBranchNetwork)
+    arcpy.Near_analysis(fcCentroids,inputStreamBranchNetwork,inputSearchRadius)
 
     arcpy.JoinField_management(fcCentroids,
                                "Near_FID",

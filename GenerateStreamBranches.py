@@ -45,7 +45,7 @@ def main(
     where = arcpy.AddFieldDelimiters(fcLineNetwork,fieldStreamName) + " <> '' "
     arcpy.SelectLayerByAttribute_management(lyrStreamSelection,"NEW_SELECTION",where)
     fcDissolveByName = gis_tools.newGISDataset(tempWorkspace,"GNAT_BRANCHES_DissolveByName")
-    arcpy.Dissolve_management(lyrStreamSelection,fcDissolveByName,"GNIS_Name")
+    arcpy.Dissolve_management(lyrStreamSelection,fcDissolveByName,fieldStreamName)
     listfcMerge.append(fcDissolveByName)
     
     # Dissolve by Stream Order
@@ -64,8 +64,8 @@ def main(
         else:
             listfcMerge.append(fcDissolveByStreamOrder)
     else:
-        fcNoStreamOrder = gis_tools.newGISDataset(tempWorkspace,"GNAT_BRANCHES_NoStreamOrderOrGNIS")
-        arcpy.CopyFeatures_management(lyrStreamSelection,fcNoStreamOrder)
+        fcNoStreamOrder = gis_tools.newGISDataset(tempWorkspace,"GNAT_BRANCHES_NoStreamOrderOrStreamName")
+        arcpy.Dissolve_management(lyrStreamSelection,fcNoStreamOrder,multi_part="SINGLE_PART")
         listfcMerge.append(fcNoStreamOrder)
     
     # Merge Dissolved Networks
