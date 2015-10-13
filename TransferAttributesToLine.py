@@ -99,7 +99,7 @@ def main(fcFromLine,
         arcpy.Merge_management(list_fcIntersectBranches,fcOutputLineNetwork)
     else:
 
-            ## Make Bounding Polygon
+        ## Make Bounding Polygon
         fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FromLineBuffer")
         arcpy.Buffer_analysis(fcFromLine,fcFromLineBuffer,"10 Meters","FULL","ROUND","ALL")
         fcToLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_ToLineBuffer")
@@ -111,34 +111,31 @@ def main(fcFromLine,
         fcFinalBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FinalBuffer")
         arcpy.EliminatePolygonPart_management(fcDissolveBuffer,fcFinalBuffer,"PERCENT",part_area_percent="99.9",part_option="CONTAINED_ONLY")
 
-        fcSegmentedBoundingPolygons = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_02_SegmentedBoundingPolygons")
+        fcSegmentedBoundingPolygons = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_SegmentedBoundingPolygons")
         DividePolygonBySegment.main(fcFromLine,fcFinalBuffer,fcSegmentedBoundingPolygons,tempWorkspace)
 
+        # Split Points of ToLine at intersection of Polygon Segments
+        fcIntersectSplitPoints = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_IntersectSplitPoints")
+        arcpy.Intersect_analysis([fcToLine,fcSegmentedBoundingPolygons],fcIntersectSplitPoints,output_type="POINT")
 
-    #if version == "OLD":    
-    #    # Split Points of ToLine at intersection of Polygon Segments
-    #    fcIntersectSplitPoints = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_03_IntersectSplitPoints")
-    #    arcpy.Intersect_analysis([fcToLine,fcSegmentedBoundingPolygons],fcIntersectSplitPoints,output_type="POINT")
+        fcSplitLines = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_SplitLines")
+        arcpy.SplitLineAtPoint_management(fcToLine,fcIntersectSplitPoints,fcSplitLines,"0.1 METERS")
 
-    #    fcSplitLines = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_04_SplitLines")
-    #    arcpy.SplitLineAtPoint_management(fcToLine,fcIntersectSplitPoints,fcSplitLines,"2 METERS")
+        # Spatial Join Lines based on common FID, as transfered by Segmented Polygon
 
-    #    # Spatial Join Lines based on common FID, as transfered by Segmented Polygon
+        gis_tools.resetData(fcOutputLineNetwork)
 
-    #    gis_tools.resetData(fcOutputLineNetwork)
+        arcpy.SpatialJoin_analysis(fcSplitLines,
+                                   fcSegmentedBoundingPolygons,
+                                   fcOutputLineNetwork,
+                                   "JOIN_ONE_TO_ONE",
+                                   "KEEP_ALL",
+                                   match_option="WITHIN")
 
-    #    arcpy.SpatialJoin_analysis(fcSplitLines,
-    #                               fcSegmentedBoundingPolygons,
-    #                               fcOutputLineNetwork,
-    #                               "JOIN_ONE_TO_ONE",
-    #                               "KEEP_ALL",
-    #                               match_option="WITHIN")
-
-    #    arcpy.JoinField_management(fcOutputLineNetwork,
-    #                               "JOIN_FID",
-    #                               fcFromLine,
-    #                               str(arcpy.Describe(fcFromLine).OIDFieldName))
-    #else:
+        arcpy.JoinField_management(fcOutputLineNetwork,
+                                   "JOIN_FID",
+                                   fcFromLine,
+                                   str(arcpy.Describe(fcFromLine).OIDFieldName))
 
     
     return

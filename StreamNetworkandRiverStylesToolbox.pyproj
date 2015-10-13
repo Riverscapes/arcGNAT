@@ -5,8 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{54bb0110-2bb5-4b52-b164-c697bdc76521}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>
-    </StartupFile>
+    <StartupFile>D:\Development\GNAT\MovingWindow_Plot.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -16,6 +15,8 @@
     <InterpreterId>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</InterpreterId>
     <InterpreterVersion>2.7</InterpreterVersion>
     <IsWindowsApplication>False</IsWindowsApplication>
+    <CommandLineArguments>"C:\GIS\Projects\GNAT_MovingWindowAnalaysis\PreTesting\MFJDData\GNAT_MWA_FullTest_01.gdb\GNAT_MWA_SeedPoints" "WindowSize100;WindowSize75" 0;0.2;0.5;0.8;1 Unconfined;Partially-Unconfined;Partially-Confined;Confined</CommandLineArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -52,6 +53,9 @@
     </Compile>
     <Compile Include="gis_tools.py" />
     <Compile Include="MovingWindow.py" />
+    <Compile Include="MovingWindow_Plot.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="OutsideValleyBottom.py" />
     <Compile Include="Segmentation.py">
       <SubType>Code</SubType>

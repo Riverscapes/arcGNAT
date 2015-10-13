@@ -41,21 +41,12 @@ def main(fcStreamNetwork,fcValleyCenterline,fcValleyBottomPolygon,outputFCSinuos
     arcpy.CopyFeatures_management(fcValleyCenterline,outputFCSinuosityValley)
     Sinuosity.main(outputFCSinuosityValley,"Valley_Sinuosity",workspaceTemp)
 
-    ## Determine if Valley Polygon is Segmented
-    #intRows = arcpy.GetCount_management(fcValleyBottomPolygon)
-    #if intRows == 1:
-    #    bool_IsSegmented = False
-    #else:
-    #    bool_IsSegmented = True
-    bool_IsSegmented = False # Assume not segmented for now...
-
     ## Transfer Attributes to Stream Linework
     if arcpy.Exists(outputFCPlanform):
         arcpy.Delete_management(outputFCPlanform)
     TransferAttributesToLine.main(outputFCSinuosityValley,
                                   outputFCSinuosityChannel,
-                                  fcValleyBottomPolygon,
-                                  bool_IsSegmented,
+                                  "",
                                   outputFCPlanform,
                                   workspaceTemp)
 
