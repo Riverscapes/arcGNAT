@@ -29,7 +29,8 @@ def main(
     fieldAttribute,
     strSeedDistance,
     inputliststrWindowSize,
-    outputWorkspace):#=arcpy.env.scratchWorkspace):
+    boolOverlap=False,
+    outputWorkspace=arcpy.env.scratchWorkspace):
     """Perform a Moving Window Analysis on a Line Network."""
 
     liststrWindowSize = inputliststrWindowSize.split(";")

@@ -407,9 +407,9 @@ class MovingWindowTool(object):
             displayName="Output Workspace",
             name="strOutputWorkspace",
             datatype="DEWorkspace",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Input")
-        param5.value = str(arcpy.env.scratchWorkspace)
+        #param5.value = str(arcpy.env.scratchWorkspace)
         params = [param0,param1,param2,param3,param4,param5]
         return params
 
