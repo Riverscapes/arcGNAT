@@ -57,15 +57,12 @@ def main(fcInputStreamLineNetwork,
 
     fcConfiningMarginsMultipart = gis_tools.newGISDataset(scratchWorkspace,"ConfiningMargins_Multipart")
     arcpy.Intersect_analysis([fcConfinedChannel,fcInputValleyBottomPolygon],fcConfiningMarginsMultipart,output_type="LINE")
-    
     arcpy.MultipartToSinglepart_management(fcConfiningMarginsMultipart,fcConfiningMargins)
 
-    # Merge segments in PolyineCenter to create Route Layer
-    tempZFlag = arcpy.env.outputZFlag
+    # Merge segments in Polyline Center to create Route Layer
     arcpy.env.outputZFlag = "Disabled" # 'empty' z values can cause problem with dissolve
     fcStreamNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"StreamNetworkDissolved") ### one feature per 'section between trib or branch junctions'
     arcpy.Dissolve_management(fcInputStreamLineNetwork,fcStreamNetworkDissolved,multi_part="SINGLE_PART",unsplit_lines="UNSPLIT_LINES")
-    arcpy.env.outputZFlag = tempZFlag
 
     fcNetworkSegmentPoints = gis_tools.newGISDataset(scratchWorkspace,"StreamNetworkSegmentPoints")
     arcpy.FeatureVerticesToPoints_management(fcInputStreamLineNetwork,fcNetworkSegmentPoints,"END")
@@ -80,7 +77,6 @@ def main(fcInputStreamLineNetwork,
     fcChannelSegmentPolygonLines = gis_tools.newGISDataset(scratchWorkspace,"SegmentPolygonLines")
     fcChannelBankNearLines = gis_tools.newGISDataset(scratchWorkspace,"Bank_NearLines")
     DividePolygonBySegment.main(fcInputStreamLineNetwork,fcConfinedChannel,fcChannelSegmentPolygons,scratchWorkspace)
-    #arcpy.Copy_management(fcConfinedChannel,fcChannelSegmentPolygons)
     arcpy.PolygonToLine_management(fcChannelSegmentPolygons,fcChannelSegmentPolygonLines)
     lyrStreamNetworkDangles = gis_tools.newGISDataset("LAYER", "lyrStreamNetworkDangles")
     arcpy.MakeFeatureLayer_management(fcStreamNetworkDangles,lyrStreamNetworkDangles)
@@ -165,135 +161,43 @@ def main(fcInputStreamLineNetwork,
                                       "10 Meters")
 
     #Table and Attributes
-    arcpy.AddField_management(fcOutputRawConfiningState,"Confinement_Type","TEXT",field_length="6")
+    arcpy.AddField_management(fcOutputRawConfiningState,"Con_Type","TEXT",field_length="6")
     arcpy.AddField_management(fcOutputRawConfiningState,"IsConfined","LONG")
 
     lyrConfinementStreamNetwork1 = gis_tools.newGISDataset("Layer","lyrStreamNetworkCenterline1")
     arcpy.MakeFeatureLayer_management(fcOutputRawConfiningState,lyrConfinementStreamNetwork1)
-    arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"NEW_SELECTION",""" "Confinement_LEFT" = 1""")
-    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Confinement_Type","'LEFT'","PYTHON")
-    arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"NEW_SELECTION",""" "Confinement_RIGHT" = 1""")
-    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Confinement_Type","'RIGHT'","PYTHON")
-    arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"NEW_SELECTION",""" "Confinement_LEFT" = 1 AND "Confinement_RIGHT" = 1""")
-    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Confinement_Type","'BOTH'","PYTHON")
-    arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"NEW_SELECTION",""" "Confinement_LEFT" = 1 OR "Confinement_RIGHT" = 1""")
+    arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"NEW_SELECTION",""" "Con_LEFT" = 1""")
+    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Con_Type","'LEFT'","PYTHON")
+    arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"NEW_SELECTION",""" "Con_RIGHT" = 1""")
+    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Con_Type","'RIGHT'","PYTHON")
+    arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"NEW_SELECTION",""" "Con_LEFT" = 1 AND "Con_RIGHT" = 1""")
+    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Con_Type","'BOTH'","PYTHON")
+    arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"NEW_SELECTION",""" "Con_LEFT" = 1 OR "Con_RIGHT" = 1""")
     arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"IsConfined","1","PYTHON")
     arcpy.SelectLayerByAttribute_management(lyrConfinementStreamNetwork1,"SWITCH_SELECTION")
     arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"IsConfined","0","PYTHON")
-    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Confinement_Type","'NONE'","PYTHON")
+    arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Con_Type","'NONE'","PYTHON")
 
-    # Loop through Segments to Calculate Confinement for Each Segment
+    # Calculate Confinement on Segments using Raw Confining State
     if fcOutputConfinementSegments:
 
-        # Copy Line Network for Final Output and Prepare Fields
+        fcIntersectRCSAndSegments = gis_tools.newGISDataset(scratchWorkspace,"IntersectRCS_AndSegments")
+        arcpy.Intersect_analysis([fcInputChannelPolygon,fcOutputRawConfiningState],fcIntersectRCSAndSegments)
+
+        tblIntersectSumStats = gis_tools.newGISDataset(scratchWorkspace,"TableIntersectSumStats")
+        arcpy.Statistics_analysis(fcIntersectRCSAndSegments,tblIntersectSumStats,"Shape_Length SUM","SegmentID,IsConfined")
+        
+        tblIntersectSumStatsPivot = gis_tools.newGISDataset(scratchWorkspace,"TableIntersectSumStatsPivot")
+        arcpy.PivotTable_management(tblIntersectSumStats,"SegmentID","IsConfined","SUM_Shape_Length",tblIntersectSumStatsPivot)
+
+        gis_tools.resetField(tblIntersectSumStatsPivot,"Con_Value","DOUBLE")
+        arcpy.CalculateField_management(tblIntersectSumStatsPivot,"Con_Value","!IsConfined1!/(!IsConfined0! + !IsConfined1!)","PYTHON")
+
         if arcpy.Exists(fcOutputConfinementSegments):
            arcpy.Delete_management(fcOutputConfinementSegments)
         arcpy.CopyFeatures_management(fcInputStreamLineNetwork,fcOutputConfinementSegments)
-        ##Confinement By Margins Outputs
-        arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_Margin_Summed","DOUBLE")
-        arcpy.AddField_management(fcOutputConfinementSegments,"Length_ConfinedMargin_Left","DOUBLE")
-        arcpy.AddField_management(fcOutputConfinementSegments,"Length_ChannelMargin_Left","DOUBLE")
-        arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_Margin_Left","DOUBLE")
-        arcpy.AddField_management(fcOutputConfinementSegments,"Length_ConfinedMargin_Right","DOUBLE")
-        arcpy.AddField_management(fcOutputConfinementSegments,"Length_ChannelMargin_Right","DOUBLE")
-        arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_Margin_Right","DOUBLE")
-        ##Confinement By LineNetwork Outputs
-        arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_LineNetwork_All","DOUBLE")
-        arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_LineNetwork_Both","DOUBLE")
-        arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_LineNetwork_Left","DOUBLE")
-        arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_LineNetwork_Right","DOUBLE")
 
-
-        arcpy.AddMessage("GNAT CON: Calculating Confinement Along Segments.")
-        desc_fcOutputSegments = arcpy.Describe(fcOutputConfinementSegments)
-        with arcpy.da.UpdateCursor(fcOutputConfinementSegments,[str(desc_fcOutputSegments.OIDFieldName), #0
-                                                     "Confinement_Margin_Summed", #1
-                                                     "SHAPE@LENGTH", #2
-                                                     "Length_ConfinedMargin_Left", #3
-                                                     "Length_ChannelMargin_Left", #4
-                                                     "Confinement_Margin_Left",#5
-                                                     "Length_ConfinedMargin_Right", #6
-                                                     "Length_ChannelMargin_Right", #7
-                                                     "Confinement_Margin_Right", #8
-                                                     "Confinement_LineNetwork_All", #9
-                                                     "Confinement_LineNetwork_Both", #10
-                                                     "Confinement_LineNetwork_Left", #11
-                                                     "Confinement_LineNetwork_Right" #12
-                                                     ]) as ucSegments:
-            for segment in ucSegments:
-                lyrCurrentSegment = gis_tools.newGISDataset("Layer","lyrCurrentSegment")
-                arcpy.MakeFeatureLayer_management(fcOutputConfinementSegments,lyrCurrentSegment,'"' + str(desc_fcOutputSegments.OIDFieldName)+ '" = ' + str(segment[0]))
-
-                ## Find Current Segment
-                arcpy.SelectLayerByLocation_management(lyrSegmentPolygons,"CONTAINS",lyrCurrentSegment,selection_type="NEW_SELECTION")
-                #arcpy.AddMessage(str(arcpy.GetCount_management(lyrSegmentPolygons).getOutput(0)))
-                if int(arcpy.GetCount_management(lyrSegmentPolygons).getOutput(0)) == 0:
-                    arcpy.SelectLayerByLocation_management(lyrSegmentPolygons,"CROSSED_BY_THE_OUTLINE_OF",lyrCurrentSegment,selection_type="NEW_SELECTION")
-
-                ## Calculate Total Confinement Using both banks (Summed) 
-                arcpy.SelectLayerByLocation_management(lyrConfinementEdgeSegments,"SHARE_A_LINE_SEGMENT_WITH",lyrSegmentPolygons,selection_type="NEW_SELECTION")
-                arcpy.SelectLayerByLocation_management(lyrChannelEdgeSegments,"SHARE_A_LINE_SEGMENT_WITH",lyrSegmentPolygons,selection_type="NEW_SELECTION")
-
-                dblConfinementEdges = sum([r[0] for r in arcpy.da.SearchCursor(lyrConfinementEdgeSegments,["SHAPE@LENGTH"])])
-                dblChannelEdges = sum([r[0] for r in arcpy.da.SearchCursor(lyrChannelEdgeSegments,["SHAPE@LENGTH"])])
-
-                segment[1] = calculate_confinement(dblConfinementEdges,dblChannelEdges)
-                arcpy.AddMessage("Segment #" + str(segment[0]) + " | Confinement Margins Summed: " + str(segment[1]))
-
-                ## Calculate Confinement for each bank separately
-                #LeftBank
-                arcpy.SelectLayerByLocation_management(lyrChannelBanks,"WITHIN",lyrSegmentPolygons,selection_type="NEW_SELECTION")
-                arcpy.SelectLayerByLocation_management(lyrChannelBanks,"CONTAINS",fcChannelBankSidePoints,selection_type="SUBSET_SELECTION")
-                arcpy.SelectLayerByLocation_management(lyrConfinementEdgeSegments,"SHARE_A_LINE_SEGMENT_WITH",lyrChannelBanks,selection_type="NEW_SELECTION")
-                arcpy.SelectLayerByLocation_management(lyrChannelEdgeSegments,"SHARE_A_LINE_SEGMENT_WITH",lyrChannelBanks,selection_type="NEW_SELECTION")
-                dblConfinementEdgesL = sum([r[0] for r in arcpy.da.SearchCursor(lyrConfinementEdgeSegments,["SHAPE@LENGTH"])])
-                dblChannelEdgesL = sum([r[0] for r in arcpy.da.SearchCursor(lyrChannelEdgeSegments,["SHAPE@LENGTH"])])
-
-                segment[3] = dblConfinementEdgesL
-                segment[4] = dblChannelEdgesL
-                segment[5] = calculate_confinement(dblConfinementEdgesL,dblChannelEdgesL)
-
-                #RightBank
-                arcpy.SelectLayerByLocation_management(lyrChannelBanks,"WITHIN",lyrSegmentPolygons,selection_type="NEW_SELECTION")
-                arcpy.SelectLayerByLocation_management(lyrChannelBanks,"CONTAINS",fcChannelBankSidePoints,selection_type="REMOVE_FROM_SELECTION")
-                arcpy.SelectLayerByLocation_management(lyrConfinementEdgeSegments,"SHARE_A_LINE_SEGMENT_WITH",lyrChannelBanks,selection_type="NEW_SELECTION")
-                arcpy.SelectLayerByLocation_management(lyrChannelEdgeSegments,"SHARE_A_LINE_SEGMENT_WITH",lyrChannelBanks,selection_type="NEW_SELECTION")
-                dblConfinementEdgesR = sum([r[0] for r in arcpy.da.SearchCursor(lyrConfinementEdgeSegments,["SHAPE@LENGTH"])])
-                dblChannelEdgesR = sum([r[0] for r in arcpy.da.SearchCursor(lyrChannelEdgeSegments,["SHAPE@LENGTH"])])
-
-                segment[6] = dblConfinementEdgesR
-                segment[7] = dblChannelEdgesR
-                segment[8] = calculate_confinement(dblConfinementEdgesR,dblChannelEdgesR)
-
-                ## Calculate Confinement from continuous stream network
-                # Is Confined
-                lyrLineNetworkConfinement = gis_tools.newGISDataset("Layer","lyrLineNetworkConfinement")
-                arcpy.MakeFeatureLayer_management(fcOutputRawConfiningState,lyrLineNetworkConfinement,""" "IsConfined" = 1""")
-                arcpy.SelectLayerByLocation_management(lyrLineNetworkConfinement,"SHARE_A_LINE_SEGMENT_WITH",lyrCurrentSegment,selection_type="NEW_SELECTION")
-                dblConfinementLineNetwork = sum([r[0] for r in arcpy.da.SearchCursor(lyrLineNetworkConfinement,["SHAPE@LENGTH"])])
-                segment[9] = calculate_confinement(dblConfinementLineNetwork,float(segment[2]))
-
-                # Both
-                lyrLineNetworkConfinementBoth = gis_tools.newGISDataset("Layer","lyrLineNetworkConfinementBoth")
-                arcpy.MakeFeatureLayer_management(fcOutputRawConfiningState,lyrLineNetworkConfinementBoth,""" "Confinement_Type" = 'BOTH'""")
-                arcpy.SelectLayerByLocation_management(lyrLineNetworkConfinementBoth,"SHARE_A_LINE_SEGMENT_WITH",lyrCurrentSegment,selection_type="NEW_SELECTION")
-                dblConfinementLineNetworkBoth = sum([r[0] for r in arcpy.da.SearchCursor(lyrLineNetworkConfinementBoth,["SHAPE@LENGTH"])])
-                segment[10] = calculate_confinement(dblConfinementLineNetworkBoth,float(segment[2]))
-                # Left
-                lyrLineNetworkConfinementLeft = gis_tools.newGISDataset("Layer","lyrLineNetworkConfinementLeft")
-                arcpy.MakeFeatureLayer_management(fcOutputRawConfiningState,lyrLineNetworkConfinementLeft,""" "Confinement_Type" = 'LEFT'""")
-                arcpy.SelectLayerByLocation_management(lyrLineNetworkConfinementLeft,"SHARE_A_LINE_SEGMENT_WITH",lyrCurrentSegment,selection_type="NEW_SELECTION")
-                dblConfinementLineNetworkLeft = sum([r[0] for r in arcpy.da.SearchCursor(lyrLineNetworkConfinementLeft,["SHAPE@LENGTH"])])
-                segment[11] = calculate_confinement(dblConfinementLineNetworkLeft,float(segment[2]))
-                # Right
-                lyrLineNetworkConfinementRight = gis_tools.newGISDataset("Layer","lyrLineNetworkConfinementRight")
-                arcpy.MakeFeatureLayer_management(fcOutputRawConfiningState,lyrLineNetworkConfinementRight,""" "Confinement_Type" = 'RIGHT'""")
-                arcpy.SelectLayerByLocation_management(lyrLineNetworkConfinementRight,"SHARE_A_LINE_SEGMENT_WITH",lyrCurrentSegment,selection_type="NEW_SELECTION")
-                dblConfinementLineNetworkRight = sum([r[0] for r in arcpy.da.SearchCursor(lyrLineNetworkConfinementRight,["SHAPE@LENGTH"])])
-                segment[12] = calculate_confinement(dblConfinementLineNetworkRight,float(segment[2]))
-
-                ## Update Row
-                ucSegments.updateRow(segment)
+        arcpy.JoinField_management(fcOutputConfinementSegments,"SegmentID",tblIntersectSumStatsPivot,"SegmentID")
 
         arcpy.AddMessage("GNAT CON: Confinement Calculations Complete.")
 
