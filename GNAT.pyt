@@ -365,9 +365,25 @@ class OutsideValleyBottomTool(object):
             name="OutputStreamNetwork",
             datatype="GPString",
             parameterType="Required",
+<<<<<<< HEAD
             direction="Input")
 
         return [param0,param1,param2,param3,param4]
+=======
+            direction="Input",
+            multiValue=True)
+        #param4.value = [50,100]
+
+        param5 = arcpy.Parameter(
+            displayName="Output Workspace",
+            name="strOutputWorkspace",
+            datatype="DEWorkspace",
+            parameterType="Required",
+            direction="Input")
+        #param5.value = str(arcpy.env.scratchWorkspace)
+        params = [param0,param1,param2,param3,param4,param5]
+        return params
+>>>>>>> master
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
