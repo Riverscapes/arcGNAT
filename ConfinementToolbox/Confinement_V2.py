@@ -182,10 +182,10 @@ def main(fcInputStreamLineNetwork,
     if fcOutputConfinementSegments:
 
         fcIntersectRCSAndSegments = gis_tools.newGISDataset(scratchWorkspace,"IntersectRCS_AndSegments")
-        arcpy.Intersect_analysis([fcInputChannelPolygon,fcOutputRawConfiningState],fcIntersectRCSAndSegments)
+        arcpy.Intersect_analysis([fcInputStreamLineNetwork,fcOutputRawConfiningState],fcIntersectRCSAndSegments,)
 
         tblIntersectSumStats = gis_tools.newGISDataset(scratchWorkspace,"TableIntersectSumStats")
-        arcpy.Statistics_analysis(fcIntersectRCSAndSegments,tblIntersectSumStats,"Shape_Length SUM","SegmentID,IsConfined")
+        arcpy.Statistics_analysis(fcIntersectRCSAndSegments,tblIntersectSumStats,"Shape_Length SUM","SegmentID;IsConfined")
         
         tblIntersectSumStatsPivot = gis_tools.newGISDataset(scratchWorkspace,"TableIntersectSumStatsPivot")
         arcpy.PivotTable_management(tblIntersectSumStats,"SegmentID","IsConfined","SUM_Shape_Length",tblIntersectSumStatsPivot)
@@ -226,7 +226,7 @@ def transfer_line(fcInLine,fcToLine,strStreamSide):
     arcpy.SplitLineAtPoint_management(fcToLine,lyrNearPointsConfinement,fcOutput,search_radius="10 Meters")
     
     # Prepare Fields
-    strConfinementField = "Confinement_" + strStreamSide
+    strConfinementField = "Con_" + strStreamSide
     arcpy.AddField_management(fcOutput,strConfinementField,"LONG")
 
     # Transfer Attributes by Centroids

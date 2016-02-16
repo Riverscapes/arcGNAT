@@ -25,6 +25,7 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="ConfinementToolbox\Confinement_Toolbox.pyt" />
     <Content Include="GNAT.pyt" />
     <Content Include="readme.md" />
   </ItemGroup>
@@ -33,6 +34,12 @@
     <Compile Include="Centerline.py" />
     <Compile Include="CheckNetworkConnectivity.py" />
     <Compile Include="CombineAttributes.py" />
+    <Compile Include="ConfinementToolbox\Confinement_V2.py" />
+    <Compile Include="ConfinementToolbox\DividePolygonBySegment.py" />
+    <Compile Include="ConfinementToolbox\geometry_functions.py" />
+    <Compile Include="ConfinementToolbox\gis_tools.py" />
+    <Compile Include="ConfinementToolbox\MovingWindow.py" />
+    <Compile Include="ConfinementToolbox\ValleyConfinement.py" />
     <Compile Include="CopyBranchID.py">
       <SubType>Code</SubType>
     </Compile>
@@ -70,6 +77,9 @@
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="{9a7a9026-48c1-4688-9d5d-e5699d47d074}\2.7" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ConfinementToolbox\" />
   </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
