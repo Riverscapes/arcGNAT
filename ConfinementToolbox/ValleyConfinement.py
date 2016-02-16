@@ -48,16 +48,16 @@ def main(fcInputStreamLineNetwork,
         fcConfiningMargins = fcOutputConfiningMargins
     else:
         fcConfiningMargins = gis_tools.newGISDataset(scratchWorkspace, "ConfiningMargins")
-	
-	fcConfiningMarginsMultipart = gis_tools.newGISDataset(scratchWorkspace,"ConfiningMargins_Multipart")
+    
+    fcConfiningMarginsMultipart = gis_tools.newGISDataset(scratchWorkspace,"ConfiningMargins_Multipart")
     arcpy.Intersect_analysis([fcConfinedChannel,fcInputValleyBottomPolygon],fcConfiningMarginsMultipart,output_type="LINE")
-	
-	arcpy.MultipartToSinglepart_management(fcConfiningMarginsMultipart,fcConfiningMargins)
+    
+    arcpy.MultipartToSinglepart_management(fcConfiningMarginsMultipart,fcConfiningMargins)
     
     # Merge segments in PolyineCenter to create Route Layer
     tempZFlag = arcpy.env.outputZFlag
     arcpy.env.outputZFlag = "Disabled" # 'empty' z values can cause problem with dissolve
-    fcStreamNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"StreamNetworkDissolved") ### one feature per 'section between trib or branch junctions'
+    fcStreamNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"StreamNetworkDissolved") ### one feature per 'section between tributary or branch junctions'
     arcpy.Dissolve_management(fcInputStreamLineNetwork,fcStreamNetworkDissolved,multi_part="SINGLE_PART",unsplit_lines="UNSPLIT_LINES")
     arcpy.env.outputZFlag = tempZFlag
 
@@ -74,7 +74,6 @@ def main(fcInputStreamLineNetwork,
     fcChannelSegmentPolygonLines = gis_tools.newGISDataset(scratchWorkspace,"SegmentPolygonLines")
     fcChannelBankNearLines = gis_tools.newGISDataset(scratchWorkspace,"Bank_NearLines")
     DividePolygonBySegment.main(fcInputStreamLineNetwork,fcConfinedChannel,fcChannelSegmentPolygons,scratchWorkspace)
-    #arcpy.Copy_management(fcConfinedChannel,fcChannelSegmentPolygons)
     arcpy.PolygonToLine_management(fcChannelSegmentPolygons,fcChannelSegmentPolygonLines)
     lyrStreamNetworkDangles = gis_tools.newGISDataset("LAYER", "lyrStreamNetworkDangles")
     arcpy.MakeFeatureLayer_management(fcStreamNetworkDangles,lyrStreamNetworkDangles)
@@ -91,7 +90,7 @@ def main(fcInputStreamLineNetwork,
     arcpy.Merge_management([fcChannelSegmentPolygonLines,fcInputStreamLineNetwork,fcChannelBankNearLines],fcChannelBankLines)
     arcpy.FeatureToPolygon_management(fcChannelBankLines,fcChannelBankPolygons)
         
-    # Intersect and Split Channel polygon fcchanneledges and PolylineConfinement using cross section lines
+    # Intersect and Split Channel Polygon Channel Edges and PolylineConfinement using cross section lines
     arcpy.AddMessage("GNAT CON: Intersect and Split Channel Polygons")
     fcIntersectPoints_ChannelMargins = gis_tools.newGISDataset(scratchWorkspace,"IntersectPoints_ChannelMargins")
     fcIntersectPoints_ConfinementMargins = gis_tools.newGISDataset(scratchWorkspace,"IntersectPoints_ConfinementMargins")
@@ -116,7 +115,7 @@ def main(fcInputStreamLineNetwork,
     arcpy.SelectLayerByAttribute_management(lyrChannelBanks,"SWITCH_SELECTION")
     arcpy.CalculateField_management(lyrChannelBanks,"BankSide","'RIGHT'","PYTHON")
 
-    # Pepare Layers for Segment Selection
+    # Prepare Layers for Segment Selection
     lyrSegmentPolygons = gis_tools.newGISDataset("Layer","lyrSegmentPolygons")
     lyrConfinementEdgeSegments = gis_tools.newGISDataset("Layer","lyrConfinementEdgeSegments")
     lyrChannelEdgeSegments = gis_tools.newGISDataset("Layer","lyrChannelEdgeSegments")
@@ -124,7 +123,7 @@ def main(fcInputStreamLineNetwork,
     arcpy.MakeFeatureLayer_management(fcConfinementMargin_Segments,lyrConfinementEdgeSegments)
     arcpy.MakeFeatureLayer_management(fcChannelMargin_Segments,lyrChannelEdgeSegments)
 
-    # Perepare Filtered Margins
+    # Prepare Filtered Margins
     fcFilterSplitPoints = gis_tools.newGISDataset(scratchWorkspace,"FilterSplitPoints")
     arcpy.FeatureVerticesToPoints_management(fcConfinementMargin_Segments,fcFilterSplitPoints,"BOTH_ENDS")
 
@@ -149,7 +148,7 @@ def main(fcInputStreamLineNetwork,
     fcConfinementStreamNetworkIntersected = gis_tools.newGISDataset(scratchWorkspace,"ConfinementStreamNetworkIntersected")
     arcpy.Intersect_analysis([fcStreamNetworkConfinementLeft,fcStreamNetworkConfinementRight],fcConfinementStreamNetworkIntersected,"ALL")
 
-    #resplit centerline by segments
+    #Re-split centerline by segments
     arcpy.AddMessage("GNAT CON: Calculating Confinement For Stream Network Segments.")
     if arcpy.Exists(fcOutputRawConfiningState):
        arcpy.Delete_management(fcOutputRawConfiningState)# = outputLineFC#gis_tools.newGISDataset(outputLineFC,"ConfinementCenterline")
@@ -197,9 +196,9 @@ def main(fcInputStreamLineNetwork,
         arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_LineNetwork_Left","DOUBLE")
         arcpy.AddField_management(fcOutputConfinementSegments,"Confinement_LineNetwork_Right","DOUBLE")
 
-
         arcpy.AddMessage("GNAT CON: Calculating Confinement Along Segments.")
         desc_fcOutputSegments = arcpy.Describe(fcOutputConfinementSegments)
+
         with arcpy.da.UpdateCursor(fcOutputConfinementSegments,[str(desc_fcOutputSegments.OIDFieldName), #0
                                                      "Confinement_Margin_Summed", #1
                                                      "SHAPE@LENGTH", #2
@@ -287,7 +286,7 @@ def main(fcInputStreamLineNetwork,
                 segment[12] = calculate_confinement(dblConfinementLineNetworkRight,float(segment[2]))
 
                 ## Update Row
-                ucSegments.updateRow(segment)
+                ucSegments.updateRow(segment)  
 
         arcpy.AddMessage("GNAT CON: Confinement Calculations Complete.")
 

@@ -1,16 +1,14 @@
 ﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Name:        Stream Network and Riverstyles Toolbox                         #
-# Purpose:     Tools for generating a Stream Network and for calculating      #  
-#              Riverstyles Metrics.                                           #
+# Name:        Confinement Tool                                               #
+# Purpose:     Tools for and calculating confinement on a stream              # 
+#              network or using a moving window  along the stream network     #  
 #                                                                             #
 # Authors:     Kelly Whitehead (kelly@southforkresearch.org)                  #
-#              Jesse Langdon (jesse@southforkresearch.org)                    #
-#              Jean Olson (jean@southforkresearch.org                         #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     1.3                                                            #
+# Version:     1                                                              #
 # Released:                                                                   #
 #                                                                             #
 # License:     Free to use.                                                   #
