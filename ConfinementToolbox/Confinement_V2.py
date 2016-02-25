@@ -38,7 +38,7 @@ def main(fcInputStreamLineNetwork,
 
     ## Reload modules and Prepare processing environments
     reload(gis_tools)
-    arcpy.AddMessage("Confinement Tool")
+    arcpy.AddMessage("Starting Confinement Tool")
 
     # Create Confined Channel Polygon
     fcConfinedChannel = gis_tools.newGISDataset(scratchWorkspace,"ChannelConfined")
@@ -93,7 +93,7 @@ def main(fcInputStreamLineNetwork,
     arcpy.Merge_management([fcChannelSegmentPolygonLines,fcInputStreamLineNetwork,fcChannelBankNearLines],fcChannelBankLines)
     arcpy.FeatureToPolygon_management(fcChannelBankLines,fcChannelBankPolygons)
         
-    # Intersect and Split Channel polygon Channel Edges and Polyline Confinement using cross section lines
+    ## Intersect and Split Channel polygon Channel Edges and Polyline Confinement using cross section lines
     arcpy.AddMessage("GNAT CON: Intersect and Split Channel Polygons")
     fcIntersectPoints_ChannelMargins = gis_tools.newGISDataset(scratchWorkspace,"IntersectPoints_ChannelMargins")
     fcIntersectPoints_ConfinementMargins = gis_tools.newGISDataset(scratchWorkspace,"IntersectPoints_ConfinementMargins")
@@ -105,18 +105,8 @@ def main(fcInputStreamLineNetwork,
     arcpy.SplitLineAtPoint_management(fcChannelMargins,fcIntersectPoints_ChannelMargins,fcChannelMargin_Segments,search_radius="10 Meters")
 
     # Create River Side buffer to select right or left banks
-    arcpy.AddMessage("GNAT CON: Determining Sides of Bank.")
-    fcChannelBankSideBuffer = gis_tools.newGISDataset(scratchWorkspace,"BankSide_Buffer")
-    fcChannelBankSidePoints = gis_tools.newGISDataset(scratchWorkspace,"BankSidePoints")
-    arcpy.Buffer_analysis(fcInputStreamLineNetwork,fcChannelBankSideBuffer,"1 Meter","LEFT","FLAT","NONE")
-    arcpy.FeatureToPoint_management(fcChannelBankSideBuffer,fcChannelBankSidePoints,"INSIDE")
-    arcpy.AddField_management(fcChannelBankPolygons,"BankSide","TEXT","10")
-    lyrChannelBanks = gis_tools.newGISDataset("Layer","lyrChannelBanks")
-    arcpy.MakeFeatureLayer_management(fcChannelBankPolygons,lyrChannelBanks)
-    arcpy.SelectLayerByLocation_management(lyrChannelBanks,"INTERSECT",fcChannelBankSidePoints,selection_type="NEW_SELECTION")
-    arcpy.CalculateField_management(lyrChannelBanks,"BankSide","'LEFT'","PYTHON")
-    arcpy.SelectLayerByAttribute_management(lyrChannelBanks,"SWITCH_SELECTION")
-    arcpy.CalculateField_management(lyrChannelBanks,"BankSide","'RIGHT'","PYTHON")
+    arcpy.AddMessage("Confinement Tool: Determining Sides of Bank.")
+    determine_banks(fcInputStreamLineNetwork,fcChannelBankPolygons,scratchWorkspace)
 
     # Prepare Layers for Segment Selection
     lyrSegmentPolygons = gis_tools.newGISDataset("Layer","lyrSegmentPolygons")
@@ -130,8 +120,8 @@ def main(fcInputStreamLineNetwork,
     fcFilterSplitPoints = gis_tools.newGISDataset(scratchWorkspace,"FilterSplitPoints")
     arcpy.FeatureVerticesToPoints_management(fcConfinementMargin_Segments,fcFilterSplitPoints,"BOTH_ENDS")
 
-    # Prepare Continuous Confinement ##
-    arcpy.AddMessage("GNAT CON: Determining Continuous Confinement along Stream Network.")
+    # Transfer Confining Margins to Stream Network ##
+    arcpy.AddMessage("Confinement Tool: Transferring Confining Margins to Stream Network.")
     fcConfinementMarginSegmentsBankSide = gis_tools.newGISDataset(scratchWorkspace,"ConfinementMarginSegmentsBank")
     lyrConfinementMarginSegmentsBankside = gis_tools.newGISDataset("Layer","lyrConfinementMarginSegmentsBankside")
     arcpy.SpatialJoin_analysis(fcConfinementMargin_Segments,
@@ -158,7 +148,7 @@ def main(fcInputStreamLineNetwork,
     arcpy.SplitLineAtPoint_management(fcConfinementStreamNetworkIntersected,
                                       fcNetworkSegmentPoints,
                                       fcOutputRawConfiningState,
-                                      "10 Meters")
+                                      "0.01 Meters")
 
     #Table and Attributes
     arcpy.AddField_management(fcOutputRawConfiningState,"Con_Type","TEXT",field_length="6")
@@ -212,6 +202,22 @@ def calculate_confinement(dblConfinedMarginLength,dblTotalLength):
 
     return dblConfinement
 
+def determine_banks(fcInputStreamLineNetwork,fcChannelBankPolygons,scratchWorkspace):
+
+    fcChannelBankSideBuffer = gis_tools.newGISDataset(scratchWorkspace,"BankSide_Buffer")
+    fcChannelBankSidePoints = gis_tools.newGISDataset(scratchWorkspace,"BankSidePoints")
+    arcpy.Buffer_analysis(fcInputStreamLineNetwork,fcChannelBankSideBuffer,"1 Meter","LEFT","FLAT","NONE")
+    arcpy.FeatureToPoint_management(fcChannelBankSideBuffer,fcChannelBankSidePoints,"INSIDE")
+    arcpy.AddField_management(fcChannelBankPolygons,"BankSide","TEXT","10")
+    lyrChannelBanks = gis_tools.newGISDataset("Layer","lyrChannelBanks")
+    arcpy.MakeFeatureLayer_management(fcChannelBankPolygons,lyrChannelBanks)
+    arcpy.SelectLayerByLocation_management(lyrChannelBanks,"INTERSECT",fcChannelBankSidePoints,selection_type="NEW_SELECTION")
+    arcpy.CalculateField_management(lyrChannelBanks,"BankSide","'LEFT'","PYTHON")
+    arcpy.SelectLayerByAttribute_management(lyrChannelBanks,"SWITCH_SELECTION")
+    arcpy.CalculateField_management(lyrChannelBanks,"BankSide","'RIGHT'","PYTHON")
+    
+    return 
+
 def transfer_line(fcInLine,fcToLine,strStreamSide):
     outputWorkspace = arcpy.Describe(fcInLine).path
     fcOutput = gis_tools.newGISDataset(outputWorkspace,"LineNetworkConfinement" + strStreamSide)
@@ -223,7 +229,7 @@ def transfer_line(fcInLine,fcToLine,strStreamSide):
     arcpy.GenerateNearTable_analysis(fcSplitPoints,fcToLine,tblNearPointsConfinement,location="LOCATION",angle="ANGLE")
     lyrNearPointsConfinement = gis_tools.newGISDataset("Layer","lyrNearPointsConfinement"+ strStreamSide)
     arcpy.MakeXYEventLayer_management(tblNearPointsConfinement,"NEAR_X","NEAR_Y",lyrNearPointsConfinement,fcToLine)
-    arcpy.SplitLineAtPoint_management(fcToLine,lyrNearPointsConfinement,fcOutput,search_radius="10 Meters")
+    arcpy.SplitLineAtPoint_management(fcToLine,lyrNearPointsConfinement,fcOutput,search_radius="0.01 Meters")
     
     # Prepare Fields
     strConfinementField = "Con_" + strStreamSide
@@ -239,7 +245,7 @@ def transfer_line(fcInLine,fcToLine,strStreamSide):
     lyrToLineSegments = gis_tools.newGISDataset("Layer","lyrToLineSegments")
     arcpy.MakeFeatureLayer_management(fcOutput,lyrToLineSegments)
     
-    arcpy.SelectLayerByLocation_management(lyrToLineSegments,"INTERSECT",lyrNearPointsCentroid,"0.01 Meter","NEW_SELECTION")
+    arcpy.SelectLayerByLocation_management(lyrToLineSegments,"INTERSECT",lyrNearPointsCentroid,selection_type="NEW_SELECTION")#"0.01 Meter","NEW_SELECTION")
     arcpy.CalculateField_management(lyrToLineSegments,strConfinementField,1,"PYTHON")
     
     return fcOutput

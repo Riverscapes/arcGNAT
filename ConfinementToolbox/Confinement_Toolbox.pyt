@@ -33,7 +33,7 @@ class Toolbox(object):
 
         # List of tool classes associated with this toolbox
         self.tools = [ConfinementTool,
-                      ConfinementTool2,
+                      #ConfinementTool2,
                       MovingWindowTool]
 
 # Stream Network Management Tools #
@@ -148,12 +148,22 @@ class MovingWindowTool(object):
 class ConfinementTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Confinement"
+        self.label = "Confinement Tool"
         self.description = "Calculate the Confinement for segmented reaches using the Stream Network, Channel Buffer Polygon, and Valley Bottom Polygon."
         self.canRunInBackground = True
 
     def getParameterInfo(self):
         """Define parameter definitions"""
+        
+
+        paramSwitch = arcpy.Parameter(
+            displayName="Results Type",
+            name="ResutlsFlag",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+        paramSwitch.filter.list = ["Full","Converged Margins Only"]
+        
         param0 = arcpy.Parameter(
             displayName="Input Stream Network (Segmentation Optional)",
             name="InputFCStreamNetwork",
@@ -210,7 +220,7 @@ class ConfinementTool(object):
             direction="Input")
         param6.filter.list = ["Local Database"]
 
-        return [param0,param1,param2,param3,param4,param5,param6]
+        return [param0,param1,param2,param3,param4,param5,param6,paramSwitch]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -244,24 +254,41 @@ class ConfinementTool(object):
         reload(ValleyConfinement)
         setEnvironmentSettings()
 
-        ValleyConfinement.main(p[0].valueAsText,
+        
+        if p[7].valueAsText == "Full":
+            ValleyConfinement.main(p[0].valueAsText,
                                p[1].valueAsText,
                                p[2].valueAsText,
                                p[3].valueAsText,
                                p[4].valueAsText,
                                p[5].valueAsText,
                                getTempWorkspace(p[6].valueAsText))
+        else:
+            reload(Confinement_V2)
+            setEnvironmentSettings()
+
+            Confinement_V2.main(p[0].valueAsText,
+                               p[1].valueAsText,
+                               p[2].valueAsText,
+                               p[3].valueAsText,
+                               p[4].valueAsText,
+                               p[5].valueAsText,
+                               getTempWorkspace(p[6].valueAsText))
+        
         return
 
 class ConfinementTool2(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Confinement"
+        self.label = "Confinement 2"
         self.description = "Calculate the Confinement for segmented reaches using the Stream Network, Channel Buffer Polygon, and Valley Bottom Polygon."
         self.canRunInBackground = True
 
     def getParameterInfo(self):
         """Define parameter definitions"""
+        
+        
+
         param0 = arcpy.Parameter(
             displayName="Input Stream Network (Segmentation Optional)",
             name="InputFCStreamNetwork",
@@ -312,7 +339,7 @@ class ConfinementTool2(object):
 
         param6 = arcpy.Parameter(
             displayName="Scratch Workspace",
-            name="InputTempWorkspace",
+            name="ScratchWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
@@ -349,7 +376,7 @@ class ConfinementTool2(object):
 
     def execute(self, p, messages):
         """The source code of the tool."""
-        reload(ValleyConfinement)
+        reload(Confinement_V2)
         setEnvironmentSettings()
 
         Confinement_V2.main(p[0].valueAsText,
