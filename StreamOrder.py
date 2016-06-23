@@ -47,7 +47,7 @@ def main(inputFCPolylineNetwork,
     arcpy.Intersect_analysis(fcNetworkDissolvedUnsplit,fcNetworkIntersectPoints,"ALL",output_type="POINT")
     
     fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"NetworkDissolved")###
-    arcpy.SplitLineAtPoint_management(fcNetworkDissolvedUnsplit,fcNetworkIntersectPoints,fcNetworkDissolved,"1 METERS")
+    arcpy.SplitLineAtPoint_management(fcNetworkDissolvedUnsplit,fcNetworkIntersectPoints,fcNetworkDissolved,"0.1 METERS")
 
 
     listFields = arcpy.ListFields(fcNetworkDissolved,"Stream_Order")
