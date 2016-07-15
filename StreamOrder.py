@@ -41,12 +41,12 @@ def main(inputFCPolylineNetwork,
     # Preprocess Network
     ### This section could stall ArcGIS 10.1 with dissolve... 
     fcNetworkDissolvedUnsplit = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_NetworkDissolvedUnsplit")
-    arcpy.Dissolve_management(inputFCPolylineNetwork,fcNetworkDissolvedUnsplit,multi_part="SINGLE_PART",unsplit_lines="UNSPLIT_LINES")
+    arcpy.Dissolve_management(inputFCPolylineNetwork,fcNetworkDissolvedUnsplit,multi_part="SINGLE_PART",unsplit_lines="DISSOLVE_LINES")
     
     fcNetworkIntersectPoints = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_NetworkIntersectPoints")
     arcpy.Intersect_analysis(fcNetworkDissolvedUnsplit,fcNetworkIntersectPoints,"ALL",output_type="POINT")
     
-    fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"NetworkDissolved")###
+    fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"NetworkDissolved")
     arcpy.SplitLineAtPoint_management(fcNetworkDissolvedUnsplit,fcNetworkIntersectPoints,fcNetworkDissolved,"0.1 METERS")
 
 
@@ -117,7 +117,7 @@ def main(inputFCPolylineNetwork,
         arcpy.SelectLayerByAttribute_management(lyrCalculate,"NEW_SELECTION",'"Stream_Order" = 0')
         intFeaturesCurrent = int(arcpy.GetCount_management(lyrCalculate).getOutput(0))
         if intFeaturesRemaining == intFeaturesCurrent:
-            arcpy.AddError("The nuber of features remaining (" + str(intFeaturesCurrent) + " is the same as the last iteration.")
+            arcpy.AddError("The number of features remaining (" + str(intFeaturesCurrent) + " is the same as the last iteration.")
         else:
             intFeaturesRemaining = intFeaturesCurrent
         intIteration = intIteration + 1
