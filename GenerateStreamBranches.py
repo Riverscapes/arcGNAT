@@ -45,7 +45,8 @@ def main(
     where = arcpy.AddFieldDelimiters(fcLineNetwork,fieldStreamName) + " <> '' "
     arcpy.SelectLayerByAttribute_management(lyrStreamSelection,"NEW_SELECTION",where)
     fcDissolveByName = gis_tools.newGISDataset(tempWorkspace,"GNAT_BRANCHES_DissolveByName")
-    arcpy.Dissolve_management(lyrStreamSelection,fcDissolveByName,fieldStreamName)
+    #arcpy.Dissolve_management(lyrStreamSelection,fcDissolveByName,fieldStreamName)
+    arcpy.Dissolve_management(lyrStreamSelection, fcDissolveByName, fieldStreamName,multi_part="SINGLE_PART",unsplit_lines="DISSOLVE_LINES")
     listfcMerge.append(fcDissolveByName)
     
     # Dissolve by Stream Order
@@ -82,7 +83,7 @@ def main(
         arcpy.AddMessage("Dissolving " + str(boolDissolve))
         arcpy.CopyFeatures_management(fcMerged,fcOutputStreamNetwork)
     else:
-        ## Delete remaining fields from fcMerged not BranchID, or Requried Fields fieldStreamName,fieldStreamOrder,
+        ## Delete remaining fields from fcMerged not BranchID, or required fields fieldStreamName,fieldStreamOrder,
         descFCMerged = arcpy.Describe(fcMerged)
         for field in descFCMerged.fields:
             if field.name not in ["BranchID",descFCMerged.OIDFieldName,descFCMerged.shapeFieldName,"Shape_Length"]:
