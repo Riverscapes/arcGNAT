@@ -19,9 +19,8 @@
 # # Import Modules # #
 import arcpy
 from os import path
-import ValleyConfinement
+import ConfiningMargins
 import MovingWindow
-import Confinement_V2
 
 class Toolbox(object):
     def __init__(self):
@@ -32,18 +31,14 @@ class Toolbox(object):
         self.description = "Tools for generating Valley Confinement."
 
         # List of tool classes associated with this toolbox
-        self.tools = [ConfinementTool,
-                      #ConfinementTool2,
-                      MovingWindowTool]
+        self.tools = [ConfingMarginTool,
+                      ConfinementCalculationTool]
 
-# Stream Network Management Tools #
-
-# Geomorphic Attributes Tools #
-class MovingWindowTool(object):
+class ConfinementCalculationTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Moving Window Analysis"
-        self.description = "Calculate the Valley Confinement using a Moving Window on a Raw Confinement Polyline FC.  Tool Documentation: https://bitbucket.org/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/MovingWindow"
+        self.label = "Confinement Calculation Tool"
+        self.description = "Calculate the Valley Confinement. Tool Documentation: https://bitbucket.org/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/MovingWindow"
         self.canRunInBackground = True
 
     def getParameterInfo(self):
@@ -95,8 +90,17 @@ class MovingWindowTool(object):
             direction="Input",
             category="Outputs")
 
+        param6 = arcpy.Parameter(
+            displayName="Temp Workspace",
+            name="strTempWorkspace",
+            datatype="DEWorkspace",
+            parameterType="Optional",
+            direction="Input",
+            category="Outputs")
+        param6.value = arcpy.env.scratchWorkspace
+
         param5.value = str(arcpy.env.scratchWorkspace)
-        params = [param0,param1,param2,param3,param4,param5]
+        params = [param0,param1,param2,param3,param4,param5,param6]
         return params
 
     def isLicensed(self):
@@ -130,6 +134,7 @@ class MovingWindowTool(object):
 
         testProjected(parameters[0])
         testWorkspacePath(parameters[5])
+        testWorkspacePath(parameters[6])
         return
 
     def execute(self, p, messages):
@@ -142,30 +147,22 @@ class MovingWindowTool(object):
                           p[2].valueAsText,
                           p[3].valueAsText,
                           p[4].valueAsText,
-                          p[5].valueAsText)
+                          p[5].valueAsText,
+                          p[6].valueAsText)
         return
 
-class ConfinementTool(object):
+class ConfingMarginTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Confinement Tool"
-        self.description = "Calculate the Confinement for segmented reaches using the Stream Network, Channel Buffer Polygon, and Valley Bottom Polygon."
+        self.label = "Confining Margins Tool"
+        self.description = "Determine the Confining Margins using the Stream Network, Channel Buffer Polygon, and Valley Bottom Polygon."
         self.canRunInBackground = True
 
     def getParameterInfo(self):
         """Define parameter definitions"""
         
-
-        paramSwitch = arcpy.Parameter(
-            displayName="Results Type",
-            name="ResutlsFlag",
-            datatype="GPString",
-            parameterType="Required",
-            direction="Input")
-        paramSwitch.filter.list = ["Full","Converged Margins Only"]
-        
         param0 = arcpy.Parameter(
-            displayName="Input Stream Network (Segmentation Optional)",
+            displayName="Input Stream Network",
             name="InputFCStreamNetwork",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -181,171 +178,37 @@ class ConfinementTool(object):
         param1.filter.list = ["Polygon"]
 
         param2 = arcpy.Parameter(
-            displayName="Input Channel Polygon",
-            name="InputChannelBottom",
+            displayName="Input Buffered Bankfull Channel Polygon",
+            name="InputBankfullChannelPoly",
             datatype="GPFeatureLayer", 
             parameterType="Required",
             direction="Input")
         param2.filter.list = ["Polygon"]
 
         param3 = arcpy.Parameter(
-            displayName="Output Raw Confining State Along Stream Network",
-            name="outputConCenterlineFC",
+            displayName="Output Raw Confining State",
+            name="outputRawConfiningState",
             datatype="DEFeatureClass",
             parameterType="Required",
             direction="Output")
         param3.filter.list = ["Polyline"]
 
         param4 = arcpy.Parameter(
-            displayName="Output Confinement Calculated by Segments",
-            name="outputConSegmentsFC",
-            datatype="DEFeatureClass",
-            parameterType="Optional",
-            direction="Output")
-        #param4.filter.list = ["Polyline"]
-
-        param5 = arcpy.Parameter(
             displayName="Output Confining Margins",
             name="fcOutputConfiningMargins",
             datatype="DEFeatureClass",
             parameterType="Optional",
             direction="Output")
-        #param5.filter.FeatureClass = ["Polyline"]
 
-        param6 = arcpy.Parameter(
+        param5 = arcpy.Parameter(
             displayName="Scratch Workspace",
             name="InputTempWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
-        param6.filter.list = ["Local Database"]
+        param5.filter.list = ["Local Database"]
 
-        return [param0,param1,param2,param3,param4,param5,param6,paramSwitch]
-
-    def isLicensed(self):
-        """Set whether tool is licensed to execute."""
-        return True
-
-    def updateParameters(self, parameters):
-        """Modify the values and properties of parameters before internal
-        validation is performed.  This method is called whenever a parameter
-        has been changed."""
-
-        return
-
-    def updateMessages(self, parameters):
-        """Modify the messages created by internal validation for each tool
-        parameter.  This method is called after internal validation."""
-        
-        testProjected(parameters[0])
-        testProjected(parameters[1])
-        testProjected(parameters[2])
-        testMValues(parameters[0])
-        testMValues(parameters[1])
-        testMValues(parameters[2])
-        testLayerSelection(parameters[0])
-        testLayerSelection(parameters[1])
-        testLayerSelection(parameters[2])
-        testWorkspacePath(parameters[6])
-        return
-
-    def execute(self, p, messages):
-        """The source code of the tool."""
-        reload(ValleyConfinement)
-        setEnvironmentSettings()
-
-        
-        if p[7].valueAsText == "Full":
-            ValleyConfinement.main(p[0].valueAsText,
-                               p[1].valueAsText,
-                               p[2].valueAsText,
-                               p[3].valueAsText,
-                               p[4].valueAsText,
-                               p[5].valueAsText,
-                               getTempWorkspace(p[6].valueAsText))
-        else:
-            reload(Confinement_V2)
-            setEnvironmentSettings()
-
-            Confinement_V2.main(p[0].valueAsText,
-                               p[1].valueAsText,
-                               p[2].valueAsText,
-                               p[3].valueAsText,
-                               p[4].valueAsText,
-                               p[5].valueAsText,
-                               getTempWorkspace(p[6].valueAsText))
-        
-        return
-
-class ConfinementTool2(object):
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "Confinement 2"
-        self.description = "Calculate the Confinement for segmented reaches using the Stream Network, Channel Buffer Polygon, and Valley Bottom Polygon."
-        self.canRunInBackground = True
-
-    def getParameterInfo(self):
-        """Define parameter definitions"""
-        
-        
-
-        param0 = arcpy.Parameter(
-            displayName="Input Stream Network (Segmentation Optional)",
-            name="InputFCStreamNetwork",
-            datatype="GPFeatureLayer", 
-            parameterType="Required",
-            direction="Input")
-        param0.filter.list = ["Polyline"]
-
-        param1 = arcpy.Parameter(
-            displayName="Input Valley Bottom Polygon",
-            name="InputValleyBottomPolygon",
-            datatype="GPFeatureLayer", #Integer
-            parameterType="Required",
-            direction="Input")
-        param1.filter.list = ["Polygon"]
-
-        param2 = arcpy.Parameter(
-            displayName="Input Channel Polygon",
-            name="InputChannelBottom",
-            datatype="GPFeatureLayer", 
-            parameterType="Required",
-            direction="Input")
-        param2.filter.list = ["Polygon"]
-
-        param3 = arcpy.Parameter(
-            displayName="Output Raw Confining State Along Stream Network",
-            name="outputConCenterlineFC",
-            datatype="DEFeatureClass",
-            parameterType="Required",
-            direction="Output")
-        param3.filter.list = ["Polyline"]
-
-        param4 = arcpy.Parameter(
-            displayName="Output Confinement Calculated by Segments",
-            name="outputConSegmentsFC",
-            datatype="DEFeatureClass",
-            parameterType="Optional",
-            direction="Output")
-        #param4.filter.list = ["Polyline"]
-
-        param5 = arcpy.Parameter(
-            displayName="Output Confining Margins",
-            name="fcOutputConfiningMargins",
-            datatype="DEFeatureClass",
-            parameterType="Optional",
-            direction="Output")
-        #param5.filter.FeatureClass = ["Polyline"]
-
-        param6 = arcpy.Parameter(
-            displayName="Scratch Workspace",
-            name="ScratchWorkspace",
-            datatype="DEWorkspace", 
-            parameterType="Optional",
-            direction="Input")
-        param6.filter.list = ["Local Database"]
-
-        return [param0,param1,param2,param3,param4,param5,param6]
+        return [param0,param1,param2,param3,param4,param5]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -371,22 +234,21 @@ class ConfinementTool2(object):
         testLayerSelection(parameters[0])
         testLayerSelection(parameters[1])
         testLayerSelection(parameters[2])
-        testWorkspacePath(parameters[6])
+        testWorkspacePath(parameters[5])
         return
 
     def execute(self, p, messages):
         """The source code of the tool."""
-        reload(Confinement_V2)
-        setEnvironmentSettings()
-
-        Confinement_V2.main(p[0].valueAsText,
-                               p[1].valueAsText,
-                               p[2].valueAsText,
-                               p[3].valueAsText,
-                               p[4].valueAsText,
-                               p[5].valueAsText,
-                               getTempWorkspace(p[6].valueAsText))
+        reload(ConfiningMargins)
+        ConfiningMargins.main(p[0].valueAsText,
+                            p[1].valueAsText,
+                            p[2].valueAsText,
+                            p[3].valueAsText,
+                            p[4].valueAsText,
+                            getTempWorkspace(p[5].valueAsText))
+        
         return
+
 # Other Functions # 
 def setEnvironmentSettings():
     arcpy.env.OutputMFlag = "Disabled"

@@ -32,13 +32,11 @@ def main(fcInputStreamLineNetwork,
          fcInputValleyBottomPolygon,
          fcInputChannelPolygon,
          fcOutputRawConfiningState,
-         fcOutputConfinementSegments,
          fcOutputConfiningMargins,
          scratchWorkspace):
 
-    ## Reload modules and Prepare processing environments
-    reload(gis_tools)
-    arcpy.AddMessage("Starting Confinement Tool")
+    ##Prepare processing environments
+    arcpy.AddMessage("Starting Confining Margins Tool")
 
     # Create Confined Channel Polygon
     fcConfinedChannel = gis_tools.newGISDataset(scratchWorkspace,"ChannelConfined")
@@ -71,18 +69,21 @@ def main(fcInputStreamLineNetwork,
 
     #SegmentPolgyons
     arcpy.AddMessage("GNAT CON: Preparing Segmented Polygons")
-    fcChannelBankLines = gis_tools.newGISDataset(scratchWorkspace,"Bank_Lines")
-    fcChannelBankPolygons = gis_tools.newGISDataset(scratchWorkspace,"Bank_Polygons")
+    
     fcChannelSegmentPolygons = gis_tools.newGISDataset(scratchWorkspace,"SegmentPolygons")
     fcChannelSegmentPolygonLines = gis_tools.newGISDataset(scratchWorkspace,"SegmentPolygonLines")
-    fcChannelBankNearLines = gis_tools.newGISDataset(scratchWorkspace,"Bank_NearLines")
+
     DividePolygonBySegment.main(fcInputStreamLineNetwork,fcConfinedChannel,fcChannelSegmentPolygons,scratchWorkspace)
     arcpy.PolygonToLine_management(fcChannelSegmentPolygons,fcChannelSegmentPolygonLines)
+
     lyrStreamNetworkDangles = gis_tools.newGISDataset("LAYER", "lyrStreamNetworkDangles")
     arcpy.MakeFeatureLayer_management(fcStreamNetworkDangles,lyrStreamNetworkDangles)
     arcpy.SelectLayerByLocation_management(lyrStreamNetworkDangles,"INTERSECT",fcConfinedChannel)
     arcpy.Near_analysis(lyrStreamNetworkDangles,fcChannelSegmentPolygonLines,location="LOCATION")
+    
     arcpy.AddXY_management(lyrStreamNetworkDangles)
+
+    fcChannelBankNearLines = gis_tools.newGISDataset(scratchWorkspace,"Bank_NearLines")
     arcpy.XYToLine_management(lyrStreamNetworkDangles,
                                 fcChannelBankNearLines,
                                 "POINT_X",
@@ -90,7 +91,9 @@ def main(fcInputStreamLineNetwork,
                                 "NEAR_X",
                                 "NEAR_Y")
 
-    arcpy.Merge_management([fcChannelSegmentPolygonLines,fcInputStreamLineNetwork,fcChannelBankNearLines],fcChannelBankLines)
+    fcChannelBankLines = gis_tools.newGISDataset(scratchWorkspace,"Bank_Lines")
+    arcpy.Merge_management([fcInputStreamLineNetwork,fcChannelBankNearLines,fcChannelSegmentPolygonLines],fcChannelBankLines)#fcChannelSegmentPolygonLines,
+    fcChannelBankPolygons = gis_tools.newGISDataset(scratchWorkspace,"Bank_Polygons")
     arcpy.FeatureToPolygon_management(fcChannelBankLines,fcChannelBankPolygons)
         
     ## Intersect and Split Channel polygon Channel Edges and Polyline Confinement using cross section lines
@@ -116,7 +119,7 @@ def main(fcInputStreamLineNetwork,
     arcpy.MakeFeatureLayer_management(fcConfinementMargin_Segments,lyrConfinementEdgeSegments)
     arcpy.MakeFeatureLayer_management(fcChannelMargin_Segments,lyrChannelEdgeSegments)
 
-    # Prepare Filtered Margins
+    ## Prepare Filtered Margins
     fcFilterSplitPoints = gis_tools.newGISDataset(scratchWorkspace,"FilterSplitPoints")
     arcpy.FeatureVerticesToPoints_management(fcConfinementMargin_Segments,fcFilterSplitPoints,"BOTH_ENDS")
 
@@ -144,11 +147,14 @@ def main(fcInputStreamLineNetwork,
     #Re-split centerline by segments
     arcpy.AddMessage("GNAT CON: Calculating Confinement For Stream Network Segments.")
     if arcpy.Exists(fcOutputRawConfiningState):
-       arcpy.Delete_management(fcOutputRawConfiningState)# = outputLineFC#gis_tools.newGISDataset(outputLineFC,"ConfinementCenterline")
+        arcpy.Delete_management(fcOutputRawConfiningState)# = outputLineFC#gis_tools.newGISDataset(outputLineFC,"ConfinementCenterline")
     arcpy.SplitLineAtPoint_management(fcConfinementStreamNetworkIntersected,
                                       fcNetworkSegmentPoints,
                                       fcOutputRawConfiningState,
                                       "0.01 Meters")
+    #arcpy.CopyFeatures_management(fcConfinementStreamNetworkIntersected,fcOutputRawConfiningState)
+
+    #arcpy.CopyFeatures_management(fcConfinementStreamNetworkIntersected,fcOutputConfiningMargins)
 
     #Table and Attributes
     arcpy.AddField_management(fcOutputRawConfiningState,"Con_Type","TEXT",field_length="6")
@@ -169,27 +175,27 @@ def main(fcInputStreamLineNetwork,
     arcpy.CalculateField_management(lyrConfinementStreamNetwork1,"Con_Type","'NONE'","PYTHON")
 
     # Calculate Confinement on Segments using Raw Confining State
-    if fcOutputConfinementSegments:
+    #if fcOutputConfinementSegments:
 
-        fcIntersectRCSAndSegments = gis_tools.newGISDataset(scratchWorkspace,"IntersectRCS_AndSegments")
-        arcpy.Intersect_analysis([fcInputStreamLineNetwork,fcOutputRawConfiningState],fcIntersectRCSAndSegments,)
+    #    fcIntersectRCSAndSegments = gis_tools.newGISDataset(scratchWorkspace,"IntersectRCS_AndSegments")
+    #    arcpy.Intersect_analysis([fcInputStreamLineNetwork,fcOutputRawConfiningState],fcIntersectRCSAndSegments,)
 
-        tblIntersectSumStats = gis_tools.newGISDataset(scratchWorkspace,"TableIntersectSumStats")
-        arcpy.Statistics_analysis(fcIntersectRCSAndSegments,tblIntersectSumStats,"Shape_Length SUM","SegmentID;IsConfined")
+    #    tblIntersectSumStats = gis_tools.newGISDataset(scratchWorkspace,"TableIntersectSumStats")
+    #    arcpy.Statistics_analysis(fcIntersectRCSAndSegments,tblIntersectSumStats,"Shape_Length SUM","SegmentID;IsConfined")
         
-        tblIntersectSumStatsPivot = gis_tools.newGISDataset(scratchWorkspace,"TableIntersectSumStatsPivot")
-        arcpy.PivotTable_management(tblIntersectSumStats,"SegmentID","IsConfined","SUM_Shape_Length",tblIntersectSumStatsPivot)
+    #    tblIntersectSumStatsPivot = gis_tools.newGISDataset(scratchWorkspace,"TableIntersectSumStatsPivot")
+    #    arcpy.PivotTable_management(tblIntersectSumStats,"SegmentID","IsConfined","SUM_Shape_Length",tblIntersectSumStatsPivot)
 
-        gis_tools.resetField(tblIntersectSumStatsPivot,"Con_Value","DOUBLE")
-        arcpy.CalculateField_management(tblIntersectSumStatsPivot,"Con_Value","!IsConfined1!/(!IsConfined0! + !IsConfined1!)","PYTHON")
+    #    gis_tools.resetField(tblIntersectSumStatsPivot,"Con_Value","DOUBLE")
+    #    arcpy.CalculateField_management(tblIntersectSumStatsPivot,"Con_Value","!IsConfined1!/(!IsConfined0! + !IsConfined1!)","PYTHON")
 
-        if arcpy.Exists(fcOutputConfinementSegments):
-           arcpy.Delete_management(fcOutputConfinementSegments)
-        arcpy.CopyFeatures_management(fcInputStreamLineNetwork,fcOutputConfinementSegments)
+    #    if arcpy.Exists(fcOutputConfinementSegments):
+    #       arcpy.Delete_management(fcOutputConfinementSegments)
+    #    arcpy.CopyFeatures_management(fcInputStreamLineNetwork,fcOutputConfinementSegments)
 
-        arcpy.JoinField_management(fcOutputConfinementSegments,"SegmentID",tblIntersectSumStatsPivot,"SegmentID")
+    #    arcpy.JoinField_management(fcOutputConfinementSegments,"SegmentID",tblIntersectSumStatsPivot,"SegmentID")
 
-        arcpy.AddMessage("GNAT CON: Confinement Calculations Complete.")
+    #    arcpy.AddMessage("GNAT CON: Confinement Calculations Complete.")
 
     return
 
@@ -251,13 +257,11 @@ def transfer_line(fcInLine,fcToLine,strStreamSide):
     return fcOutput
 
 if __name__ == "__main__":
-    
+
     main(sys.argv[1],
          sys.argv[2],
          sys.argv[3],
          sys.argv[4],
          sys.argv[5],
-         sys.argv[6],
-         sys.argv[7],
-         sys.argv[8],
-         sys.argv[9])
+         sys.argv[6])
+

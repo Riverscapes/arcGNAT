@@ -29,13 +29,13 @@ def main(
     fieldAttribute,
     strSeedDistance,
     inputliststrWindowSize,
-    boolOverlap=False,
-    outputWorkspace=arcpy.env.scratchWorkspace):
+    outputWorkspace,
+    tempWorkspace=arcpy.env.scratchWorkspace):
     """Perform a Moving Window Analysis on a Line Network."""
 
     liststrWindowSize = inputliststrWindowSize.split(";")
 
-    fcLineNetworkDissolved = gis_tools.newGISDataset(outputWorkspace,"GNAT_MWA_LineNetworkDissolved")
+    fcLineNetworkDissolved = gis_tools.newGISDataset(tempWorkspace,"GNAT_MWA_LineNetworkDissolved")
     arcpy.Dissolve_management(fcLineNetwork,fcLineNetworkDissolved,fieldStreamRouteID,multi_part=False,unsplit_lines=True)
 
     listLineGeometries = arcpy.CopyFeatures_management(fcLineNetworkDissolved,arcpy.Geometry())
@@ -68,10 +68,11 @@ def main(
                     gPointEndLocation = gLine.positionAlongLine(dblLengthEnd)
                     gTemp = arcpy.Geometry()
                     listgWindowTemp = arcpy.SplitLineAtPoint_management(gLine,[gPointStartLocation,gPointEndLocation],gTemp,"1 METER")
+                    #TODO: Need a better method to select the line here!!
                     for gWindowTemp in listgWindowTemp:
                         if abs(gWindowTemp.length - dblWindowSize) < 10 :
                             listgWindows.append([scLines[1],intSeedID,dblWindowSize,gWindowTemp])
-
+                    # End TODO
                     listWindows.append([scLines[1],intSeedID,dblWindowSize,gPointStartLocation])
                     listWindows.append([scLines[1],intSeedID,dblWindowSize,gPointEndLocation])
                     listWindowEvents.append([scLines[1],intSeedID,dblWindowSize,dblLengthStart,dblLengthEnd])
@@ -79,60 +80,67 @@ def main(
                 intSeedID = intSeedID + 1
             iRoute = iRoute + 1
 
-    fcSeedPoints = gis_tools.newGISDataset(outputWorkspace,"GNAT_MWA_SeedPoints")
-    fcWindowEndPoints = gis_tools.newGISDataset(outputWorkspace,"GNAT_MWA_WindowEndPoints")
-    fcWindowLines = gis_tools.newGISDataset(outputWorkspace,"GNAT_MWA_WindowLines")
+    fcSeedPoints = gis_tools.newGISDataset(tempWorkspace,"GNAT_MWA_SeedPoints")
+    fcWindowEndPoints = gis_tools.newGISDataset(tempWorkspace,"GNAT_MWA_WindowEndPoints")
+    fcWindowLines = gis_tools.newGISDataset(tempWorkspace,"GNAT_MWA_WindowLines")
       
-    arcpy.CreateFeatureclass_management(outputWorkspace,"GNAT_MWA_SeedPoints","POINT",spatial_reference=fcLineNetwork)
-    arcpy.CreateFeatureclass_management(outputWorkspace,"GNAT_MWA_WindowEndPoints","POINT",spatial_reference=fcLineNetwork)
-    arcpy.CreateFeatureclass_management(outputWorkspace,"GNAT_MWA_WindowLines","POLYLINE",spatial_reference=fcLineNetwork)
+    arcpy.CreateFeatureclass_management(tempWorkspace,"GNAT_MWA_SeedPoints","POINT",spatial_reference=fcLineNetwork)
+    arcpy.CreateFeatureclass_management(tempWorkspace,"GNAT_MWA_WindowEndPoints","POINT",spatial_reference=fcLineNetwork)
+    arcpy.CreateFeatureclass_management(tempWorkspace,"GNAT_MWA_WindowLines","POLYLINE",spatial_reference=fcLineNetwork)
 
     gis_tools.resetField(fcSeedPoints,"RouteID","LONG")
-    gis_tools.resetField(fcSeedPoints,"SeedPointID","LONG")
+    gis_tools.resetField(fcSeedPoints,"SeedID","LONG")
     
     gis_tools.resetField(fcWindowEndPoints,"RouteID","LONG")
-    gis_tools.resetField(fcWindowEndPoints,"SeedPointID","LONG")
-    gis_tools.resetField(fcWindowEndPoints,"WindowSize","DOUBLE")
+    gis_tools.resetField(fcWindowEndPoints,"SeedID","LONG")
+    gis_tools.resetField(fcWindowEndPoints,"Seg","DOUBLE")
 
     gis_tools.resetField(fcWindowLines,"RouteID","LONG")
-    gis_tools.resetField(fcWindowLines,"SeedPointID","LONG")
-    gis_tools.resetField(fcWindowLines,"WindowSize","DOUBLE")
+    gis_tools.resetField(fcWindowLines,"SeedID","LONG")
+    gis_tools.resetField(fcWindowLines,"Seg","DOUBLE")
 
-    with arcpy.da.InsertCursor(fcSeedPoints,["RouteID","SeedPointID","SHAPE@XY"]) as icSeedPoints:
+    with arcpy.da.InsertCursor(fcSeedPoints,["RouteID","SeedID","SHAPE@XY"]) as icSeedPoints:
         for row in listSeeds:
             icSeedPoints.insertRow(row)
 
-    with arcpy.da.InsertCursor(fcWindowEndPoints,["RouteID","SeedPointID","WindowSize","SHAPE@XY"]) as icWindowEndPoints:
+    with arcpy.da.InsertCursor(fcWindowEndPoints,["RouteID","SeedID","Seg","SHAPE@XY"]) as icWindowEndPoints:
         for row in listWindows:
             icWindowEndPoints.insertRow(row)
 
-    with arcpy.da.InsertCursor(fcWindowLines,["RouteID","SeedPointID","WindowSize","SHAPE@"]) as icWindowLines:
+    with arcpy.da.InsertCursor(fcWindowLines,["RouteID","SeedID","Seg","SHAPE@"]) as icWindowLines:
         for row in listgWindows:
             icWindowLines.insertRow(row)
 
-    fcIntersected = gis_tools.newGISDataset(outputWorkspace,"GNAT_MWA_IntersectWindowAttributes")
+    fcIntersected = gis_tools.newGISDataset(tempWorkspace,"GNAT_MWA_IntersectWindowAttributes")
     arcpy.Intersect_analysis([fcWindowLines,fcLineNetwork],fcIntersected,"ALL",output_type="LINE")
 
-    tblSummaryStatistics = gis_tools.newGISDataset(outputWorkspace,"GNAT_MWA_SummaryStatsTable")
-    arcpy.Statistics_analysis(fcIntersected,tblSummaryStatistics,"Shape_Length SUM",fieldStreamRouteID + ";SeedPointID;WindowSize;" + fieldAttribute)
+    tblSummaryStatistics = gis_tools.newGISDataset(tempWorkspace,"GNAT_MWA_SummaryStatsTable")
+    arcpy.Statistics_analysis(fcIntersected,tblSummaryStatistics,"Shape_Length SUM",fieldStreamRouteID + ";SeedID;Seg;" + fieldAttribute)
 
-    tblSummaryStatisticsPivot = gis_tools.newGISDataset(outputWorkspace,"GNAT_MWA_SummaryStatisticsPivotTable")
-    arcpy.PivotTable_management(tblSummaryStatistics,"Route;SeedPointID;WindowSize",fieldAttribute,"SUM_Shape_Length",tblSummaryStatisticsPivot)
+    tblSummaryStatisticsPivot = gis_tools.newGISDataset(tempWorkspace,"GNAT_MWA_SummaryStatisticsPivotTable")
+    arcpy.PivotTable_management(tblSummaryStatistics,"Route;SeedID;Seg",fieldAttribute,"SUM_Shape_Length",tblSummaryStatisticsPivot)
     
-    gis_tools.resetField(tblSummaryStatisticsPivot,"Confinement","DOUBLE")
-    arcpy.CalculateField_management(tblSummaryStatisticsPivot,"Confinement","!IsConfined1!/(!IsConfined0! + !IsConfined1!)","PYTHON")
+    gis_tools.resetField(tblSummaryStatisticsPivot,"Con_Value","DOUBLE")
+    arcpy.CalculateField_management(tblSummaryStatisticsPivot,"Con_Value","!" + fieldAttribute+ "1!/(!" + fieldAttribute + "0! + !" + fieldAttribute + "1!)","PYTHON")
 
-    #Pivot Confinement on WindowSize
-    tblSummaryStatisticsWindowPivot = gis_tools.newGISDataset(outputWorkspace,"GNAT_MWA_SummaryStatisticsWindowPivotTable")
-    arcpy.PivotTable_management(tblSummaryStatisticsPivot,fieldStreamRouteID + ";SeedPointID","WindowSize","Confinement",tblSummaryStatisticsWindowPivot)
+    #Pivot Confinement on Segment Size
+    tblSummaryStatisticsWindowPivot = gis_tools.newGISDataset(tempWorkspace,"GNAT_MWA_SummaryStatisticsWindowPivotTable")
+    arcpy.PivotTable_management(tblSummaryStatisticsPivot,fieldStreamRouteID + ";SeedID","Seg","Con_Value",tblSummaryStatisticsWindowPivot)
     
     strWindowSizeFields = ""
     for WindowSize in liststrWindowSize:
-        strWindowSizeFields = strWindowSizeFields + ";WindowSize" + WindowSize
+        strWindowSizeFields = strWindowSizeFields + ";Seg" + WindowSize
     strWindowSizeFields = strWindowSizeFields.lstrip(";")
 
     #Join Above table to seed points
-    arcpy.JoinField_management(fcSeedPoints,"SeedPointID",tblSummaryStatisticsWindowPivot,"SeedPointID",strWindowSizeFields)
+    arcpy.JoinField_management(fcSeedPoints,"SeedID",tblSummaryStatisticsWindowPivot,"SeedID",strWindowSizeFields)
+
+    # Manage Outputs
+    fcOutputSeedPoints = gis_tools.newGISDataset(outputWorkspace,"ConfinementSeedPoints")
+    arcpy.CopyFeatures_management(fcSeedPoints,fcOutputSeedPoints)
+
+    fcOutputWindows = gis_tools.newGISDataset(outputWorkspace,"ConfinementSegments")
+    arcpy.CopyFeatures_management(fcWindowLines,fcOutputWindows)
 
     return
 
@@ -145,5 +153,4 @@ if __name__ == "__main__":
         sys.argv[4],
         sys.argv[5],
         sys.argv[6],
-        sys.argv[7],
-        sys.argv[8])
+        sys.argv[7])
