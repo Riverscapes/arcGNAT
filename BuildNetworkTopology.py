@@ -15,36 +15,7 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
 
-#Overview:
-# Script to build the network table.
-# Start at outflow and populate the network database table.
-#
-#Inputs:
-# Line feature class
-# Feature ID of outflow reach.
-#
-#Algorithm
-# Start at outflow reach
-# Select all features within buffer distance (0.05)
-# Loop over touching features (ignoring those already processed)
-# Store touching features in network table.
-# Optional: Store headwater attribute for reaches that have no neighbours
-#
-#Requirements:
-# Need to anticipate running when no network table exists in File GDB
-# Need to anticipate running when existing network table is populated (i.e. clear table first)
-# Probably should compact GDB after running.
-# Consider status bar updates (processing could be slow)
-#
-#Output Data Format
-# Store in new table in File GDB called "NetworkTable" Fields:
-# ReachID (long int)
-# UpstreamID (long int)
-# Add IsHeadwater bit (yes/no) field to main feature class
-
 # # Import Modules # #
-import os
-import sys
 import arcpy
 
 # # Script Parameters # #
@@ -55,13 +26,16 @@ listJunctions = [] ## Reaches that are part of a junction, to ignore as an upstr
 intTotalFeatures = [] ## Total number of features to be processed
 listBraidedReaches = [] ## Reaches part of a braided system
 
+# # Environmental parameters # #
+arcpy.env.overwriteOutput = True
+
 # # Functions # #
 
-def network_tree(inputID,tblNetwork,fcLines):
+def network_tree(inputID,tblNetwork,fcLines,fcNodePoint):
 
     checkcount()
 
-    if inputID in listReachesDone:
+    if inputID in listReachesDone or inputID == "":
         pass #return
 
     else:
@@ -77,11 +51,12 @@ def network_tree(inputID,tblNetwork,fcLines):
             arcpy.Delete_management("lyrSelectedBraidedReaches")
         arcpy.SelectLayerByAttribute_management("lyrBraidedReachStartPoints","CLEAR_SELECTION")
 
-        # Select Adjacent Features
+        # Make Layers
         listSelected = []
         arcpy.MakeFeatureLayer_management(fcLines,"InputReach",""" "OBJECTID" = """ + str(inputID))
         arcpy.MakeFeatureLayer_management(fcLines,"SelectedReaches")
 
+        # Select Adjacent Features
         if inputID in listBraidedReaches:
             arcpy.SelectLayerByAttribute_management("lyrBraidedReachStartPoints","CLEAR_SELECTION")
             arcpy.MakeFeatureLayer_management("lyrBraidedReachStartPoints","lyrCurrentReachBraidedPoint",""" "ORIG_FID" = """ + str(inputID))
@@ -100,9 +75,9 @@ def network_tree(inputID,tblNetwork,fcLines):
             listSelected = descSelectedReaches.FIDset.split("; ")
 
         else:
-            arcpy.SelectLayerByLocation_management("SelectedReaches","WITHIN_A_DISTANCE","InputReach","0.1","NEW_SELECTION")
+            arcpy.SelectLayerByLocation_management("SelectedReaches","WITHIN_A_DISTANCE","InputReach","5.0","NEW_SELECTION")
             arcpy.SelectLayerByAttribute_management("SelectedReaches","REMOVE_FROM_SELECTION",""" "OBJECTID" = """ + str(inputID))
-            arcpy.SelectLayerByLocation_management("lyrBraidedReachStartPoints","WITHIN_A_DISTANCE","InputReach","0.1","NEW_SELECTION")
+            arcpy.SelectLayerByLocation_management("lyrBraidedReachStartPoints","WITHIN_A_DISTANCE","InputReach","5.0","NEW_SELECTION")
             listSelectedBraidedReaches = []
             if int(arcpy.GetCount_management("lyrBraidedReachStartPoints").getOutput(0)) > 0:
                 with arcpy.da.SearchCursor("lyrBraidedReachStartPoints",["ORIG_FID"]) as scBraided:
@@ -131,7 +106,7 @@ def network_tree(inputID,tblNetwork,fcLines):
             #Write Output to Table
             arcpy.AddMessage("  Single Reach")
             listReachPairs.append([inputID,listSelected[0]])
-            network_tree(listSelected[0],tblNetwork,fcLines) 
+            network_tree(listSelected[0],tblNetwork,fcLines,fcNodePoint)
             pass
 
         elif len(listSelected) == 0: # Headwater
@@ -139,6 +114,7 @@ def network_tree(inputID,tblNetwork,fcLines):
                 pass
             else:
                 listHeadwaterIDs.append(int(inputID))
+                listReachPairs.append([inputID, u'0']) # include headwater reaches in StreamNetworkTable
                 arcpy.AddMessage("  Headwater")
             return # Return to Next Junction
 
@@ -148,7 +124,9 @@ def network_tree(inputID,tblNetwork,fcLines):
                 listJunctions.append(item)
             for selectedID in listSelected:
                 listReachPairs.append([inputID,selectedID])
-                network_tree(selectedID,tblNetwork,fcLines)
+                network_tree(selectedID,tblNetwork,fcLines,fcNodePoint)
+
+        return
  
 def checkcount():
     #arcpy.AddMessage str(len(listReachesDone)) + " | " + str(intTotalFeatures[0]) 
@@ -157,6 +135,68 @@ def checkcount():
             if len(listReachesDone) == int(intTotalFeatures[0] * 0.1 * percent):
                 arcpy.AddMessage(str(10*percent) + "%  complete.")
     return
+
+def calcNodes(fcStreamNetwork):
+    arcpy.AddMessage("Calculating stream network nodes...")
+    arcpy.MakeFeatureLayer_management(fcStreamNetwork, "StreamNetwork_lyr")
+    descStreamNetwork = arcpy.Describe(fcStreamNetwork)
+    fileGDBpath = descStreamNetwork.path
+    # create table blank table to hold vertex coordinates
+    networkVrtx = fileGDBpath + "\\networkVrtx"
+    arcpy.CreateFeatureclass_management(fileGDBpath, "networkVrtx", "POINT", "", "DISABLED", "DISABLED", fcStreamNetwork)
+    arcpy.AddField_management(networkVrtx, "ReachID", "LONG")
+    arcpy.AddField_management(networkVrtx, "PointType", "TEXT")
+    arcpy.AddField_management(networkVrtx, "TO_X_Coord", "DOUBLE")
+    arcpy.AddField_management(networkVrtx, "TO_Y_Coord", "DOUBLE")
+    arcpy.AddField_management(networkVrtx, "FROM_X_Coord", "DOUBLE")
+    arcpy.AddField_management(networkVrtx, "FROM_Y_Coord", "DOUBLE")
+    arcpy.AddField_management(networkVrtx, "TO_NODE", "TEXT")
+    arcpy.AddField_management(networkVrtx, "FROM_NODE", "TEXT")
+
+    # plot start and end vertices and populate TO and FROM fields in vertex table
+    pointTypes = ["START", "END"]
+    for type in pointTypes:
+        networkVrtx_lyr = "networkVrtx_" + type + "_lyr"
+        tmpVrtx = r"in_memory\vrtx" + type
+        arcpy.FeatureVerticesToPoints_management("StreamNetwork_lyr", tmpVrtx, type)
+        arcpy.MakeFeatureLayer_management(tmpVrtx, "tmpVrtx_"+type)
+        arcpy.Append_management("tmpVrtx_"+type, networkVrtx, "NO_TEST")
+        if type == "START":
+            arcpy.MakeFeatureLayer_management(networkVrtx, networkVrtx_lyr)
+            arcpy.SelectLayerByAttribute_management(networkVrtx_lyr, "NEW_SELECTION", """"PointType" IS NULL""")
+            arcpy.CalculateField_management(networkVrtx, "PointType", "'" + type + "'", "PYTHON_9.3")
+            arcpy.CalculateField_management(networkVrtx, "FROM_X_Coord", "!SHAPE.CENTROID.X!", "PYTHON_9.3")
+            arcpy.CalculateField_management(networkVrtx, "FROM_Y_Coord", "!SHAPE.CENTROID.Y!", "PYTHON_9.3")
+            arcpy.CalculateField_management(networkVrtx, "FROM_NODE", """str('!FROM_X_Coord!') + "_" + str(round(float('!FROM_Y_Coord!'),4))""",
+                                            "PYTHON_9.3")
+            arcpy.Delete_management(networkVrtx_lyr)
+            del tmpVrtx
+        else:
+            arcpy.MakeFeatureLayer_management(networkVrtx, networkVrtx_lyr)
+            arcpy.SelectLayerByAttribute_management(networkVrtx_lyr, "NEW_SELECTION", """"PointType" IS NULL""")
+            arcpy.CalculateField_management(networkVrtx_lyr, "PointType", "'" + type + "'", "PYTHON_9.3")
+            arcpy.CalculateField_management(networkVrtx_lyr, "TO_X_Coord", "!SHAPE.CENTROID.X!", "PYTHON_9.3")
+            arcpy.CalculateField_management(networkVrtx_lyr, "TO_Y_Coord", "!SHAPE.CENTROID.Y!", "PYTHON_9.3")
+            arcpy.CalculateField_management(networkVrtx_lyr, "TO_NODE", """str('!TO_X_Coord!') + "_" + str(round(float('!TO_Y_Coord!'),4))""",
+                                            "PYTHON_9.3")
+            arcpy.Delete_management(networkVrtx_lyr)
+            del tmpVrtx
+    return networkVrtx
+
+def queryNodes(inputID, fcNodePoint):
+    fcNodePoint_lyr = "fcNodePoint_lyr"
+    arcpy.MakeFeatureLayer_management(fcNodePoint, fcNodePoint_lyr)
+    expr = """"{0}" = {1}""".format("ReachID", inputID)
+    nodeDict = {}
+    with arcpy.da.SearchCursor(fcNodePoint_lyr, ['ReachID','PointType','FROM_NODE','TO_NODE'], where_clause=expr) as cursor:
+        for row in cursor:
+            if row[1] == 'START':
+                nodeDict = {'FROM_NODE': row[2]}
+            if row[1] == 'END':
+                nodeDict['TO_NODE'] = row[3]
+    arcpy.Delete_management(fcNodePoint_lyr)
+    del cursor
+    return nodeDict
 
 def main(fcStreamNetwork,intOutflowReachID,boolClearTable):
 
@@ -175,18 +215,30 @@ def main(fcStreamNetwork,intOutflowReachID,boolClearTable):
         arcpy.CreateTable_management(fileGDB,"StreamNetworkTable")
         arcpy.AddField_management(tableNetwork,"ReachID","LONG")
         arcpy.AddField_management(tableNetwork,"UpstreamID","LONG")
+        arcpy.AddField_management(tableNetwork,"FROM_NODE", "STRING")
+        arcpy.AddField_management(tableNetwork,"TO_NODE", "STRING")
 
     # Polyline Prep
-    listFields = arcpy.ListFields(fcStreamNetwork,"IsHeadwater")
-    if len(listFields) is not 1:
-        arcpy.AddField_management(fcStreamNetwork,"IsHeadwater","SHORT")
+    add_fields = ["IsHeadwater", "ReachID"]
+    list_fields = arcpy.ListFields(fcStreamNetwork)
+    name_fields = [f.name for f in list_fields]
+    oid_field = arcpy.Describe(fcStreamNetwork).OIDFieldName
+    if add_fields[0] in name_fields:
+        pass
+    else:
+        arcpy.AddField_management(fcStreamNetwork, add_fields[0], "SHORT") # add IsHeadwater field
+    if add_fields[1] in name_fields:
+        pass
+    else:
+        arcpy.AddField_management(fcStreamNetwork, add_fields[1], "LONG") # add ReachID field
+        arcpy.CalculateField_management(fcStreamNetwork, "ReachID", "'!" + oid_field + "!'", "PYTHON_9.3")
 
     intTotalFeatures.append(int(arcpy.GetCount_management(fcStreamNetwork).getOutput(0)))
 
     # Populate Braided List
     if arcpy.Exists("lyrBraidedReaches"):
         arcpy.Delete_management("lyrBraidedReaches")
-    whereBraidedReaches = """ "IsBraidedReach" = 1 """
+    whereBraidedReaches = """ "IsBraided" = 1 """
     arcpy.MakeFeatureLayer_management(fcStreamNetwork,"lyrBraidedReaches")
     arcpy.SelectLayerByAttribute_management("lyrBraidedReaches","NEW_SELECTION",whereBraidedReaches)
     descLyrBraidedReaches = arcpy.Describe("lyrBraidedReaches")
@@ -201,33 +253,38 @@ def main(fcStreamNetwork,intOutflowReachID,boolClearTable):
     arcpy.MakeFeatureLayer_management("in_memory\\BraidedReachStartPoints","lyrBraidedReachStartPoints")
 
     # Process
-    network_tree(intOutflowReachID,tableNetwork,fcStreamNetwork)
+    fcNodePoint = calcNodes(fcStreamNetwork) # Build the node point feature class
+    network_tree(intOutflowReachID,tableNetwork,fcStreamNetwork,fcNodePoint)
     checkcount()
 
     # Write Outputs
-    with arcpy.da.InsertCursor(tableNetwork,["ReachID","UpstreamID"]) as icNetworkTable:
-        for pair in listReachPairs:
-            icNetworkTable.insertRow([pair[0],pair[1]])
+    arcpy.AddMessage("Writing to table...")
+    with arcpy.da.InsertCursor(tableNetwork,["ReachID","UpstreamID","FROM_NODE","TO_NODE"]) as icNetworkTable:
+        try:
+            for pair in listReachPairs:
+                nodeDict = queryNodes(pair[0], fcNodePoint) # query node points feature class
+                icNetworkTable.insertRow([pair[0],pair[1],nodeDict['FROM_NODE'], nodeDict['TO_NODE']])
+        except RuntimeError as e:
+            print "Runtime error: {0}".format(e)
 
     if arcpy.Exists("LineLayer"):
         arcpy.Delete_management("LineLayer")
     arcpy.MakeFeatureLayer_management(fcStreamNetwork,"LineLayer")
     arcpy.CalculateField_management(fcStreamNetwork,"IsHeadwater",0,"PYTHON") #clear field
     where = '"OBJECTID" IN' + str(tuple(listHeadwaterIDs))
-    #print(where)
-    arcpy.SelectLayerByAttribute_management("LineLayer","NEW_SELECTION",where)
+    arcpy.SelectLayerByAttribute_management("LineLayer","NEW_SELECTION", where)
     arcpy.CalculateField_management("LineLayer","IsHeadwater",1,"PYTHON")
 
     # Cleanup
-
     ##arcpy.Compact_management(fileGDB)
 
     return
 
 # # Run as Script # # 
-if __name__ == "__main__":
-    inputPolylineFC = sys.argv[1] # Str Feature class path
-    inputOutflowReachID = sys.argv[2] # Int
-    boolClearTable = sys.argv[3]
-
-    main(inputPolylineFC,inputOutflowReachID,boolClearTable)
+# if __name__ == "__main__":
+#     # TESTING main FUNCTION
+#     inputPolylineFC = r"C:\JL\Testing\GNAT\BuildNetworkTopology\YF.gdb\StreamNetwork"
+#     inputOutflowReachID = 1140
+#     boolClearTable = "True"
+#
+#     main(inputPolylineFC,inputOutflowReachID,boolClearTable)
