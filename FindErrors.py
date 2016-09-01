@@ -19,6 +19,7 @@
 import itertools
 from itertools import *
 import arcpy
+from arcpy.sa import *
 import gis_tools
 
 # Set environmental variables
@@ -188,21 +189,18 @@ def reach_pair_errors(in_network_fc, tmp_network_tbl, reach_id):
             if result_overlap != 0:
                 with arcpy.da.UpdateCursor(tmp_network_tbl, ["ReachID", "ERROR_CODE"], expr) as ucursor:
                     for urow in ucursor:
-                        if urow[1] == 0:
-                            urow[1] = result_overlap
-                            ucursor.updateRow(urow)
+                        urow[1] = result_overlap
+                        ucursor.updateRow(urow)
             elif result_cross != 0:
                 with arcpy.da.UpdateCursor(tmp_network_tbl, ["ReachID", "ERROR_CODE"], expr) as ucursor:
                     for urow in ucursor:
-                        if urow[1] == 0:
-                            urow[1] = result_cross
-                            ucursor.updateRow(urow)
+                        urow[1] = result_cross
+                        ucursor.updateRow(urow)
             elif result_connect != 0:
                 with arcpy.da.UpdateCursor(tmp_network_tbl, ["ReachID", "ERROR_CODE"], expr) as ucursor:
                     for urow in ucursor:
-                        if urow[1] == 0:
-                            urow[1] = result_connect
-                            ucursor.updateRow(urow)
+                        urow[1] = result_connect
+                        ucursor.updateRow(urow)
             else:
                 with arcpy.da.UpdateCursor(tmp_network_tbl, ["ReachID", "ERROR_CODE"], expr) as ucursor:
                     for urow in ucursor:
@@ -236,12 +234,14 @@ def cross(tmp_network_fc):
     # Set global constant
     ERROR_CODE = 5
 
+
     with arcpy.da.SearchCursor(tmp_network_fc, ['ReachID', 'SHAPE@']) as cursor:
         for r1,r2 in itertools.combinations(cursor, 2):
             if r1[1].crosses(r2[1]):
                 return ERROR_CODE
             else:
                 return 0
+
 
 def connected(tmp_network_fc):
     #Set global constant
@@ -253,6 +253,7 @@ def connected(tmp_network_fc):
                 return ERROR_CODE
             else:
                 return 0
+
 
 ## Find flow direction errors
 def flow_direction(tmp_network_tbl):
@@ -272,12 +273,56 @@ def flow_direction(tmp_network_tbl):
                     if (urow[1] == val_dict[key_val][0]):
                         urow[3] = ERROR_CODE
                         ucursor.updateRow(urow)
-                    # elif (urow[2] == val_dict[key_val][1]):
-                    #     urow[3] = 6
-                    #     ucursor.updateRow(urow)
     del val_dict
 
     return
+
+
+def node_flow_acc(in_network_fc, in_network_table, flow_acc):
+    arcpy.AddMessage("Calculating flow accumulation per network node...")
+
+    # declare layer name variables
+    network_vrtx_lyr = "network_vrtx_lyr"
+    zstat_start_view = "zstat_start_view"
+    zstat_end_view = "zstat_end_view"
+    vrtx_buf_start_lyr = "vrtx_buf_start_lyr"
+    vrtx_buf_end_lyr = "vrtx_buf_end_lyr"
+
+    # get name of network vertex feature class
+    out_fgb = arcpy.Describe(in_network_fc).GDBFilePath
+    network_vrtx = out_fgb + "\networkVrtx"
+    arcpy.MakeFeatureLayer_management(network_vrtx, network_vrtx_lyr)
+
+    # buffer network vertices, and extract flow accumulation values
+    expr_to = """"{0}" = {1}""".format("TYPE", "START")
+    arcpy.SelectLayerByAttribute_management(network_vrtx_lyr,"NEW_SELECTION", expr_to)
+    arcpy.Buffer_analysis(network_vrtx_lyr, r"in_memory\vrtx_buf_start", 30)
+    arcpy.SelectLayerByAttribute_management(network_vrtx_lyr, "SWITCH_SELECTION")
+    arcpy.Buffer_analysis(network_vrtx_lyr, r"in_memory\vrtx_buf_end", 30)
+    arcpy.MakeFeatureLayer_management(r"in_memory\vrtx_buf_start", vrtx_buf_start_lyr)
+    ZonalStatisticsAsTable(vrtx_buf_start_lyr, "ReachID", flow_acc, r"in_memory\zstat_start", "DATA","MEAN")
+    arcpy.MakeTableView_management("in_memory\zstat_start", zstat_start_view)
+    arcpy.MakeFeatureLayer_management(r"in_memory\vrtx_buf_end", vrtx_buf_end_lyr)
+    ZonalStatisticsAsTable(vrtx_buf_end_lyr, "ReachID", flow_acc, r"in_memory\zstat_end", "DATA")
+    arcpy.MakeTableView_management("in_memory\zstat_end", zstat_end_view)
+
+    # add mean flow accumulation values to ReachID records in StreamNetworkTable
+    node_list = ["start", "end"]
+    for node in node_list:
+        arcpy.AddJoin_management(in_network_table, "ReachID", "zstat_" + node + "_view", "ReachID", "KEEP_ALL")
+        with arcpy.da.UpdateCursor as cursor:
+            for row in cursor:
+                if node == "start":
+                    row.TO_NODE_FA = row.VALUE
+                else:
+                    row.FROM_NODE_FA = row.VALUE
+        arcpy.RemoveJoin_management("zstat_" + node + "_view")
+
+    # clean up
+    arcpy.Delete_management(r"in_memory\vrtx_buf_start")
+    arcpy.Delete_management(r"in_memory\vrtx_buf_end")
+    arcpy.Delete_management(r"in_memory\zstat_start")
+    arcpy.Delete_management(r"in_memory\zstat_end")
 
 
 def main(in_network_fc, in_network_table, outflow_id, max_len):
@@ -306,8 +351,9 @@ def main(in_network_fc, in_network_table, outflow_id, max_len):
     dangles(in_network_fc, "tmp_network_table_lyr", max_len)
     braids(in_network_fc, "tmp_network_table_lyr")
     duplicates(in_network_fc, "tmp_network_table_lyr")
-    reach_pair_errors(in_network_fc, "tmp_network_table_lyr", outflow_id)
     flow_direction("tmp_network_table_lyr")
+    reach_pair_errors(in_network_fc, "tmp_network_table_lyr", outflow_id)
+    # node_flow_acc(in_network_fc, "tmp_network_table_lyr", flow_acc)
 
     # Clean up and write final error table
     oid_field = arcpy.Describe("tmp_network_table_lyr").OIDFieldName
@@ -325,7 +371,8 @@ def main(in_network_fc, in_network_table, outflow_id, max_len):
 # if __name__ == "__main__":
 #     in_network_fc= r"C:\JL\Testing\GNAT\BuildNetworkTopology\YF.gdb\StreamNetwork"
 #     in_network_tbl = r"C:\JL\Testing\GNAT\BuildNetworkTopology\YF.gdb\StreamNetworkTable"
-#     outflow_id = 1135
+#     outflow_id = 1125
 #     max_len = 30
+#     flow_acc = r"C:\JL\Testing\GNAT\BuildNetworkTopology\YF.gdb\fa"
 #
 #     main(in_network_fc, in_network_tbl, outflow_id, max_len)
