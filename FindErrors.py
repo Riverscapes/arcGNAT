@@ -83,23 +83,13 @@ def braids(in_network_fc, tmp_network_tbl):
     # Create temporary in_memory version of input stream network
     tmp_network_fc = r"in_memory\tmp_network_fc"
     arcpy.FeatureClassToFeatureClass_conversion(in_network_fc_lyr, "in_memory", "tmp_network_fc")
+    arcpy.MakeFeatureLayer_management(r"in_memory\tmp_network_fc", "tmp_network_fc_lyr")
     #arcpy.FeatureClassToFeatureClass_conversion("in_network_fc_lyr", "C:\JL\Testing\GNAT\BuildNetworkTopology\YF.gdb", "tmp_network_fc")
 
-    # Clear temp data
-    if arcpy.Exists("in_memory//DonutPolygons"):
-        arcpy.Delete_management("in_memory//DonutPolygons")
-    if arcpy.Exists("lyrDonuts"):
-        arcpy.Delete_management("lyrDonuts")
-    if arcpy.Exists("lyrBraidedReaches"):
-        arcpy.Delete_management("lyrBraidedReaches")
-
-    # Find donut reaches
-    arcpy.FeatureToPolygon_management(tmp_network_fc, "in_memory/DonutPolygons")
-    arcpy.MakeFeatureLayer_management(tmp_network_fc, "lyrBraidedReaches")
-    arcpy.MakeFeatureLayer_management("in_memory/DonutPolygons", "lyrDonuts")
-    arcpy.SelectLayerByLocation_management("lyrBraidedReaches", "SHARE_A_LINE_SEGMENT_WITH", "lyrDonuts", '',
-                                           "NEW_SELECTION")
-    arcpy.FeatureClassToFeatureClass_conversion("lyrBraidedReaches", "in_memory", "braids")
+    # Select reaches based on "IsBraided" attribute field
+    expr = """"{0}" = {1}""".format("IsBraided", 1)
+    arcpy.SelectLayerByAttribute_management("tmp_network_fc_lyr", "NEW_SELECTION", expr)
+    arcpy.FeatureClassToFeatureClass_conversion("tmp_network_fc_lyr", "in_memory", "braids")
     arcpy.MakeFeatureLayer_management(r"in_memory\braids", "braids_lyr")
 
     # Add error values to network table
@@ -108,7 +98,6 @@ def braids(in_network_fc, tmp_network_tbl):
     arcpy.RemoveJoin_management(tmp_network_tbl)
 
     # Clean up
-    arcpy.Delete_management("braids_lyr")
     arcpy.Delete_management(tmp_network_fc)
 
     return
@@ -183,7 +172,6 @@ def reach_pair_errors(in_network_fc, tmp_network_tbl, reach_id):
             # Send temporary reach feature class to error functions
             result_cross = cross("sel_rch_lyr")
             result_overlap = overlap("sel_rch_lyr")
-            result_connect = connected("sel_rch_lyr")
 
             # Update record in network table
             if result_overlap != 0:
@@ -195,11 +183,6 @@ def reach_pair_errors(in_network_fc, tmp_network_tbl, reach_id):
                 with arcpy.da.UpdateCursor(tmp_network_tbl, ["ReachID", "ERROR_CODE"], expr) as ucursor:
                     for urow in ucursor:
                         urow[1] = result_cross
-                        ucursor.updateRow(urow)
-            elif result_connect != 0:
-                with arcpy.da.UpdateCursor(tmp_network_tbl, ["ReachID", "ERROR_CODE"], expr) as ucursor:
-                    for urow in ucursor:
-                        urow[1] = result_connect
                         ucursor.updateRow(urow)
             else:
                 with arcpy.da.UpdateCursor(tmp_network_tbl, ["ReachID", "ERROR_CODE"], expr) as ucursor:
@@ -243,37 +226,70 @@ def cross(tmp_network_fc):
                 return 0
 
 
-def connected(tmp_network_fc):
-    #Set global constant
+# Disconnected reaches error
+def disconnected(in_network_fc, tmp_network_tbl):
+    arcpy.AddMessage("...disconnected reaches")
+
     ERROR_CODE = 6
 
-    with arcpy.da.SearchCursor(tmp_network_fc, ['ReachID', 'SHAPE@']) as cursor:
-        for r1,r2 in itertools.combinations(cursor, 2):
-            if r1[1].disjoint(r2[1]):
-                return ERROR_CODE
-            else:
-                return 0
+    in_network_fc_lyr = "in_network_fc_lyr"
+    arcpy.MakeFeatureLayer_management(in_network_fc, in_network_fc_lyr)
+
+    # join topology table to stream network feature class, and select reaches not found in the topology table
+    arcpy.AddJoin_management(in_network_fc_lyr, "ReachID", tmp_network_tbl, "ReachID", "KEEP_ALL")
+    for field in arcpy.ListFields(in_network_fc_lyr, "*UpstreamID"):
+        upstream_field = field.name
+    expr = """"{0}" IS NOT NULL""".format(upstream_field)
+    arcpy.SelectLayerByAttribute_management(in_network_fc_lyr, "NEW_SELECTION", expr)
+    arcpy.SelectLayerByAttribute_management(in_network_fc_lyr, "SWITCH_SELECTION")
+    arcpy.RemoveJoin_management(in_network_fc_lyr)
+
+    # copy selected reaches to a temporary table and append to tmp_network_tbl
+    arcpy.CopyRows_management(in_network_fc_lyr, r"in_memory\disconnected_reaches")
+    arcpy.MakeTableView_management(r"in_memory\disconnected_reaches", "disconnected_view")
+    arcpy.AddField_management("disconnected_view", "UpstreamID", "LONG")
+    arcpy.AddField_management("disconnected_view", "TO_NODE", "DOUBLE")
+    arcpy.AddField_management("disconnected_view", "FROM_NODE", "DOUBLE")
+    arcpy.AddField_management("disconnected_view", "ERROR_CODE", "SHORT")
+    with arcpy.da.SearchCursor("disconnected_view", ["ReachID", "UpstreamID", "TO_NODE", "FROM_NODE", "ERROR_CODE"]) as scursor:
+        with arcpy.da.InsertCursor(tmp_network_tbl, ["ReachID", "UpstreamID", "TO_NODE", "FROM_NODE", "ERROR_CODE"]) as icursor:
+            for srow in scursor:
+                icursor.insertRow(srow)
+        #del srow, scursor
+        #del icursor
+
+    arcpy.SelectLayerByAttribute_management(tmp_network_tbl, "NEW_SELECTION", """"UpstreamID" IS NULL""")
+    with arcpy.da.UpdateCursor(tmp_network_tbl, ["ERROR_CODE"]) as ucursor:
+        for urow in ucursor:
+            if urow[0] == None:
+                urow[0] = ERROR_CODE
+                ucursor.updateRow(urow)
+        #del urow, ucursor
+
+    # clean up
+    arcpy.SelectLayerByAttribute_management(tmp_network_tbl, "CLEAR_SELECTION")
+    arcpy.SelectLayerByAttribute_management(in_network_fc_lyr, "CLEAR_SELECTION")
 
 
-## Find flow direction errors
+# Find flow direction errors
 def flow_direction(tmp_network_tbl):
-    arcpy.AddMessage("... flow direction")
+    arcpy.AddMessage("...flow direction")
 
     ERROR_CODE = 7
 
-    upstream_field_list = ["UpstreamID", "FROM_NODE", "TO_NODE"]
-    val_dict = {r[0]:(r[1:]) for r in arcpy.da.SearchCursor(tmp_network_tbl, upstream_field_list)}
-    reach_field_list = ["ReachID", "FROM_NODE", "TO_NODE", "ERROR_CODE"]
+    upstream_fields = ["UpstreamID","FROM_NODE","TO_NODE"]
+    val_dict = {r[0]:(r[1:]) for r in arcpy.da.SearchCursor(tmp_network_tbl, upstream_fields)}
+    update_fields = ["OID@","ReachID","UpstreamID","FROM_NODE","ERROR_CODE"]
 
-    with arcpy.da.UpdateCursor(tmp_network_tbl, reach_field_list) as ucursor:
+    with arcpy.da.UpdateCursor(tmp_network_tbl, update_fields) as ucursor:
         for urow in ucursor:
-            key_val = urow[0]
+            print (urow)
+            key_val = urow[1]
             if key_val in val_dict:
-                if urow[0] != val_dict[key_val][0]:
-                    if (urow[1] == val_dict[key_val][0]):
-                        urow[3] = ERROR_CODE
+                if urow[1] != val_dict[key_val]:
+                    if urow[3] == val_dict[key_val][0]:
+                        urow[4] = ERROR_CODE
                         ucursor.updateRow(urow)
-    del val_dict
 
     return
 
@@ -338,41 +354,43 @@ def main(in_network_fc, in_network_table, outflow_id, max_len):
         arcpy.Delete_management("in_network_table")
     if arcpy.Exists("tmp_memory_table"):
         arcpy.Delete_management("tmp_memory_table")
-    arcpy.MakeTableView_management(in_network_table, "in_network_table_lyr")
-    arcpy.CopyRows_management("in_network_table_lyr", r"in_memory\tmp_network_table")
-    arcpy.MakeTableView_management(r"in_memory\tmp_network_table", "tmp_network_table_lyr")
+    arcpy.MakeTableView_management(in_network_table, "in_network_table_view")
+    arcpy.CopyRows_management("in_network_table_view", r"in_memory\tmp_network_table")
+    arcpy.MakeTableView_management(r"in_memory\tmp_network_table", "tmp_network_table_view")
+
     # add required fields
-    list_fields = arcpy.ListFields("tmp_network_table_lyr", "ERROR_CODE")
+    list_fields = arcpy.ListFields("tmp_network_table_view", "ERROR_CODE")
     if len(list_fields) != 1:
-        arcpy.AddField_management("tmp_network_table_lyr", "ERROR_CODE", "LONG")
-        arcpy.CalculateField_management("tmp_network_table_lyr", "ERROR_CODE", "0", "PYTHON_9.3")
+        arcpy.AddField_management("tmp_network_table_view", "ERROR_CODE", "LONG")
+        arcpy.CalculateField_management("tmp_network_table_view", "ERROR_CODE", "0", "PYTHON_9.3")
 
     # Find errors
-    dangles(in_network_fc, "tmp_network_table_lyr", max_len)
-    braids(in_network_fc, "tmp_network_table_lyr")
-    duplicates(in_network_fc, "tmp_network_table_lyr")
-    flow_direction("tmp_network_table_lyr")
-    reach_pair_errors(in_network_fc, "tmp_network_table_lyr", outflow_id)
+    flow_direction("tmp_network_table_view")
+    dangles(in_network_fc, "tmp_network_table_view", max_len)
+    braids(in_network_fc, "tmp_network_table_view")
+    duplicates(in_network_fc, "tmp_network_table_view")
+    reach_pair_errors(in_network_fc, "tmp_network_table_view", outflow_id)
+    disconnected(in_network_fc, "tmp_network_table_view")
     # node_flow_acc(in_network_fc, "tmp_network_table_lyr", flow_acc)
 
     # Clean up and write final error table
-    oid_field = arcpy.Describe("tmp_network_table_lyr").OIDFieldName
+    oid_field = arcpy.Describe("tmp_network_table_view").OIDFieldName
     keep_fields = [oid_field, "ReachID", "ERROR_CODE"]
-    list_obj = arcpy.ListFields("tmp_network_table_lyr")
+    list_obj = arcpy.ListFields("tmp_network_table_view")
     tmp_field_names = [f.name for f in list_obj]
     for field_name in tmp_field_names:
         if field_name not in keep_fields:
-            arcpy.DeleteField_management("tmp_network_table_lyr", field_name)
+            arcpy.DeleteField_management("tmp_network_table_view", field_name)
     expr = """"{0}" > {1}""".format("ERROR_CODE", "0")
-    arcpy.SelectLayerByAttribute_management("tmp_network_table_lyr", "NEW_SELECTION", expr)
-    arcpy.CopyRows_management("tmp_network_table_lyr", file_gdb_path + "\NetworkErrors")
+    arcpy.SelectLayerByAttribute_management("tmp_network_table_view", "NEW_SELECTION", expr)
+    arcpy.CopyRows_management("tmp_network_table_view", file_gdb_path + "\NetworkErrors")
 
 # FOR TESTING
 # if __name__ == "__main__":
-#     in_network_fc= r"C:\JL\Testing\GNAT\BuildNetworkTopology\YF.gdb\StreamNetwork"
-#     in_network_tbl = r"C:\JL\Testing\GNAT\BuildNetworkTopology\YF.gdb\StreamNetworkTable"
-#     outflow_id = 1125
-#     max_len = 30
-#     flow_acc = r"C:\JL\Testing\GNAT\BuildNetworkTopology\YF.gdb\fa"
-#
-#     main(in_network_fc, in_network_tbl, outflow_id, max_len)
+#     in_network_fc= r"C:\JL\Testing\GNAT\BuildNetworkTopology\Function_Tests.gdb\Example_FlowDir"
+#     in_network_tbl = r"C:\JL\Testing\GNAT\BuildNetworkTopology\Function_Tests.gdb\StreamNetworkTable"
+#     outflow_id = 3
+#     max_len = 20
+    # flow_acc = r"C:\JL\Testing\GNAT\BuildNetworkTopology\YF.gdb\fa"
+
+    # main(in_network_fc, in_network_tbl, outflow_id, max_len)
