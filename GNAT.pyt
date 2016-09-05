@@ -57,7 +57,7 @@ class Toolbox(object):
         self.tools = [StreamOrderTool,
                       StreamBranchesTool,
                       #CheckNetworkConnectivityTool,
-                      #FindBraidedNetworkTool,
+                      FindBraidedNetworkTool,
                       #FindCrossingLinesTool,
                       BuildNetworkTopologyTool,
                       #CalculateGeomorphicAttributesTool,
@@ -225,7 +225,7 @@ class BuildNetworkTopologyTool(object):
             displayName="Clear Network Table?",
             name="ClearTable",
             datatype="GPBoolean", #Boolean
-            parameterType="Required",
+            parameterType="Optional",
             direction="Input")
 
         return [param0,param1,param2]
