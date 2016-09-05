@@ -17,6 +17,7 @@
 
 # # Import Modules # #
 import arcpy
+import FindBraidedNetwork as braid
 
 # # Script Parameters # #
 listReachPairs = [] ## Reach-Pairs written to NetworkTable
@@ -52,7 +53,7 @@ def network_tree(inputID,tblNetwork,fcLines,fcNodePoint):
         arcpy.SelectLayerByAttribute_management("lyrBraidedReachStartPoints","CLEAR_SELECTION")
 
         # Make Layers
-        listSelected = []
+        listSelected = [] #FIXME is this being used?  If not, delete
         arcpy.MakeFeatureLayer_management(fcLines,"InputReach",""" "OBJECTID" = """ + str(inputID))
         arcpy.MakeFeatureLayer_management(fcLines,"SelectedReaches")
 
@@ -114,7 +115,7 @@ def network_tree(inputID,tblNetwork,fcLines,fcNodePoint):
                 pass
             else:
                 listHeadwaterIDs.append(int(inputID))
-                listReachPairs.append([inputID, u'0']) # include headwater reaches in StreamNetworkTable
+                listReachPairs.append([inputID, u'-99999']) # include headwater reaches in StreamNetworkTable
                 arcpy.AddMessage("  Headwater")
             return # Return to Next Junction
 
@@ -127,7 +128,8 @@ def network_tree(inputID,tblNetwork,fcLines,fcNodePoint):
                 network_tree(selectedID,tblNetwork,fcLines,fcNodePoint)
 
         return
- 
+
+
 def checkcount():
     #arcpy.AddMessage str(len(listReachesDone)) + " | " + str(intTotalFeatures[0]) 
     if len(listReachesDone) > 0:
@@ -135,6 +137,7 @@ def checkcount():
             if len(listReachesDone) == int(intTotalFeatures[0] * 0.1 * percent):
                 arcpy.AddMessage(str(10*percent) + "%  complete.")
     return
+
 
 def calcNodes(fcStreamNetwork):
     arcpy.AddMessage("Calculating stream network nodes...")
@@ -183,6 +186,7 @@ def calcNodes(fcStreamNetwork):
             del tmpVrtx
     return networkVrtx
 
+
 def queryNodes(inputID, fcNodePoint):
     fcNodePoint_lyr = "fcNodePoint_lyr"
     arcpy.MakeFeatureLayer_management(fcNodePoint, fcNodePoint_lyr)
@@ -197,6 +201,7 @@ def queryNodes(inputID, fcNodePoint):
     arcpy.Delete_management(fcNodePoint_lyr)
     del cursor
     return nodeDict
+
 
 def main(fcStreamNetwork,intOutflowReachID,boolClearTable):
 
@@ -238,6 +243,9 @@ def main(fcStreamNetwork,intOutflowReachID,boolClearTable):
     # Populate Braided List
     if arcpy.Exists("lyrBraidedReaches"):
         arcpy.Delete_management("lyrBraidedReaches")
+    braided_field = arcpy.ListFields(fcStreamNetwork, "IsBraided")
+    if len(braided_field) == 0:
+        braid.main(fcStreamNetwork) # find braids, add to "IsBraided" field if it hasn't been done already
     whereBraidedReaches = """ "IsBraided" = 1 """
     arcpy.MakeFeatureLayer_management(fcStreamNetwork,"lyrBraidedReaches")
     arcpy.SelectLayerByAttribute_management("lyrBraidedReaches","NEW_SELECTION",whereBraidedReaches)
@@ -271,7 +279,10 @@ def main(fcStreamNetwork,intOutflowReachID,boolClearTable):
         arcpy.Delete_management("LineLayer")
     arcpy.MakeFeatureLayer_management(fcStreamNetwork,"LineLayer")
     arcpy.CalculateField_management(fcStreamNetwork,"IsHeadwater",0,"PYTHON") #clear field
-    where = '"OBJECTID" IN' + str(tuple(listHeadwaterIDs))
+    if len(listHeadwaterIDs) > 1:
+        where = '"OBJECTID" IN ' + str(tuple(listHeadwaterIDs))
+    else:
+        where = '"OBJECTID" = ' + str(listHeadwaterIDs[0]) # corner case of one headwater
     arcpy.SelectLayerByAttribute_management("LineLayer","NEW_SELECTION", where)
     arcpy.CalculateField_management("LineLayer","IsHeadwater",1,"PYTHON")
 
@@ -282,9 +293,9 @@ def main(fcStreamNetwork,intOutflowReachID,boolClearTable):
 
 # # Run as Script # # 
 # if __name__ == "__main__":
-#     # TESTING main FUNCTION
-#     inputPolylineFC = r"C:\JL\Testing\GNAT\BuildNetworkTopology\YF.gdb\StreamNetwork"
-#     inputOutflowReachID = 1140
+# #     # TESTING main FUNCTION
+#     inputPolylineFC = r"C:\JL\Testing\GNAT\BuildNetworkTopology\Function_Tests.gdb\Example_FlowDir"
+#     inputOutflowReachID = 3
 #     boolClearTable = "True"
 #
 #     main(inputPolylineFC,inputOutflowReachID,boolClearTable)
