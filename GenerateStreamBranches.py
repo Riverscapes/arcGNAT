@@ -92,7 +92,7 @@ def main(
         arcpy.AddMessage("NOT Dissolving " + str(boolDissolve))
         arcpy.Intersect_analysis([fcMerged,fcLineNetwork],fcOutputStreamNetwork,"ALL")
 
-    return
+    return fcOutputStreamNetwork
 
 if __name__ == "__main__":
 

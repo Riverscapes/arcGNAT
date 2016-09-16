@@ -759,8 +759,8 @@ class CopyBranchIDTool(object):
 class SegmentationTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Segmentation Tool"
-        self.description = "Segment the Stream Network."
+        self.label = "Segment Stream Network"
+        self.description = "Segment a stream network polyline feature class."
         self.canRunInBackground = True
         self.category = strCatagoryStreamNetworkManagement
 
@@ -769,7 +769,7 @@ class SegmentationTool(object):
         reload(Segmentation)
         
         param0 = arcpy.Parameter(
-            displayName="Input Stream Network",
+            displayName="Stream Network Polyline Feature Class",
             name="InputStreamNetwork",
             datatype="GPFeatureLayer",
             parameterType="Required",
@@ -777,35 +777,35 @@ class SegmentationTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Segment Distance (Meters)",
+            displayName="Segment Length (Meters)",
             name="InputSegmentDistance",
             datatype="GPDouble",
             parameterType="Required",
             direction="Input")
-        param1.value = "100"
+        param1.value = "200"
 
         param2 = arcpy.Parameter(
-            displayName="Rule for Remainders",
-            name="strRemainderRule",
-            datatype="GPString",
+            displayName="Downstream Reach ID",
+            name="reachID",
+            datatype="GPLong",
             parameterType="Required",
             direction="Input")
-        param2.filter.list = Segmentation.listStrRemainderRules
 
         param3 = arcpy.Parameter(
-            displayName="Stream BranchID Field",
-            name="fieldStreamName",
-            datatype="GPString",
-            parameterType="Optional",
+            displayName="Stream Name Field",
+            name="streamIndex",
+            datatype="Field",
+            parameterType="Required",
             direction="Input")
+        param3.parameterDependencies = [param0.name]
 
         param4 = arcpy.Parameter(
-            displayName="Output SegmentID Field",
-            name="fieldSegmentID",
+            displayName="Segmentation Method",
+            name="strSegmentationMethod",
             datatype="GPString",
             parameterType="Required",
             direction="Input")
-        param4.value = "SegmentID"
+        param4.filter.list = Segmentation.listStrSegMethod
 
         param5 = arcpy.Parameter(
             displayName="Output Segmented Line Network",
@@ -815,15 +815,7 @@ class SegmentationTool(object):
             direction="Output")
         param5.filter.list = ["Polyline"]
 
-        param6 = arcpy.Parameter(
-            displayName="Scratch Workspace",
-            name="InputTempWorkspace",
-            datatype="DEWorkspace", 
-            parameterType="Optional",
-            direction="Input")
-        param6.filter.list = ["Local Database"]
-
-        return [param0,param1,param2,param3,param4,param5,param6]
+        return [param0,param1,param2,param3,param4,param5]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -834,7 +826,7 @@ class SegmentationTool(object):
         validation is performed.  This method is called whenever a parameter
         has been changed."""
 
-        populateFields(parameters[0],parameters[3],"BranchID")
+        #populateFields(parameters[0],parameters[3],"BranchID")
 
         return
 
@@ -844,7 +836,7 @@ class SegmentationTool(object):
         
         testLayerSelection(parameters[0])
         testProjected(parameters[0])
-        testWorkspacePath(parameters[6])
+        testWorkspacePath(parameters[5])
         return
 
     def execute(self, p, messages):
@@ -855,8 +847,7 @@ class SegmentationTool(object):
                           p[2].valueAsText,
                           p[3].valueAsText,
                           p[4].valueAsText,
-                          p[5].valueAsText,
-                          getTempWorkspace(p[6].valueAsText))
+                          p[5].valueAsText)
         return
 
 # Geomorphic Attributes Tools #

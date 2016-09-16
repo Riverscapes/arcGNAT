@@ -16,7 +16,6 @@
 #!/usr/bin/env python
 
 # # Import Modules # #
-import math
 import arcpy
 
 scratchWorkspace = arcpy.env.scratchWorkspace
@@ -51,7 +50,7 @@ def getGISDataset(workspace,inputDatasetName):
     if workspace == "Layer":
         inputDataset = inputDatasetName
         if arcpy.Exists(inputDataset):
-            return inputDatset
+            return inputDataset
     else:
         inputDataset = workspace + "\\" + inputDatasetName
         if arcpy.Exists(inputDataset):

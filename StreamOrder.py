@@ -19,13 +19,14 @@
 import sys
 import arcpy
 import gis_tools
+import ClearInMemory
 
 # # Main Function # #
 def main(inputFCPolylineNetwork,
          inputDownstreamID,
          outputFCPolylineStreamOrder,
          outputFCJunctionPoints,
-         scratchWorkspace=arcpy.env.scratchWorkspace):
+         scratchWorkspace="in_memory"):
 
     # Set Processing Environments
     arcpy.env.outputZflag = "Disabled"
@@ -127,8 +128,10 @@ def main(inputFCPolylineNetwork,
         
     arcpy.DeleteIdentical_management(fcStreamOrderTransistionPoints,"Shape")
     arcpy.CopyFeatures_management(fcStreamOrderTransistionPoints,outputFCJunctionPoints)
-    
-    return
+
+    ClearInMemory.main()
+
+    return outputFCPolylineStreamOrder, outputFCJunctionPoints
 
 # # Other Functions # #
 def newListPairs(number):
