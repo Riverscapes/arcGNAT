@@ -283,7 +283,6 @@ def flow_direction(tmp_network_tbl):
 
     with arcpy.da.UpdateCursor(tmp_network_tbl, update_fields) as ucursor:
         for urow in ucursor:
-            print (urow)
             key_val = urow[1]
             if key_val in val_dict:
                 if urow[1] != val_dict[key_val]:

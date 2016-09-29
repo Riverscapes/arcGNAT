@@ -228,15 +228,13 @@ def main(fcStreamNetwork,intOutflowReachID,boolClearTable):
     list_fields = arcpy.ListFields(fcStreamNetwork)
     name_fields = [f.name for f in list_fields]
     oid_field = arcpy.Describe(fcStreamNetwork).OIDFieldName
-    if add_fields[0] in name_fields:
-        pass
-    else:
-        arcpy.AddField_management(fcStreamNetwork, add_fields[0], "SHORT") # add IsHeadwater field
+    if add_fields[0] in name_fields: # add IsHeadwater field
+        arcpy.DeleteField_management(fcStreamNetwork, add_fields[0])
+    arcpy.AddField_management(fcStreamNetwork, add_fields[0], "SHORT")
     if add_fields[1] in name_fields:
-        pass
-    else:
-        arcpy.AddField_management(fcStreamNetwork, add_fields[1], "LONG") # add ReachID field
-        arcpy.CalculateField_management(fcStreamNetwork, "ReachID", "'!" + oid_field + "!'", "PYTHON_9.3")
+        arcpy.DeleteField_management(fcStreamNetwork, add_fields[1])
+    arcpy.AddField_management(fcStreamNetwork, add_fields[1], "LONG") # add ReachID field
+    arcpy.CalculateField_management(fcStreamNetwork, "ReachID", "'!" + oid_field + "!'", "PYTHON_9.3")
 
     intTotalFeatures.append(int(arcpy.GetCount_management(fcStreamNetwork).getOutput(0)))
 
@@ -244,8 +242,9 @@ def main(fcStreamNetwork,intOutflowReachID,boolClearTable):
     if arcpy.Exists("lyrBraidedReaches"):
         arcpy.Delete_management("lyrBraidedReaches")
     braided_field = arcpy.ListFields(fcStreamNetwork, "IsBraided")
-    if len(braided_field) == 0:
-        braid.main(fcStreamNetwork) # find braids, add to "IsBraided" field if it hasn't been done already
+    if len(braided_field) > 0:
+        arcpy.DeleteField_management(fcStreamNetwork, "IsBraided")
+    braid.main(fcStreamNetwork) # find braids, add to "IsBraided" field if it hasn't been done already
     whereBraidedReaches = """ "IsBraided" = 1 """
     arcpy.MakeFeatureLayer_management(fcStreamNetwork,"lyrBraidedReaches")
     arcpy.SelectLayerByAttribute_management("lyrBraidedReaches","NEW_SELECTION",whereBraidedReaches)
