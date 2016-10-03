@@ -221,7 +221,7 @@ def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, out
     arcpy.Dissolve_management(spatial_join_fc_lyr, strm_dslv, "BranchID", "", "SINGLE_PART", "DISSOLVE_LINES")
 
     # Segment using method with remainder at inflow of each stream reach (i.e. Jesse's method)
-    if segMethod == "Remaining segment at outflow (bottom) of stream branch":
+    if segMethod == "Remaining segment at inflow (top) of stream branch":
         strm_seg = segOptionA(strm_dslv, inputDistance, outFGB)
         arcpy.FeatureClassToFeatureClass_conversion(strm_seg, outFGB, outFile)
     # Segment using method with remainder at outflow, or divided remainder (i.e. Kelly's method)
@@ -231,14 +231,3 @@ def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, out
     # Finalize the process
     ClearInMemory.main()
     arcpy.AddMessage("Segmentation process complete!")
-
-
-# # TESTING
-# inputFCStreamNetwork = r"C:\JL\Testing\GNAT\Segmentation_Refactor\lemhi\strm_network_huc6.shp"
-# inputDistance = 200
-# reachID = 13
-# strmIndex = "GNIS_Name"
-# segMethod = r"Divide remainder proportionally between reaches"
-# outputFCSegments = r"C:\JL\Testing\GNAT\Segmentation_Refactor\lemhi\lemhi.gdb\segments_optionC"
-#
-# main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, outputFCSegments)
