@@ -44,7 +44,7 @@ def main(fcStreamNetwork):
     # PolylinePrep
     listFields = arcpy.ListFields(fcStreamNetwork,"IsBraided")
     if len(listFields) is not 1:
-        arcpy.AddField_management(fcStreamNetwork,"IsBraided","SHORT")
+        arcpy.AddField_management(fcStreamNetwork, "IsBraided", "SHORT", "", "", "", "", "NULLABLE")
     arcpy.CalculateField_management(fcStreamNetwork,"IsBraided",0,"PYTHON") #clear field
 
     # Process

@@ -36,6 +36,10 @@ def network_tree(inputID,tblNetwork,fcLines,fcNodePoint):
 
     checkcount()
 
+    # Get OID field names
+    oid_fcLines = arcpy.Describe(fcLines).OIDFieldName
+    oid_fcNodePoint = arcpy.Describe(fcNodePoint).OIDFieldName
+
     if inputID in listReachesDone or inputID == "":
         pass #return
 
@@ -54,30 +58,30 @@ def network_tree(inputID,tblNetwork,fcLines,fcNodePoint):
 
         # Make Layers
         listSelected = [] #FIXME is this being used?  If not, delete
-        arcpy.MakeFeatureLayer_management(fcLines,"InputReach",""" "OBJECTID" = """ + str(inputID))
+        arcpy.MakeFeatureLayer_management(fcLines,"InputReach", oid_fcLines + " = " + str(inputID))
         arcpy.MakeFeatureLayer_management(fcLines,"SelectedReaches")
 
         # Select Adjacent Features
         if inputID in listBraidedReaches:
             arcpy.SelectLayerByAttribute_management("lyrBraidedReachStartPoints","CLEAR_SELECTION")
-            arcpy.MakeFeatureLayer_management("lyrBraidedReachStartPoints","lyrCurrentReachBraidedPoint",""" "ORIG_FID" = """ + str(inputID))
+            arcpy.MakeFeatureLayer_management("lyrBraidedReachStartPoints","lyrCurrentReachBraidedPoint",oid_fcLines + " = " + str(inputID))
             arcpy.SelectLayerByLocation_management("SelectedReaches","WITHIN_A_DISTANCE","lyrCurrentReachBraidedPoint","0.1","NEW_SELECTION")
 
             arcpy.SelectLayerByLocation_management("lyrBraidedReachStartPoints","WITHIN_A_DISTANCE","lyrCurrentReachBraidedPoint","0.1","NEW_SELECTION")
             arcpy.AddMessage("Braided" + str(int(arcpy.GetCount_management("lyrBraidedReachStartPoints").getOutput(0))))
-            arcpy.SelectLayerByAttribute_management("lyrBraidedReachStartPoints","REMOVE_FROM_SELECTION",""" "ORIG_FID" = """ + str(inputID))
+            arcpy.SelectLayerByAttribute_management("lyrBraidedReachStartPoints","REMOVE_FROM_SELECTION",oid_fcLines + " = " + str(inputID))
             arcpy.SelectLayerByAttribute_management("SelectedReaches","REMOVE_FROM_SELECTION",""" "OBJECTID" = """ + str(inputID))
             if int(arcpy.GetCount_management("lyrBraidedReachStartPoints").getOutput(0)) == 1:
                 with arcpy.da.SearchCursor("lyrBraidedReachStartPoints",["ORIG_FID"]) as scBraided:
                     for row in scBraided:
-                        arcpy.SelectLayerByAttribute_management("SelectedReaches","REMOVE_FROM_SELECTION",""" "OBJECTID" = """ +str(row[0]))
+                        arcpy.SelectLayerByAttribute_management("SelectedReaches","REMOVE_FROM_SELECTION",oid_fcLines + " = " + str(row[0]))
                 del scBraided
             descSelectedReaches = arcpy.Describe("SelectedReaches")
             listSelected = descSelectedReaches.FIDset.split("; ")
 
         else:
             arcpy.SelectLayerByLocation_management("SelectedReaches","WITHIN_A_DISTANCE","InputReach","0.1","NEW_SELECTION")
-            arcpy.SelectLayerByAttribute_management("SelectedReaches","REMOVE_FROM_SELECTION",""" "OBJECTID" = """ + str(inputID))
+            arcpy.SelectLayerByAttribute_management("SelectedReaches","REMOVE_FROM_SELECTION",oid_fcLines + " = " + str(inputID))
             arcpy.SelectLayerByLocation_management("lyrBraidedReachStartPoints","WITHIN_A_DISTANCE","InputReach","0.1","NEW_SELECTION")
             listSelectedBraidedReaches = []
             if int(arcpy.GetCount_management("lyrBraidedReachStartPoints").getOutput(0)) > 0:
@@ -203,10 +207,10 @@ def queryNodes(inputID, fcNodePoint):
     return nodeDict
 
 
-def main(fcStreamNetwork,intOutflowReachID,boolClearTable):
+def main(fcNetwork,intOutflowReachID,boolClearTable):
 
     # Data Paths
-    descStreamNetwork = arcpy.Describe(fcStreamNetwork)
+    descStreamNetwork = arcpy.Describe(fcNetwork)
     fileGDB = descStreamNetwork.path
     tableNetwork = fileGDB + "\\StreamNetworkTable"
 
@@ -224,6 +228,11 @@ def main(fcStreamNetwork,intOutflowReachID,boolClearTable):
         arcpy.AddField_management(tableNetwork,"TO_NODE", "STRING")
 
     # Polyline Prep
+    fcStreamNetwork_inmem = r"in_memory\fcStreamNetwork_inmem"
+    fcStreamNetwork = "fcStreamNetwork_lyr"
+    arcpy.FeatureClassToFeatureClass_conversion(fcNetwork, "in_memory", "fcStreamNetwork_inmem")
+    arcpy.MakeFeatureLayer_management(fcStreamNetwork_inmem, fcStreamNetwork)
+
     add_fields = ["IsHeadwater", "ReachID"]
     list_fields = arcpy.ListFields(fcStreamNetwork)
     name_fields = [f.name for f in list_fields]
@@ -234,7 +243,7 @@ def main(fcStreamNetwork,intOutflowReachID,boolClearTable):
     if add_fields[1] in name_fields:
         arcpy.DeleteField_management(fcStreamNetwork, add_fields[1])
     arcpy.AddField_management(fcStreamNetwork, add_fields[1], "LONG") # add ReachID field
-    arcpy.CalculateField_management(fcStreamNetwork, "ReachID", "'!" + oid_field + "!'", "PYTHON_9.3")
+    arcpy.CalculateField_management(fcStreamNetwork, "ReachID", "!" + oid_field + "!", "PYTHON_9.3")
 
     intTotalFeatures.append(int(arcpy.GetCount_management(fcStreamNetwork).getOutput(0)))
 
