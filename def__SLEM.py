@@ -59,9 +59,9 @@ def SLEM(Line, Distance, Output, TF):
         
         #/shaping of the segmented result
         arcpy.AddField_management(CopyLine, "Rank_UGO", "LONG", "", "", "", "", "NULLABLE", "NON_REQUIRED", "")
-        arcpy.CalculateField_management(CopyLine, "Rank_UGO", "["+fieldnames[0]+"]", "VB", "")
+        arcpy.CalculateField_management(CopyLine, "Rank_UGO", "!"+fieldnames[0]+"!", "PYTHON_9.3", "")
         arcpy.AddField_management(CopyLine, "From_Measure", "DOUBLE", "", "", "", "", "NULLABLE", "NON_REQUIRED", "")
-        arcpy.CalculateField_management(CopyLine, "From_Measure", "0", "VB", "")
+        arcpy.CalculateField_management(CopyLine, "From_Measure", "0", "PYTHON_9.3", "")
         arcpy.AddField_management(CopyLine, "To_Measure", "DOUBLE", "", "", "", "", "NULLABLE", "NON_REQUIRED", "")
         arcpy.CalculateField_management(CopyLine, "To_Measure", "!shape.length!", "PYTHON_9.3", "")
         
