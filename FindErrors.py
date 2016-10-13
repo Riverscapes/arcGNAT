@@ -52,7 +52,7 @@ def dangles(in_network_fc, tmp_network_tbl, max_len):
     # Select reaches that intersect dangles, also < 30 meter in length
     arcpy.SelectLayerByLocation_management(in_network_fc_lyr, "INTERSECT", dangle_pnt)
     length_field = arcpy.Describe(in_network_fc_lyr).LengthFieldName
-    expr = """"{0}"<{1}""".format(length_field, 30)
+    expr = """"{0}"<{1}""".format(length_field, max_len)
     arcpy.SelectLayerByAttribute_management(in_network_fc_lyr, "SUBSET_SELECTION", expr)
     arcpy.FeatureClassToFeatureClass_conversion(in_network_fc_lyr, "in_memory", "dangles")
     arcpy.MakeFeatureLayer_management(r"in_memory\dangles", "dangles_lyr")
@@ -82,9 +82,9 @@ def braids(in_network_fc, tmp_network_tbl):
 
     # Create temporary in_memory version of input stream network
     tmp_network_fc = r"in_memory\tmp_network_fc"
+    #arcpy.FeatureClassToFeatureClass_conversion(in_network_fc_lyr, "in_memory", "tmp_network_fc")
     arcpy.FeatureClassToFeatureClass_conversion(in_network_fc_lyr, "in_memory", "tmp_network_fc")
     arcpy.MakeFeatureLayer_management(r"in_memory\tmp_network_fc", "tmp_network_fc_lyr")
-    #arcpy.FeatureClassToFeatureClass_conversion("in_network_fc_lyr", "C:\JL\Testing\GNAT\BuildNetworkTopology\YF.gdb", "tmp_network_fc")
 
     # Select reaches based on "IsBraided" attribute field
     expr = """"{0}" = {1}""".format("IsBraided", 1)
@@ -293,52 +293,52 @@ def flow_direction(tmp_network_tbl):
     return
 
 
-def node_flow_acc(in_network_fc, in_network_table, flow_acc):
-    arcpy.AddMessage("Calculating flow accumulation per network node...")
-
-    # declare layer name variables
-    network_vrtx_lyr = "network_vrtx_lyr"
-    zstat_start_view = "zstat_start_view"
-    zstat_end_view = "zstat_end_view"
-    vrtx_buf_start_lyr = "vrtx_buf_start_lyr"
-    vrtx_buf_end_lyr = "vrtx_buf_end_lyr"
-
-    # get name of network vertex feature class
-    out_fgb = arcpy.Describe(in_network_fc).GDBFilePath
-    network_vrtx = out_fgb + "\networkVrtx"
-    arcpy.MakeFeatureLayer_management(network_vrtx, network_vrtx_lyr)
-
-    # buffer network vertices, and extract flow accumulation values
-    expr_to = """"{0}" = {1}""".format("TYPE", "START")
-    arcpy.SelectLayerByAttribute_management(network_vrtx_lyr,"NEW_SELECTION", expr_to)
-    arcpy.Buffer_analysis(network_vrtx_lyr, r"in_memory\vrtx_buf_start", 30)
-    arcpy.SelectLayerByAttribute_management(network_vrtx_lyr, "SWITCH_SELECTION")
-    arcpy.Buffer_analysis(network_vrtx_lyr, r"in_memory\vrtx_buf_end", 30)
-    arcpy.MakeFeatureLayer_management(r"in_memory\vrtx_buf_start", vrtx_buf_start_lyr)
-    ZonalStatisticsAsTable(vrtx_buf_start_lyr, "ReachID", flow_acc, r"in_memory\zstat_start", "DATA","MEAN")
-    arcpy.MakeTableView_management("in_memory\zstat_start", zstat_start_view)
-    arcpy.MakeFeatureLayer_management(r"in_memory\vrtx_buf_end", vrtx_buf_end_lyr)
-    ZonalStatisticsAsTable(vrtx_buf_end_lyr, "ReachID", flow_acc, r"in_memory\zstat_end", "DATA")
-    arcpy.MakeTableView_management("in_memory\zstat_end", zstat_end_view)
-
-    # add mean flow accumulation values to ReachID records in StreamNetworkTable
-    node_list = ["start", "end"]
-    for node in node_list:
-        arcpy.AddJoin_management(in_network_table, "ReachID", "zstat_" + node + "_view", "ReachID", "KEEP_ALL")
-        with arcpy.da.UpdateCursor as cursor:
-            for row in cursor:
-                if node == "start":
-                    row.TO_NODE_FA = row.VALUE
-                else:
-                    row.FROM_NODE_FA = row.VALUE
-        arcpy.RemoveJoin_management("zstat_" + node + "_view")
-
-    # clean up
-    arcpy.Delete_management(r"in_memory\vrtx_buf_start")
-    arcpy.Delete_management(r"in_memory\vrtx_buf_end")
-    arcpy.Delete_management(r"in_memory\zstat_start")
-    arcpy.Delete_management(r"in_memory\zstat_end")
-
+# def node_flow_acc(in_network_fc, in_network_table, flow_acc):
+#     arcpy.AddMessage("Calculating flow accumulation per network node...")
+#
+#     # declare layer name variables
+#     network_vrtx_lyr = "network_vrtx_lyr"
+#     zstat_start_view = "zstat_start_view"
+#     zstat_end_view = "zstat_end_view"
+#     vrtx_buf_start_lyr = "vrtx_buf_start_lyr"
+#     vrtx_buf_end_lyr = "vrtx_buf_end_lyr"
+#
+#     # get name of network vertex feature class
+#     out_fgb = arcpy.Describe(in_network_fc).GDBFilePath
+#     network_vrtx = out_fgb + "\networkVrtx"
+#     arcpy.MakeFeatureLayer_management(network_vrtx, network_vrtx_lyr)
+#
+#     # buffer network vertices, and extract flow accumulation values
+#     expr_to = """"{0}" = {1}""".format("TYPE", "START")
+#     arcpy.SelectLayerByAttribute_management(network_vrtx_lyr,"NEW_SELECTION", expr_to)
+#     arcpy.Buffer_analysis(network_vrtx_lyr, r"in_memory\vrtx_buf_start", 30)
+#     arcpy.SelectLayerByAttribute_management(network_vrtx_lyr, "SWITCH_SELECTION")
+#     arcpy.Buffer_analysis(network_vrtx_lyr, r"in_memory\vrtx_buf_end", 30)
+#     arcpy.MakeFeatureLayer_management(r"in_memory\vrtx_buf_start", vrtx_buf_start_lyr)
+#     ZonalStatisticsAsTable(vrtx_buf_start_lyr, "ReachID", flow_acc, r"in_memory\zstat_start", "DATA","MEAN")
+#     arcpy.MakeTableView_management("in_memory\zstat_start", zstat_start_view)
+#     arcpy.MakeFeatureLayer_management(r"in_memory\vrtx_buf_end", vrtx_buf_end_lyr)
+#     ZonalStatisticsAsTable(vrtx_buf_end_lyr, "ReachID", flow_acc, r"in_memory\zstat_end", "DATA")
+#     arcpy.MakeTableView_management("in_memory\zstat_end", zstat_end_view)
+#
+#     # add mean flow accumulation values to ReachID records in StreamNetworkTable
+#     node_list = ["start", "end"]
+#     for node in node_list:
+#         arcpy.AddJoin_management(in_network_table, "ReachID", "zstat_" + node + "_view", "ReachID", "KEEP_ALL")
+#         with arcpy.da.UpdateCursor as cursor:
+#             for row in cursor:
+#                 if node == "start":
+#                     row.TO_NODE_FA = row.VALUE
+#                 else:
+#                     row.FROM_NODE_FA = row.VALUE
+#         arcpy.RemoveJoin_management("zstat_" + node + "_view")
+#
+#     # clean up
+#     arcpy.Delete_management(r"in_memory\vrtx_buf_start")
+#     arcpy.Delete_management(r"in_memory\vrtx_buf_end")
+#     arcpy.Delete_management(r"in_memory\zstat_start")
+#     arcpy.Delete_management(r"in_memory\zstat_end")
+#
 
 def main(in_network_fc, in_network_table, outflow_id, max_len):
     arcpy.AddMessage("Searching for errors: ")
@@ -365,7 +365,7 @@ def main(in_network_fc, in_network_table, outflow_id, max_len):
 
     # Find errors
     flow_direction("tmp_network_table_view")
-    dangles(in_network_fc, "tmp_network_table_view", max_len)
+    #dangles(in_network_fc, "tmp_network_table_view", max_len)
     braids(in_network_fc, "tmp_network_table_view")
     duplicates(in_network_fc, "tmp_network_table_view")
     reach_pair_errors(in_network_fc, "tmp_network_table_view", outflow_id)
@@ -385,11 +385,10 @@ def main(in_network_fc, in_network_table, outflow_id, max_len):
     arcpy.CopyRows_management("tmp_network_table_view", file_gdb_path + "\NetworkErrors")
 
 # FOR TESTING
-# if __name__ == "__main__":
-#     in_network_fc= r"C:\JL\Testing\GNAT\BuildNetworkTopology\Function_Tests.gdb\Example_FlowDir"
-#     in_network_tbl = r"C:\JL\Testing\GNAT\BuildNetworkTopology\Function_Tests.gdb\StreamNetworkTable"
-#     outflow_id = 3
-#     max_len = 20
-    # flow_acc = r"C:\JL\Testing\GNAT\BuildNetworkTopology\YF.gdb\fa"
+if __name__ == "__main__":
+    in_network_fc= r"C:\JL\Projects\RCAs\Methow\_2Preprocess\topo_check.gdb\methow_shape_convert"
+    in_network_tbl = r"C:\JL\Projects\RCAs\Methow\_2Preprocess\topo_check.gdb\StreamNetworkTable"
+    outflow_id = 3210
+    max_len = 10
 
-    # main(in_network_fc, in_network_tbl, outflow_id, max_len)
+    main(in_network_fc, in_network_tbl, outflow_id, max_len)
