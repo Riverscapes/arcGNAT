@@ -230,32 +230,36 @@ def main(fcNetwork,intOutflowReachID,boolClearTable):
         arcpy.AddField_management(tableNetwork,"TO_NODE", "STRING")
 
     # Polyline Prep
-    fcStreamNetwork = "fcStreamNetwork_lyr"
-    arcpy.MakeFeatureLayer_management(fcNetwork, fcStreamNetwork)
+    fcStreamNetworkInput_lyr = "fcStreamNetworkInput_lyr"
+    fcStreamNetworkTemp_lyr = "fcStreamNetworkTemp_lyr"
+    fcStreamNetworkTemp = "in_memory\\fcStreamNetworkTemp"
+    arcpy.MakeFeatureLayer_management(fcNetwork, fcStreamNetworkInput_lyr)
+    arcpy.FeatureClassToFeatureClass_conversion(fcStreamNetworkInput_lyr, "in_memory", "fcStreamNetworkTemp")
+    arcpy.MakeFeatureLayer_management(fcStreamNetworkTemp, fcStreamNetworkTemp_lyr)
 
     add_fields = ["IsHeadwater", "ReachID"]
-    list_fields = arcpy.ListFields(fcStreamNetwork)
+    list_fields = arcpy.ListFields(fcStreamNetworkTemp_lyr)
     name_fields = [f.name for f in list_fields]
-    oid_field = arcpy.Describe(fcStreamNetwork).OIDFieldName
+    oid_field = arcpy.Describe(fcStreamNetworkTemp_lyr).OIDFieldName
     if add_fields[0] in name_fields: # add IsHeadwater field
-        arcpy.DeleteField_management(fcStreamNetwork, add_fields[0])
-    arcpy.AddField_management(fcStreamNetwork, add_fields[0], "SHORT")
+        arcpy.DeleteField_management(fcStreamNetworkTemp_lyr, add_fields[0])
+    arcpy.AddField_management(fcStreamNetworkTemp, add_fields[0], "SHORT")
     if add_fields[1] in name_fields:
-        arcpy.DeleteField_management(fcStreamNetwork, add_fields[1])
-    arcpy.AddField_management(fcStreamNetwork, add_fields[1], "LONG") # add ReachID field
-    arcpy.CalculateField_management(fcStreamNetwork, "ReachID", "!" + oid_field + "!", "PYTHON_9.3")
+        arcpy.DeleteField_management(fcStreamNetworkTemp_lyr, add_fields[1])
+    arcpy.AddField_management(fcStreamNetworkTemp, add_fields[1], "LONG") # add ReachID field
+    arcpy.CalculateField_management(fcStreamNetworkTemp_lyr, "ReachID", "!" + oid_field + "!", "PYTHON_9.3")
 
-    intTotalFeatures.append(int(arcpy.GetCount_management(fcStreamNetwork).getOutput(0)))
+    intTotalFeatures.append(int(arcpy.GetCount_management(fcStreamNetworkTemp).getOutput(0)))
 
     # Populate Braided List
     if arcpy.Exists("lyrBraidedReaches"):
         arcpy.Delete_management("lyrBraidedReaches")
-    braided_field = arcpy.ListFields(fcStreamNetwork, "IsBraided")
+    braided_field = arcpy.ListFields(fcStreamNetworkTemp_lyr, "IsBraided")
     if len(braided_field) > 0:
-        arcpy.DeleteField_management(fcStreamNetwork, "IsBraided")
-    braid.main(fcStreamNetwork) # find braids, add to "IsBraided" field if it hasn't been done already
+        arcpy.DeleteField_management(fcStreamNetworkTemp_lyr, "IsBraided")
+    braid.main(fcStreamNetworkTemp_lyr) # find braids, add to "IsBraided" field if it hasn't been done already
     whereBraidedReaches = """ "IsBraided" = 1 """
-    arcpy.MakeFeatureLayer_management(fcStreamNetwork,"lyrBraidedReaches")
+    arcpy.MakeFeatureLayer_management(fcStreamNetworkTemp_lyr,"lyrBraidedReaches")
     arcpy.SelectLayerByAttribute_management("lyrBraidedReaches","NEW_SELECTION",whereBraidedReaches)
     descLyrBraidedReaches = arcpy.Describe("lyrBraidedReaches")
     for item in descLyrBraidedReaches.FIDset.split("; "):
@@ -269,8 +273,8 @@ def main(fcNetwork,intOutflowReachID,boolClearTable):
     arcpy.MakeFeatureLayer_management("in_memory\\BraidedReachStartPoints","lyrBraidedReachStartPoints")
 
     # Process
-    fcNodePoint = calcNodes(fcStreamNetwork) # Build the node point feature class
-    network_tree(intOutflowReachID,tableNetwork,fcStreamNetwork,fcNodePoint)
+    fcNodePoint = calcNodes(fcStreamNetworkTemp) # Build the node point feature class
+    network_tree(intOutflowReachID,tableNetwork,fcStreamNetworkTemp_lyr,fcNodePoint)
     checkcount()
 
     # Write Outputs
@@ -286,14 +290,15 @@ def main(fcNetwork,intOutflowReachID,boolClearTable):
 
     if arcpy.Exists("LineLayer"):
         arcpy.Delete_management("LineLayer")
-    arcpy.MakeFeatureLayer_management(fcStreamNetwork,"LineLayer")
-    arcpy.CalculateField_management(fcStreamNetwork,"IsHeadwater",0,"PYTHON") #clear field
+    arcpy.MakeFeatureLayer_management(fcStreamNetworkTemp,"LineLayer")
+    arcpy.CalculateField_management(fcStreamNetworkTemp,"IsHeadwater",0,"PYTHON") #clear field
     if len(listHeadwaterIDs) > 1:
         where = oid_field + ' IN ' + str(tuple(listHeadwaterIDs))
     else:
         where = oid_field + ' = ' + str(listHeadwaterIDs[0]) # corner case of one headwater
     arcpy.SelectLayerByAttribute_management("LineLayer","NEW_SELECTION", where)
     arcpy.CalculateField_management("LineLayer","IsHeadwater",1,"PYTHON")
+    arcpy.FeatureClassToFeatureClass_conversion("LineLayer", fileGDB, "processed_network")
 
     # Cleanup
     arcpy.Compact_management(fileGDB)

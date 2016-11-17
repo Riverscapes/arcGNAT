@@ -126,7 +126,7 @@ class BuildNetworkTopologyTool(object):
         """Define the tool (tool name is the name of the class)."""
         self.label = "Build Network Topology Table"
         self.description = ""
-        self.canRunInBackground = False
+        self.canRunInBackground = True
         self.category = strCatagoryStreamNetworkPreparation
 
     def getParameterInfo(self):
