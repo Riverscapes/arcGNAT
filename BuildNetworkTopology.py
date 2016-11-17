@@ -18,6 +18,7 @@
 # # Import Modules # #
 import arcpy
 import FindBraidedNetwork as braid
+import ClearInMemory as in_mem
 
 # # Script Parameters # #
 listReachPairs = [] ## Reach-Pairs written to NetworkTable
@@ -29,6 +30,7 @@ listBraidedReaches = [] ## Reaches part of a braided system
 
 # # Environmental parameters # #
 arcpy.env.overwriteOutput = True
+arcpy.env.workspace = "in_memory"
 
 # # Functions # #
 
@@ -56,7 +58,6 @@ def network_tree(inputID,tblNetwork,fcLines,fcNodePoint):
         arcpy.SelectLayerByAttribute_management("lyrBraidedReachStartPoints","CLEAR_SELECTION")
 
         # Make Layers
-        listSelected = [] #FIXME is this being used?  If not, delete
         arcpy.MakeFeatureLayer_management(fcLines,"InputReach", oid_fcLines + " = " + str(inputID))
         arcpy.MakeFeatureLayer_management(fcLines,"SelectedReaches")
 
@@ -145,11 +146,12 @@ def checkcount():
 def calcNodes(fcStreamNetwork):
     arcpy.AddMessage("Calculating stream network nodes...")
     arcpy.MakeFeatureLayer_management(fcStreamNetwork, "StreamNetwork_lyr")
-    descStreamNetwork = arcpy.Describe(fcStreamNetwork)
-    fileGDBpath = descStreamNetwork.path
-    # create table blank table to hold vertex coordinates
-    networkVrtx = fileGDBpath + "\\networkVrtx"
-    arcpy.CreateFeatureclass_management(fileGDBpath, "networkVrtx", "POINT", "", "DISABLED", "DISABLED", fcStreamNetwork)
+    # descStreamNetwork = arcpy.Describe(fcStreamNetwork)
+    # fileGDBpath = descStreamNetwork.path
+    # networkVrtx = fileGDBpath + "\\networkVrtx"
+    #arcpy.CreateFeatureclass_management(fileGDBpath, "networkVrtx", "POINT", "", "DISABLED", "DISABLED", fcStreamNetwork)
+    networkVrtx = "in_memory\\networkVrtx"
+    arcpy.CreateFeatureclass_management("in_memory", "networkVrtx", "POINT", "", "DISABLED", "DISABLED", fcStreamNetwork )
     arcpy.AddField_management(networkVrtx, "ReachID", "LONG")
     arcpy.AddField_management(networkVrtx, "PointType", "TEXT")
     arcpy.AddField_management(networkVrtx, "TO_X_Coord", "DOUBLE")
@@ -211,17 +213,17 @@ def main(fcNetwork,intOutflowReachID,boolClearTable):
     # Data Paths
     descStreamNetwork = arcpy.Describe(fcNetwork)
     fileGDB = descStreamNetwork.path
-    tableNetwork = fileGDB + "\\StreamNetworkTable"
-
+    tableNetworkFile = fileGDB + "\\StreamNetworkTable"
+    tableNetwork = "in_memory\\StreamNetworkTable"
 
     # NetworkTable Prep
-    if arcpy.Exists(tableNetwork):
-        # Clear contents of table
+    if arcpy.Exists(tableNetworkFile):
+        # Delete table if it exists
         if boolClearTable:
-            arcpy.DeleteRows_management(tableNetwork)
+            arcpy.Delete_management(tableNetworkFile)
     else:
         # Create new network Table
-        arcpy.CreateTable_management(fileGDB,"StreamNetworkTable")
+        arcpy.CreateTable_management("in_memory","StreamNetworkTable")
         arcpy.AddField_management(tableNetwork,"ReachID","LONG")
         arcpy.AddField_management(tableNetwork,"UpstreamID","LONG")
         arcpy.AddField_management(tableNetwork,"FROM_NODE", "STRING")
@@ -280,6 +282,7 @@ def main(fcNetwork,intOutflowReachID,boolClearTable):
                 icNetworkTable.insertRow([pair[0],pair[1],nodeDict['FROM_NODE'], nodeDict['TO_NODE']])
         except RuntimeError as e:
             print "Runtime error: {0}".format(e)
+    arcpy.TableToTable_conversion(tableNetwork, fileGDB, "StreamNetworkTable") # write in-memory table to disc
 
     if arcpy.Exists("LineLayer"):
         arcpy.Delete_management("LineLayer")
@@ -293,15 +296,16 @@ def main(fcNetwork,intOutflowReachID,boolClearTable):
     arcpy.CalculateField_management("LineLayer","IsHeadwater",1,"PYTHON")
 
     # Cleanup
-    ##arcpy.Compact_management(fileGDB)
+    arcpy.Compact_management(fileGDB)
+    in_mem.main()
 
     return
 
-# # Run as Script # # 
+# # # Run as Script # #
 # if __name__ == "__main__":
-# # TESTING main FUNCTION
-#     inputPolylineFC = r"C:\JL\Projects\RCAs\Methow\_2Preprocess\topo_check.gdb\Methow_NHDFlowline"
-#     inputOutflowReachID = 3210
+# # # TESTING main FUNCTION
+#     inputPolylineFC = r"C:\JL\Testing\GNAT\Issue29\lemhi\input.gdb\strm_netwrk_huc6"
+#     inputOutflowReachID = 9
 #     boolClearTable = "True"
 #
 #     main(inputPolylineFC,inputOutflowReachID,boolClearTable)
