@@ -10,7 +10,11 @@
 # Version:     1.1                                                            #
 # Modified:    2014-Sept-08                                                   #
 #                                                                             #
-# Copyright:   (c) Kelly Whitehead 2014                                       #
+# Copyright:   (c) Kelly Whitehead, Jesse Langdon 2016                        #
+#                                                                             #
+# Notes:       Upstream IDs can be populated with the following codes:        #
+#              -99999 = headwater reach                                       #
+#              -11111 = potential topology error                              #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
@@ -219,15 +223,13 @@ def main(fcNetwork,intOutflowReachID,boolClearTable):
     # NetworkTable Prep
     if arcpy.Exists(tableNetworkFile):
         # Delete table if it exists
-        if boolClearTable:
-            arcpy.Delete_management(tableNetworkFile)
-    else:
-        # Create new network Table
-        arcpy.CreateTable_management("in_memory","StreamNetworkTable")
-        arcpy.AddField_management(tableNetwork,"ReachID","LONG")
-        arcpy.AddField_management(tableNetwork,"UpstreamID","LONG")
-        arcpy.AddField_management(tableNetwork,"FROM_NODE", "STRING")
-        arcpy.AddField_management(tableNetwork,"TO_NODE", "STRING")
+        arcpy.Delete_management(tableNetworkFile)
+    # Create new network Table
+    arcpy.CreateTable_management("in_memory","StreamNetworkTable")
+    arcpy.AddField_management(tableNetwork,"ReachID","LONG")
+    arcpy.AddField_management(tableNetwork,"UpstreamID","LONG")
+    arcpy.AddField_management(tableNetwork,"FROM_NODE", "STRING")
+    arcpy.AddField_management(tableNetwork,"TO_NODE", "STRING")
 
     # Polyline Prep
     fcStreamNetworkInput_lyr = "fcStreamNetworkInput_lyr"
@@ -273,19 +275,24 @@ def main(fcNetwork,intOutflowReachID,boolClearTable):
     arcpy.MakeFeatureLayer_management("in_memory\\BraidedReachStartPoints","lyrBraidedReachStartPoints")
 
     # Process
-    fcNodePoint = calcNodes(fcStreamNetworkTemp) # Build the node point feature class
+    fcNodePoint = calcNodes(fcStreamNetworkTemp) # build node point feature class
     network_tree(intOutflowReachID,tableNetwork,fcStreamNetworkTemp_lyr,fcNodePoint)
     checkcount()
 
-    # Write Outputs
+    # Write outputs, UpstreamID = -11111 refers to a potential error
     arcpy.AddMessage("Writing to table...")
     with arcpy.da.InsertCursor(tableNetwork,["ReachID","UpstreamID","FROM_NODE","TO_NODE"]) as icNetworkTable:
         try:
             for pair in listReachPairs:
-                nodeDict = queryNodes(pair[0], fcNodePoint) # query node points feature class
-                icNetworkTable.insertRow([pair[0],pair[1],nodeDict['FROM_NODE'], nodeDict['TO_NODE']])
+                nodeDict = queryNodes(pair[0], fcNodePoint)
+                if pair[1] == '':
+                    icNetworkTable.insertRow([pair[0],-11111,nodeDict['FROM_NODE'], nodeDict['TO_NODE']])
+                else:
+                    icNetworkTable.insertRow([pair[0],pair[1],nodeDict['FROM_NODE'], nodeDict['TO_NODE']])
+                arcpy.AddMessage(str(pair[0]) + ", " + str(pair[1]) + ", " + nodeDict['FROM_NODE'] + ", " + nodeDict['TO_NODE'])
         except RuntimeError as e:
             print "Runtime error: {0}".format(e)
+            arcpy.AddMessage(str(pair[0]) + ", " + str(pair[1]) + ", " + nodeDict['FROM_NODE'] + ", " + nodeDict['TO_NODE'])
     arcpy.TableToTable_conversion(tableNetwork, fileGDB, "StreamNetworkTable") # write in-memory table to disc
 
     if arcpy.Exists("LineLayer"):
@@ -305,12 +312,3 @@ def main(fcNetwork,intOutflowReachID,boolClearTable):
     in_mem.main()
 
     return
-
-# # # Run as Script # #
-# if __name__ == "__main__":
-# # # TESTING main FUNCTION
-#     inputPolylineFC = r"C:\JL\Testing\GNAT\Issue29\lemhi\input.gdb\strm_netwrk_huc6"
-#     inputOutflowReachID = 9
-#     boolClearTable = "True"
-#
-#     main(inputPolylineFC,inputOutflowReachID,boolClearTable)
