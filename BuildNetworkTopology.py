@@ -212,7 +212,7 @@ def queryNodes(inputID, fcNodePoint):
     return nodeDict
 
 
-def main(fcNetwork,intOutflowReachID,boolClearTable):
+def main(fcNetwork,intOutflowReachID):
 
     # Data Paths
     descStreamNetwork = arcpy.Describe(fcNetwork)
@@ -279,7 +279,7 @@ def main(fcNetwork,intOutflowReachID,boolClearTable):
     network_tree(intOutflowReachID,tableNetwork,fcStreamNetworkTemp_lyr,fcNodePoint)
     checkcount()
 
-    # Write outputs, UpstreamID = -11111 refers to a potential error
+    # Write outputs
     arcpy.AddMessage("Writing to table...")
     with arcpy.da.InsertCursor(tableNetwork,["ReachID","UpstreamID","FROM_NODE","TO_NODE"]) as icNetworkTable:
         try:
@@ -289,10 +289,8 @@ def main(fcNetwork,intOutflowReachID,boolClearTable):
                     icNetworkTable.insertRow([pair[0],-11111,nodeDict['FROM_NODE'], nodeDict['TO_NODE']])
                 else:
                     icNetworkTable.insertRow([pair[0],pair[1],nodeDict['FROM_NODE'], nodeDict['TO_NODE']])
-                arcpy.AddMessage(str(pair[0]) + ", " + str(pair[1]) + ", " + nodeDict['FROM_NODE'] + ", " + nodeDict['TO_NODE'])
         except RuntimeError as e:
             print "Runtime error: {0}".format(e)
-            arcpy.AddMessage(str(pair[0]) + ", " + str(pair[1]) + ", " + nodeDict['FROM_NODE'] + ", " + nodeDict['TO_NODE'])
     arcpy.TableToTable_conversion(tableNetwork, fileGDB, "StreamNetworkTable") # write in-memory table to disc
 
     if arcpy.Exists("LineLayer"):

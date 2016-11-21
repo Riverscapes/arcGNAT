@@ -146,14 +146,7 @@ class BuildNetworkTopologyTool(object):
             parameterType="Required",
             direction="Input")
 
-        param2 = arcpy.Parameter(
-            displayName="Clear Network Table?",
-            name="ClearTable",
-            datatype="GPBoolean", #Boolean
-            parameterType="Optional",
-            direction="Input")
-
-        return [param0,param1,param2]
+        return [param0,param1]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -173,11 +166,7 @@ class BuildNetworkTopologyTool(object):
     def execute(self, parameters, messages):
         """The source code of the tool."""
         reload(BuildNetworkTopology)
-        inStream = r"C:\JL\Testing\GNAT\Issue28\input.gdb\NFJD_NHD_FullExtent"
-        reachID = 4734
-        clearTable = True
-        #BuildNetworkTopology.main(parameters[0].valueAsText,parameters[1].valueAsText,parameters[2])
-        BuildNetworkTopology.main(inStream, reachID, clearTable)
+        BuildNetworkTopology.main(parameters[0].valueAsText,parameters[1].valueAsText)
         return
 
 # Transfer Attributes Tools
@@ -1945,12 +1934,3 @@ def testWorkspacePath(parameterWorkspace):
 #        category="GNAT Options")
 
 #    return [param4,param5,param6]
-
-# TESTING
-def main():
-    tbx = Toolbox()
-    tool = BuildNetworkTopologyTool()
-    tool.execute(tool.getParameterInfo(), None)
-
-if __name__ == '__main__':
-    main()
