@@ -173,8 +173,11 @@ class BuildNetworkTopologyTool(object):
     def execute(self, parameters, messages):
         """The source code of the tool."""
         reload(BuildNetworkTopology)
-        BuildNetworkTopology.main(parameters[0].valueAsText,parameters[1].valueAsText,parameters[2])
-
+        inStream = r"C:\JL\Testing\GNAT\Issue28\input.gdb\NFJD_NHD_FullExtent"
+        reachID = 4734
+        clearTable = True
+        #BuildNetworkTopology.main(parameters[0].valueAsText,parameters[1].valueAsText,parameters[2])
+        BuildNetworkTopology.main(inStream, reachID, clearTable)
         return
 
 # Transfer Attributes Tools
@@ -1942,3 +1945,12 @@ def testWorkspacePath(parameterWorkspace):
 #        category="GNAT Options")
 
 #    return [param4,param5,param6]
+
+# TESTING
+def main():
+    tbx = Toolbox()
+    tool = BuildNetworkTopologyTool()
+    tool.execute(tool.getParameterInfo(), None)
+
+if __name__ == '__main__':
+    main()
