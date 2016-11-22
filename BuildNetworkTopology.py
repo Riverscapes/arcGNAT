@@ -214,15 +214,15 @@ def queryNodes(inputID, fcNodePoint):
 
 def main(fcNetwork,intOutflowReachID):
 
-    # Data Paths
+    # Data paths
     descStreamNetwork = arcpy.Describe(fcNetwork)
     fileGDB = descStreamNetwork.path
+    nameNetwork = descStreamNetwork.baseName
     tableNetworkFile = fileGDB + "\\StreamNetworkTable"
     tableNetwork = "in_memory\\StreamNetworkTable"
 
     # NetworkTable Prep
     if arcpy.Exists(tableNetworkFile):
-        # Delete table if it exists
         arcpy.Delete_management(tableNetworkFile)
     # Create new network Table
     arcpy.CreateTable_management("in_memory","StreamNetworkTable")
@@ -303,7 +303,8 @@ def main(fcNetwork,intOutflowReachID):
         where = oid_field + ' = ' + str(listHeadwaterIDs[0]) # corner case of one headwater
     arcpy.SelectLayerByAttribute_management("LineLayer","NEW_SELECTION", where)
     arcpy.CalculateField_management("LineLayer","IsHeadwater",1,"PYTHON")
-    arcpy.FeatureClassToFeatureClass_conversion("LineLayer", fileGDB, "processed_network")
+    arcpy.SelectLayerByAttribute_management("LineLayer", "CLEAR_SELECTION")
+    arcpy.FeatureClassToFeatureClass_conversion("LineLayer", fileGDB, nameNetwork + "_processed")
 
     # Cleanup
     arcpy.Compact_management(fileGDB)
