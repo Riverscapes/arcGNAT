@@ -1363,7 +1363,7 @@ class FindErrorsTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Input Stream Network",
+            displayName="Input Processed Stream Network",
             name="InputStreamNetwork",
             datatype="GPFeatureLayer",
             parameterType="Required",
@@ -1384,14 +1384,7 @@ class FindErrorsTool(object):
             parameterType="Required",
             direction="Input")
 
-        param3 = arcpy.Parameter(
-            displayName="Maximum Dangle Length",
-            name="MaxLength",
-            datatype="GPDouble",
-            parameterType="Required",
-            direction="Input")
-
-        return [param0, param1, param2, param3]
+        return [param0, param1, param2]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -1414,8 +1407,7 @@ class FindErrorsTool(object):
         reload(FindErrors)
         FindErrors.main(p[0].valueAsText,
                         p[1].valueAsText,
-                        p[2].valueAsText,
-                        p[3].valueAsText)
+                        p[2].valueAsText)
 
         return
 
