@@ -27,48 +27,15 @@ arcpy.env.overwriteOutput = True
 
 #Error Codes
 # 0 - no errors
-# 1 - dangle
+# 1 - dangle (redacted)
 # 2 - potential braid
 # 3 - duplicate
 # 4 - overlap
 # 5 - crossed
 # 6 - disconnected
 # 7 - flipped flow direction
+# 8 - other potential errors
 
-
-# Find dangle errors
-def dangles(in_network_fc, tmp_network_tbl, max_len):
-    arcpy.AddMessage("...dangles")
-    in_network_fc_lyr = "in_network_fc_lyr"
-    arcpy.MakeFeatureLayer_management(in_network_fc, in_network_fc_lyr)
-
-    # Set global variables
-    ERROR_CODE = 1
-
-    # Plot dangles
-    dangle_pnt = gis_tools.newGISDataset("in_memory", "dangle_pnt")
-    arcpy.FeatureVerticesToPoints_management(in_network_fc_lyr, dangle_pnt, "DANGLE")
-
-    # Select reaches that intersect dangles, also < 30 meter in length
-    arcpy.SelectLayerByLocation_management(in_network_fc_lyr, "INTERSECT", dangle_pnt)
-    length_field = arcpy.Describe(in_network_fc_lyr).LengthFieldName
-    expr = """"{0}"<{1}""".format(length_field, max_len)
-    arcpy.SelectLayerByAttribute_management(in_network_fc_lyr, "SUBSET_SELECTION", expr)
-    arcpy.FeatureClassToFeatureClass_conversion(in_network_fc_lyr, "in_memory", "dangles")
-    arcpy.MakeFeatureLayer_management(r"in_memory\dangles", "dangles_lyr")
-    arcpy.SelectLayerByAttribute_management(in_network_fc_lyr, "REMOVE_FROM_SELECTION")
-
-    # Add error values to network table
-    arcpy.AddJoin_management(tmp_network_tbl, "ReachID", "dangles_lyr", "ReachID", "KEEP_COMMON")
-    arcpy.CalculateField_management(tmp_network_tbl, "ERROR_CODE", ERROR_CODE, "PYTHON_9.3")
-    arcpy.RemoveJoin_management(tmp_network_tbl)
-
-    # Clean up
-    arcpy.Delete_management("dangles_lyr")
-    arcpy.Delete_management(in_network_fc_lyr)
-    del dangle_pnt
-
-    return
 
 
 # Find braided reach errors
@@ -217,7 +184,6 @@ def cross(tmp_network_fc):
     # Set global constant
     ERROR_CODE = 5
 
-
     with arcpy.da.SearchCursor(tmp_network_fc, ['ReachID', 'SHAPE@']) as cursor:
         for r1,r2 in itertools.combinations(cursor, 2):
             if r1[1].crosses(r2[1]):
@@ -289,58 +255,26 @@ def flow_direction(tmp_network_tbl):
                     if urow[3] == val_dict[key_val][0]:
                         urow[4] = ERROR_CODE
                         ucursor.updateRow(urow)
-
     return
 
 
-# def node_flow_acc(in_network_fc, in_network_table, flow_acc):
-#     arcpy.AddMessage("Calculating flow accumulation per network node...")
-#
-#     # declare layer name variables
-#     network_vrtx_lyr = "network_vrtx_lyr"
-#     zstat_start_view = "zstat_start_view"
-#     zstat_end_view = "zstat_end_view"
-#     vrtx_buf_start_lyr = "vrtx_buf_start_lyr"
-#     vrtx_buf_end_lyr = "vrtx_buf_end_lyr"
-#
-#     # get name of network vertex feature class
-#     out_fgb = arcpy.Describe(in_network_fc).GDBFilePath
-#     network_vrtx = out_fgb + "\networkVrtx"
-#     arcpy.MakeFeatureLayer_management(network_vrtx, network_vrtx_lyr)
-#
-#     # buffer network vertices, and extract flow accumulation values
-#     expr_to = """"{0}" = {1}""".format("TYPE", "START")
-#     arcpy.SelectLayerByAttribute_management(network_vrtx_lyr,"NEW_SELECTION", expr_to)
-#     arcpy.Buffer_analysis(network_vrtx_lyr, r"in_memory\vrtx_buf_start", 30)
-#     arcpy.SelectLayerByAttribute_management(network_vrtx_lyr, "SWITCH_SELECTION")
-#     arcpy.Buffer_analysis(network_vrtx_lyr, r"in_memory\vrtx_buf_end", 30)
-#     arcpy.MakeFeatureLayer_management(r"in_memory\vrtx_buf_start", vrtx_buf_start_lyr)
-#     ZonalStatisticsAsTable(vrtx_buf_start_lyr, "ReachID", flow_acc, r"in_memory\zstat_start", "DATA","MEAN")
-#     arcpy.MakeTableView_management("in_memory\zstat_start", zstat_start_view)
-#     arcpy.MakeFeatureLayer_management(r"in_memory\vrtx_buf_end", vrtx_buf_end_lyr)
-#     ZonalStatisticsAsTable(vrtx_buf_end_lyr, "ReachID", flow_acc, r"in_memory\zstat_end", "DATA")
-#     arcpy.MakeTableView_management("in_memory\zstat_end", zstat_end_view)
-#
-#     # add mean flow accumulation values to ReachID records in StreamNetworkTable
-#     node_list = ["start", "end"]
-#     for node in node_list:
-#         arcpy.AddJoin_management(in_network_table, "ReachID", "zstat_" + node + "_view", "ReachID", "KEEP_ALL")
-#         with arcpy.da.UpdateCursor as cursor:
-#             for row in cursor:
-#                 if node == "start":
-#                     row.TO_NODE_FA = row.VALUE
-#                 else:
-#                     row.FROM_NODE_FA = row.VALUE
-#         arcpy.RemoveJoin_management("zstat_" + node + "_view")
-#
-#     # clean up
-#     arcpy.Delete_management(r"in_memory\vrtx_buf_start")
-#     arcpy.Delete_management(r"in_memory\vrtx_buf_end")
-#     arcpy.Delete_management(r"in_memory\zstat_start")
-#     arcpy.Delete_management(r"in_memory\zstat_end")
-#
+# find potential miscellaneous errors
+def other_errors(tmp_network_tbl):
+    arcpy.AddMessage("...other potential issues")
 
-def main(in_network_fc, in_network_table, outflow_id, max_len):
+    # Set global variables
+    ERROR_CODE = 8
+
+    # Select records UpstreamID == -11111
+    expr = """"{0}" = {1}""".format("UpstreamID", -11111)
+    arcpy.SelectLayerByAttribute_management(tmp_network_tbl,"NEW_SELECTION", expr)
+
+    # Add error values to network table
+    arcpy.CalculateField_management(tmp_network_tbl, "ERROR_CODE", ERROR_CODE, "PYTHON_9.3")
+    arcpy.SelectLayerByAttribute_management(tmp_network_tbl, "CLEAR_SELECTION")
+
+
+def main(in_network_fc, in_network_table, outflow_id):
     arcpy.AddMessage("Searching for errors: ")
 
     # Get file geodatabase from input stream network feature class
@@ -365,12 +299,11 @@ def main(in_network_fc, in_network_table, outflow_id, max_len):
 
     # Find errors
     flow_direction("tmp_network_table_view")
-    #dangles(in_network_fc, "tmp_network_table_view", max_len)
     braids(in_network_fc, "tmp_network_table_view")
     duplicates(in_network_fc, "tmp_network_table_view")
     reach_pair_errors(in_network_fc, "tmp_network_table_view", outflow_id)
     disconnected(in_network_fc, "tmp_network_table_view")
-    # node_flow_acc(in_network_fc, "tmp_network_table_lyr", flow_acc)
+    other_errors("tmp_network_table_view")
 
     # Clean up and write final error table
     oid_field = arcpy.Describe("tmp_network_table_view").OIDFieldName
@@ -383,12 +316,3 @@ def main(in_network_fc, in_network_table, outflow_id, max_len):
     expr = """"{0}" > {1}""".format("ERROR_CODE", "0")
     arcpy.SelectLayerByAttribute_management("tmp_network_table_view", "NEW_SELECTION", expr)
     arcpy.CopyRows_management("tmp_network_table_view", file_gdb_path + "\NetworkErrors")
-
-# FOR TESTING
-if __name__ == "__main__":
-    in_network_fc= r"C:\JL\Projects\RCAs\Methow\_2Preprocess\topo_check.gdb\methow_shape_convert"
-    in_network_tbl = r"C:\JL\Projects\RCAs\Methow\_2Preprocess\topo_check.gdb\StreamNetworkTable"
-    outflow_id = 3210
-    max_len = 10
-
-    main(in_network_fc, in_network_tbl, outflow_id, max_len)
