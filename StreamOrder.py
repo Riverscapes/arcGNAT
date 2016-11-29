@@ -26,7 +26,7 @@ def main(inputFCPolylineNetwork,
          inputDownstreamID,
          outputFCPolylineStreamOrder,
          outputFCJunctionPoints,
-         scratchWorkspace="in_memory"):
+         scratchWorkspace= "in_memory"):
 
     # Set Processing Environments
     arcpy.env.outputZflag = "Disabled"
@@ -40,7 +40,6 @@ def main(inputFCPolylineNetwork,
         arcpy.Delete_management(outputFCJunctionPoints)
 
     # Preprocess Network
-    ### This section could stall ArcGIS 10.1 with dissolve... 
     fcNetworkDissolvedUnsplit = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_NetworkDissolvedUnsplit")
     arcpy.Dissolve_management(inputFCPolylineNetwork,fcNetworkDissolvedUnsplit,multi_part="SINGLE_PART",unsplit_lines="DISSOLVE_LINES")
     
@@ -48,8 +47,7 @@ def main(inputFCPolylineNetwork,
     arcpy.Intersect_analysis(fcNetworkDissolvedUnsplit,fcNetworkIntersectPoints,"ALL",output_type="POINT")
     
     fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"NetworkDissolved")
-    arcpy.SplitLineAtPoint_management(fcNetworkDissolvedUnsplit,fcNetworkIntersectPoints,fcNetworkDissolved,"0.1 METERS")
-
+    arcpy.SplitLineAtPoint_management(fcNetworkDissolvedUnsplit, fcNetworkIntersectPoints, fcNetworkDissolved)
 
     listFields = arcpy.ListFields(fcNetworkDissolved,"Stream_Order")
     if len(listFields) == 0:
@@ -119,6 +117,7 @@ def main(inputFCPolylineNetwork,
         intFeaturesCurrent = int(arcpy.GetCount_management(lyrCalculate).getOutput(0))
         if intFeaturesRemaining == intFeaturesCurrent:
             arcpy.AddError("The number of features remaining (" + str(intFeaturesCurrent) + " is the same as the last iteration.")
+            break
         else:
             intFeaturesRemaining = intFeaturesCurrent
         intIteration = intIteration + 1
@@ -143,9 +142,15 @@ def newListPairs(number):
 
 # # Run as Script # #
 if __name__ == "__main__":
-
     main(sys.argv[1],
          sys.argv[2],
          sys.argv[3],
          sys.argv[4],
          sys.argv[5])
+
+    # TESTING
+    # inputFCPolylineNetwork = r"C:\JL\Testing\GNAT\Issue28\input.gdb\Methow_NHDFlowline"
+    # inputDownstreamID = 36
+    # outputFCPolylineStreamOrder = r"C:\JL\Testing\GNAT\Issue28\input.gdb\strm_order"
+    # outputFCJunctionPoints = r"C:\JL\Testing\GNAT\Issue28\input.gdb\strm_junctions"
+    # main(inputFCPolylineNetwork, inputDownstreamID, outputFCPolylineStreamOrder, outputFCJunctionPoints)
