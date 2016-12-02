@@ -17,6 +17,7 @@
 
 # # Import Modules # #
 import arcpy
+import sys
 
 scratchWorkspace = arcpy.env.scratchWorkspace
 
@@ -99,6 +100,32 @@ def unique_values(table, field):
 
     with arcpy.da.SearchCursor(table, [field]) as cursor:
         return sorted({row[0] for row in cursor})
+
+def checkReq(input_dataset):
+    """Checks feature class inputs for M or Z values, and
+    whether it has a projected spatial reference"""
+
+    input_hasM = arcpy.Describe(input_dataset).hasM
+    input_hasZ = arcpy.Describe(input_dataset).hasZ
+    input_name = arcpy.Describe(input_dataset).baseName
+    input_sr = arcpy.Describe(input_dataset).spatialReference
+
+    if input_hasM == True:
+        arcpy.AddMessage("Geometry of " + input_name + " is M-value enabled. "
+                         "Please disable the M-value.")
+    if input_hasZ == True:
+        arcpy.AddMessage("Geometry of " + input_name + " is Z-value enabled. "
+                         "Please disable the Z-value.")
+    if input_sr.type != "Projected":
+        arcpy.AddMessage(input_name + " has a geographic spatial reference. "
+                         "Please change to a projected spatial reference.")
+
+    if input_hasM == True \
+            or input_hasZ == True \
+            or input_sr.type != "Projected":
+        arcpy.AddMessage("Processing interrupted...")
+        sys.exit(0)
+
 
 ### Experimental ###
 class WorkspaceManager(object):
