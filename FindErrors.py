@@ -16,11 +16,11 @@
 #!/usr/bin/env python
 
 # Import arcpy module
+import os
 import itertools
-from itertools import *
 import arcpy
 from arcpy.sa import *
-import gis_tools
+# import gis_tools
 
 # Set environmental variables
 arcpy.env.overwriteOutput = True
@@ -35,7 +35,6 @@ arcpy.env.overwriteOutput = True
 # 6 - disconnected
 # 7 - flipped flow direction
 # 8 - other potential errors
-
 
 
 # Find braided reach errors
@@ -221,8 +220,6 @@ def disconnected(in_network_fc, tmp_network_tbl):
         with arcpy.da.InsertCursor(tmp_network_tbl, ["ReachID", "UpstreamID", "TO_NODE", "FROM_NODE", "ERROR_CODE"]) as icursor:
             for srow in scursor:
                 icursor.insertRow(srow)
-        #del srow, scursor
-        #del icursor
 
     arcpy.SelectLayerByAttribute_management(tmp_network_tbl, "NEW_SELECTION", """"UpstreamID" IS NULL""")
     with arcpy.da.UpdateCursor(tmp_network_tbl, ["ERROR_CODE"]) as ucursor:
