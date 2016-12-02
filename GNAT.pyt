@@ -1363,7 +1363,7 @@ class FindErrorsTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Input Processed Stream Network",
+            displayName="Processed Input Stream Network",
             name="InputStreamNetwork",
             datatype="GPFeatureLayer",
             parameterType="Required",
