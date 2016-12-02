@@ -23,6 +23,7 @@
 import arcpy
 import FindBraidedNetwork as braid
 import ClearInMemory as in_mem
+import gis_tools
 
 # # Script Parameters # #
 listReachPairs = [] ## Reach-Pairs written to NetworkTable
@@ -213,6 +214,7 @@ def queryNodes(inputID, fcNodePoint):
 
 
 def main(fcNetwork,intOutflowReachID):
+    gis_tools.checkReq(fcNetwork)
 
     # Data paths
     descStreamNetwork = arcpy.Describe(fcNetwork)
