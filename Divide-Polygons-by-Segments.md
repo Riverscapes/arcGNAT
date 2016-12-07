@@ -1,6 +1,3 @@
-Divide Polygons by Segments 
-===========================
-
 This utility tool divides a polygon (such as a channel buffer) using the segments from a flow or center line. This is useful for confinement calculations.
 
 ### Usage 
