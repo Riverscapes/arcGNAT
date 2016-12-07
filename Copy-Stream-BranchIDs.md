@@ -1,6 +1,3 @@
-Copy Stream BranchID Tool
-=========================
-
 This tool is used to move the BranchID from one stream network to another. The stream networks may be the same geometry, or similar geometry (i.e. Stream Network to Valley Bottom Centerline).
 
 ![](/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/Images/CopyBranchID01.png)
