@@ -111,13 +111,13 @@ def checkReq(input_dataset):
     input_sr = arcpy.Describe(input_dataset).spatialReference
 
     if input_hasM == True:
-        arcpy.AddMessage("Geometry of " + input_name + " is M-value enabled. "
+        arcpy.AddError("Geometry of " + input_name + " is M-value enabled. "
                          "Please disable the M-value.")
     if input_hasZ == True:
-        arcpy.AddMessage("Geometry of " + input_name + " is Z-value enabled. "
+        arcpy.AddError("Geometry of " + input_name + " is Z-value enabled. "
                          "Please disable the Z-value.")
     if input_sr.type != "Projected":
-        arcpy.AddMessage(input_name + " has a geographic spatial reference. "
+        arcpy.AddError(input_name + " has a geographic spatial reference. "
                          "Please change to a projected spatial reference.")
 
     if input_hasM == True \
