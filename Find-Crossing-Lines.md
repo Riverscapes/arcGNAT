@@ -2,7 +2,7 @@ The **Find Crossing Lines** tool looks for places where the input stream network
 
 ## Usage
 
-### Parameters
+### Input Parameters
 
 **Input Stream Network** 
 
