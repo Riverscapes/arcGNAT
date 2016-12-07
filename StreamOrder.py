@@ -29,6 +29,7 @@ def main(inputFCPolylineNetwork,
          scratchWorkspace= "in_memory"):
 
     # Set Processing Environments
+    arcpy.env.outputMflag = "Disabled"
     arcpy.env.outputZflag = "Disabled"
 
     # Initialize Stream Order
