@@ -1,6 +1,3 @@
-Build Network Topology Table
-============================
-
 The **Build Network Topology Table** tool builds a table comprised of records for all 
 stream reaches within an input stream network feature class. Each record includes 
 the reach ID, the ID of the adjacent upstream reach, and unique codes for the TO 
