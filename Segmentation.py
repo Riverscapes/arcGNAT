@@ -29,6 +29,10 @@ listStrSegMethod = ["Remaining segment at inflow (top) of stream branch",
                     "Remaining segment at outflow (bottom) of stream branch",
                     "Divide remainder between all reaches per stream branch"]
 
+# Turn off Z and M geometry
+arcpy.env.outputMFlag = "Disabled"
+arcpy.env.outputZFlag = "Disabled"
+
 
 def cleanLineGeom(inLine, streamID, segID, lineClusterTolerance):
     lyrs = []
@@ -201,7 +205,8 @@ def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, out
     strm_branch_fc_lyr = "strm_branch_fc_lyr"
     spatial_join_fc_lyr = "spatial_join_fc_lyr"
 
-    # TODO The stream ordering and branching process should be placed in a try/except structure to trap '99999' errors
+    gis_tools.checkReq(inputFCStreamNetwork) # process will terminate if input requirements not met
+    
     strm_order_fc, junctions_fc = StreamOrder.main(inputFCStreamNetwork, reachID, strm_order_fc_out, strm_junc_fc_out)
     strm_branch_fc = GenerateStreamBranches.main(strm_order_fc, junctions_fc, strmIndex,
                                  "Stream_Order", strm_branch_fc_out, "true", "in_memory")
