@@ -1,6 +1,3 @@
-Centerline Tool
-=================
-
 *Modified from the Centerline Tool in the Fluvial Corridor Toolbox*
 
 The Centerline Tool from the Fluvial Corridor toolbox has been modified and imported inside the Stream Network and RiverStyles toolbox. The modifications fix 1) missing centerlines in sections of the valley bottom polygon and 2) extra centerline segments.
