@@ -1,4 +1,4 @@
-The **Calculate Stream Order** tool calculates the Strahler stream order for all reaches in a stream network polyline feature class. The output is a polyline feature class that is dissolved by sections between stream confluences. The stream order ttributes can then be transferred to other stream network datasets. Strahler order is also a useful attribute for improving line network routes. 
+The **Calculate Stream Order** tool calculates the Strahler stream order for all reaches in a stream network polyline feature class. The output is a polyline feature class that is dissolved by sections between stream confluences. The resulting stream order attributes can then be transferred to other geographically coincident stream networks. Strahler order can also be a useful attribute for improving line network routes. 
 
 ![](/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/Images/StreamOrder01.png)
 
@@ -8,7 +8,7 @@ _______________________________________________________________
 ### Geoprocessing Environment
  
 * We recommended running this tool using 64-bit python geoprocessing.
-* Disable Z and M geometry in the input stream network feature class Shape field when encountering topology errors.
+* Disable Z and M geometry in the input stream network feature class Shape field if topology errors are encountered.
 
 ### Input Parameters
 
@@ -20,8 +20,8 @@ Data requirements:
 
 * Projected coordinate system, not geographic.
 * All appropriate polylines are connected as a network. This can be checked with the [Build Network Topology Table](https://github.com/SouthForkResearch/gnat/wiki/Build-Network-Topology-Table) and [Find Network Errors](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Errors) tools. The user can then manually rejoin disconnected stream reaches using editing tools in ArcMap.
-* All braids removed. Braids can be identified and isolated by running the [Find Braids in Stream Network](https://github.com/SouthForkResearch/gnat/wiki/Find-Braids-in-Stream-Network) tool, or by the aforementioned [Find Network Errors](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Errors) tool. Only one braid segment should be identified as the main channel and retained. Connector segments and side channels should be removed. GNIS names can be used as a guide to identify the main channel.  
-* File geodatabase polyline feature class (due to field requirements)
+* All braids removed. Braids can be identified and isolated by running the [Find Braids in Stream Network](https://github.com/SouthForkResearch/gnat/wiki/Find-Braids-in-Stream-Network) tool, or by the aforementioned [Find Network Errors](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Errors) tool. Only one braid segment should be identified as the main channel and retained. Connector segments and side channels should be removed. GNIS names can serve as a guide to identify the main channel.  
+* Must be a file geodatabase polyline feature class (due to field requirements)
 * Z and M geometry disabled for the Shape field.
 
 **Downstream Reach ID**
