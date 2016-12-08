@@ -67,6 +67,12 @@ network polyline feature class or the network topology table.
 
 The resulting network topology table, including error codes stored in a new attribute field: *ERROR_CODE*. This will be saved to the same file geodatabase where the input stream network is stored.
 
+### Post-processing
+
+A typical next step after generating the _NetworkErrors_ table would be to add the table to an ArcMap session, along with the input stream network feature class.  After joining the table to the stream network (using the `ReachID` field), the user can visualize the location of topological errors by symbolizing by `error_code`. The user can then utilize ArcMap editing tools to manual edit and repair these errors.
+
+This process can then be repeated by running the repaired stream network feature class through the **Find Network Errors** to find any missed errors. 
+
 ### Troubleshooting and Potential Issues
 
 Because the method for finding flow direction errors is performed in a pairwise fashion(i.e. the reach and the neighboring upstream reach), a reach is considered to have an incorrect flow direction only in relation to the neighboring reach, due to both reaches having the same FROM node values. In the case of a stream branch whereall of the reaches comprising that branch have an incorrect flow direction, the tool will only tag one reach with the flow direction error code.
