@@ -3,7 +3,7 @@ topology error with an upstream reach, the upstream ID for that reach will be as
 
 The resulting output table, which will be named *StreamNetwork*, can then serve as an input for the **Find Network Errors Tool**, which can be used to find topological errors in the stream network.
 
-### Usage
+## Usage
 
 ### Geoprocessing Environment
 * We recommend that the tool be run using 64-bit python geoprocessing.
