@@ -1,62 +1,61 @@
-The **Stream Sinuosity and Planform** tool calculates sinuosity (per segment) for valley centerline and flowline network. Also transfers the valley sinuosity to the stream network and calculates river planform attribute.
+The **Stream Sinuosity and Planform** tool calculates sinuosity (per polyline feature) for valley centerline and flowline network. Also transfers the valley sinuosity to the stream network and calculates river planform attribute.
 
-### Geoprocessing Environments###
-* All inputs must be in th same projected coordinate system.
-* It is recommended to run this tool with 64-bit python geoprocessing.
-* Disable Z and M if you encounter a topology error.
+_______________________________________________________________
+## Usage
 
-## Input Parameters
+### Geoprocessing Environments ###
+* All inputs must be in the same projected coordinate system.
+* We recommended running this tool with 64-bit python geoprocessing.
+* Disable Z and M geometry in the Shape field if topology errors are encountered.
 
-### Input Stream Network
+### Input Parameters
 
-Segmented Stream Network (i.e. flowline, centerline, etc). Stream Sinuosity will be calculated for each segment.
+**Input Segmented Stream Network**
 
-### Valley Centerline
+Segmented stream network polyline feature class (i.e. flowline, centerline, etc). Stream sinuosity values will be calculated for each segment.
 
-Segmented Valley Bottom Centerline. Valley Sinuosity will be calculated for each segment.
+**Input Segmented Valley Centerline**
 
-###Valley Bottom Polygon
+Segmented valley bottom centerline polyline feature class. Valley sinuosity values will be calculated for each segment.
 
-The valley bottom polygon of the stream network. This is used in the Transfer Line Attribute tool.
+**Input Valley Bottom Polygon**
 
-> This required input will be depreciated in a future version of this tool.
+Valley bottom polygon feature class of the stream network. This can serve as input to the [Transfer Line Attribute](https://github.com/SouthForkResearch/gnat/wiki/Transfer-Line-Attributes) tool.
 
-### Output Stream Network with Sinuosity Attribute
+> This required input will be deprecated in future versions of this tool.
 
-Output Polyline Feature Class (in a FGDB) for saving the segmented stream Network with calculated sinuosity.
+**Output Stream Network with Sinuosity Attribute**
 
-### Output Valley Centerline with Sinuosity Attribute
+Output polyline feature class. Represents a stream network with calculated sinuosity.
 
-Output Polyline Feature Class (in a FGDB) for storing the Valley Bottom Centerline with 
-calculated sinuosity.
+**Output Valley Centerline with Sinuosity Attribute**
 
-### Output Stream Network with Planform Attribute
+Output polyline feature class includes calculated sinuosity as an attribute.
 
-Output Polyline Feature Class (in a FGDB) for storing the stream Centerline with calculated Planform attribute.
+**Output Stream Network with Planform Attribute**
 
-##Calculation Method##
-The Stream Sinuosity and Planform Tool uses the following calculation method:
+Output polyline feature class, representing the stream centerline with calculated planform attribute.
 
-1. Use Sinuosity By Segment Tool for stream and valley centerlines
-	1. Convert segment ends to points
-	2. Use Points to Line to find straight line distance
-	3. calculate sinuosity (Straight distance/segment distance)
-2. Transfer Valley Bottom Sinuosity to Stream Centerline using Transfer Line Attribute Tool
-3. Calculate Planform metric for each divided segment
+**Scratch Workspace** (optional)
 
-##Outputs##
+File geodatabase or folder to store temporary data produced during the processing. If no workspace is selected, the tool will use "in_memory" workspace.
 
-***Output Stream Centerline With Sinuosity***
+### Outputs
 
+**Output Stream Centerline With Sinuosity**
 
-***Output Valley Centerline with Sinuosity***
+**Output Valley Centerline with Sinuosity**
 
+**Output Planform Network**
 
-***Output Planform Network***
+_______________________________________________________________
+## Technical Background
 
+### Calculation Method
 
-##Troubleshooting and Potential Issues##
-Planform attribute relies on the accuracy and performance of the Transfer Attribute Tool (Testing in progress).
-Need better understanding of desired segmentation lengths.
-
-##References and Resources##
+1. Use [Sinuosity By Segment Tool]() for stream and valley centerlines
+  * Convert segment ends to points
+  * Find straight-line distance
+  * Calculate sinuosity (straight-line distance/segment distance)
+2. Transfer valley bottom sinuosity to stream centerline using the [Transfer Line Attributes](https://github.com/SouthForkResearch/gnat/wiki/Transfer-Line-Attributes) tool
+3. Calculate the planform metric for each divided segment
