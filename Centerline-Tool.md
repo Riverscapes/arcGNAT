@@ -49,26 +49,22 @@ Output name and location of a polyline feature class containing the new centerli
 
 If checked, deletes temporary processing files after the tool completes.
 
-##Outputs
+### Outputs
 
 **Output Centerline Feature Class**
 
 Polyline feature class representing the valley bottom centerline. 
 
-### Reviewing the output
-
-Check for erroneous spatial features,  including:
-
-1. Extraneous centerlines, usually short spurs.
-2. Centerlines that do not follow the entire valley.
-
 ## Technical Background
+
 ### Troubleshooting and Potential Issues###
-Centerline may include bends at the end of some valleys.
+1. Extraneous centerlines, usually short spurs.
+2. Centerline that does not follow the entire valley length.
+3. Centerline may include bends at the end of some valleys.
 
 ### References and Resources
 
-* [FluvialCorridor Toolbox Home](http://umrevs-isig.fr/spip.php?rubrique164)
+* [FluvialCorridor Toolbox](http://umrevs-isig.fr/spip.php?rubrique164)
 * Other methods for centerline generation
 	* http://www1.pub.informatik.uni-wuerzburg.de/pub/haunert/pdf/HaunertSester2008.pdf
 	* http://gis.stackexchange.com/questions/2775/find-tunnel-center-line
