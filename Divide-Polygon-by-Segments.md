@@ -5,8 +5,8 @@ _______________________________________________________________
 
 ### Geoprocessing Environments
 
-* It is recommended to run this tool using 64-bit python geoprocessing.
-* Disable Z and M geometry in the Shapfe field if topology errors are encountered.
+* We recommended running this tool with 64-bit python geoprocessing.
+* Disable Z and M geometry in the Shape field if topology errors are encountered.
 * Input data should be in a projected spatial reference system, not geographic.
 * Segment the flowline (i.e. centerline) as desired using the [Segment Stream Network](https://github.com/SouthForkResearch/gnat/wiki/Segment-Stream-Network) tool.
 
