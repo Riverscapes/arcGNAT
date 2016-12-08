@@ -1,6 +1,4 @@
-*Modified from the Centerline Tool in the Fluvial Corridor Toolbox*
-
-The Centerline Tool from the Fluvial Corridor toolbox has been modified and imported inside the Stream Network and RiverStyles toolbox. The modifications fix 1) missing centerlines in sections of the valley bottom polygon and 2) extra centerline segments.
+The **Centerline** tool from the Fluvial Corridor toolbox has been modified and imported inside the Stream Network and RiverStyles toolbox. The modifications fix 1) missing centerlines in sections of the valley bottom polygon and 2) extra centerline segments.
 
 Please reference the Fluvial corridor Toolbox for additional Information on this Tool.
 
@@ -9,58 +7,58 @@ Please reference the Fluvial corridor Toolbox for additional Information on this
 ### Parameters
 **Polygon**
 
-Use the `Valley Bottom Polygon`
+Should be a `valley bottom polygon`, which is an data output of the [Valley Bottom Extraction Tool (VBET)](https://bitbucket.org/jtgilbert/riparian-condition-assessment-tools/wiki/Tool_Documentation/VBET).
 
 Requirements:
 
-* Single Part
-* Only one feature within featureclass
+* Single part
+* Only one feature within the polygon feature class
 
 **Polyline**
 
-Use the Stream Line Network. This tool will create a centerline in sections of the valley bottom polygon where the line network exists.
+A stream network polyline feature class. The **Centerline** tool will create a centerline in sections of the valley bottom polygon where the line network exists.
 
 Requirements:
 
-* Line network should be contained inside the Valley Bottom Polygon
-* Remove any "dangles' or other artficially short line segments attached to the network. These will cause extra centerlines to be created. 
+* Line network should be contained inside the valley bottom polygon feature class input.
+* Remove any "dangles' or other artficially short line segments attached to the network. Dangles will cause extraneous centerlines to be created. 
 
 **Disaggregation Step**
 
-length used to split up the valley bottom polygon margins for creating thiessen polygons
+Length used to split the valley bottom polygon margins when creating Thiessen polygons
 
-> TIP: Use smaller values (i.e 10m-25m) to keep detail in narrow reaches.
+> TIP: Use smaller values (i.e 10m-25m) to maintain detail in narrow reaches.
 
 **Smoothing**
 
-Smoothing tolerance for final centerline. 
+Smoothing tolerance for the final centerline. 
 
-> TIP: 20m is typically used.
+> TIP: 20m recommended.
 
 **Output**
 
-Output name and location of a Polyline feature class that contains the new centerline.
+Output name and location of a polyline feature class containing the new centerline.
 
 **Delete Temp Files**
 
-Check to delete temporary processing files after the tool completes.
+If checked, deletes temporary processing files after the tool completes.
 
 ### Geoprocessing Environments
 
-* It is recommended to run this tool in 64-bit python geoprocessing.
-* Disable Z and M if you encounter a topology error.
-* Make sure to specify a Scratch Workspace if you want to save/review the temp files.
+* It is recommended to run this tool using 64-bit python geoprocessing.
+* Disable Z and M geometry in the Shape field if topology errors are encountered.
+* Specify a scratch workspace to save/review intermediate temporary files.
 
-### Checking the output
+### Reviewing the output
 
-Erroneous features to check for
+Check for erroneous spatial features,  including:
 
-1. Extra centerlines, usually short spurs.
-2. Centerlines do not follow the entire valley
+1. Extraneous centerlines, usually short spurs.
+2. Centerlines that do not follow the entire valley
 
 ## Technical Background
 ### Troubleshooting and Potential Issues##
-Centerline bends at the end of some valleys.
+Centerline may include bends at the end of some valleys.
 
 ### References and Resources
 
