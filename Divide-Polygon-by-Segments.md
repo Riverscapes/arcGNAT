@@ -35,14 +35,14 @@ Density of Thiessen polygon seed points to use within the junction buffer. Highe
 
 Buffer to limit the generation of Thiessen seed points around tributary junctions only. Can reduce processing time.
 
-_______________________________________________________________
-## Technical Background
-
 ### Outputs##
 
 **Output Polygon**
 
 Polygon split at segment and confluence junctions.
+
+_______________________________________________________________
+## Technical Background
 
 ### Troubleshooting and Potential Bugs
 
