@@ -2,6 +2,7 @@ The **Centerline** tool from the FluvialCorridor Toolbox has been modified and i
 
 Please reference the [FluvialCorridor Toolbox](http://www.sciencedirect.com/science/article/pii/S0169555X14002219) for additional information on the **Centerline** tool.
 
+_______________________________________________________________
 ## Usage
 
 ### Geoprocessing Environments
@@ -55,6 +56,7 @@ If checked, deletes temporary processing files after the tool completes.
 
 Polyline feature class representing the valley bottom centerline. 
 
+_______________________________________________________________
 ## Technical Background
 
 ### Troubleshooting and Potential Issues###
