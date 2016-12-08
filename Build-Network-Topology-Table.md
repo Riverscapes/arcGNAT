@@ -18,7 +18,7 @@ Stream network polyline feature class. The output network topology table will st
 
 Object ID of the downstream reach (i.e. the outflow) in the stream network polyline feature class. This will be the first record in the output network topology table.
 
-## Outputs
+### Outputs
 **StreamNetwork**
 
 The resulting network topology table.  This will be saved to the same file geodatabase where the input stream network is stored.
