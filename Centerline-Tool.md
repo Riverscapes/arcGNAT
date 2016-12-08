@@ -4,7 +4,13 @@ Please reference the [FluvialCorridor Toolbox](http://www.sciencedirect.com/scie
 
 ## Usage
 
-### Parameters
+### Geoprocessing Environments
+
+* It is recommended to run this tool using 64-bit python geoprocessing.
+* Disable Z and M geometry in the Shape field if topology errors are encountered.
+* Specify a scratch workspace to save/review intermediate temporary files.
+
+### Input Parameters
 **Polygon**
 
 Should be a `valley bottom polygon`, which is an data output of the [Valley Bottom Extraction Tool (VBET)](https://bitbucket.org/jtgilbert/riparian-condition-assessment-tools/wiki/Tool_Documentation/VBET).
@@ -43,21 +49,21 @@ Output name and location of a polyline feature class containing the new centerli
 
 If checked, deletes temporary processing files after the tool completes.
 
-### Geoprocessing Environments
+##Outputs
 
-* It is recommended to run this tool using 64-bit python geoprocessing.
-* Disable Z and M geometry in the Shape field if topology errors are encountered.
-* Specify a scratch workspace to save/review intermediate temporary files.
+**Output Centerline Feature Class**
+
+Polyline feature class representing the valley bottom centerline. 
 
 ### Reviewing the output
 
 Check for erroneous spatial features,  including:
 
 1. Extraneous centerlines, usually short spurs.
-2. Centerlines that do not follow the entire valley
+2. Centerlines that do not follow the entire valley.
 
 ## Technical Background
-### Troubleshooting and Potential Issues##
+### Troubleshooting and Potential Issues###
 Centerline may include bends at the end of some valleys.
 
 ### References and Resources
