@@ -46,7 +46,7 @@ Object ID of the downstream reach (i.e. the outflow) in the stream network polyl
 
 **NetworkErrors**
 
-The resulting network topology table, including error codes stored in a new attribute field: `error_code`. This will be saved to the same file geodatabase where the input stream network is stored.
+The resulting network topology table, including error codes stored in a new attribute field: `error_code`. The table will be saved to the same file geodatabase where the input stream network is stored.
 
 _______________________________________________________________
 ## Technical Background
