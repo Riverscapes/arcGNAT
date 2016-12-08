@@ -3,6 +3,7 @@ topology error with an upstream reach, the upstream ID for that reach will be as
 
 The resulting output table, which will be named *StreamNetwork*, can then serve as an input for the **Find Network Errors Tool**, which can be used to find topological errors in the stream network.
 
+_______________________________________________________________
 ## Usage
 
 ### Geoprocessing Environment
@@ -27,6 +28,7 @@ The resulting network topology table.  This will be saved to the same file geoda
 
 Point feature class representing beginning ("FROM") and ending ("TO") nodes for each reach within the input stream network feature class.
 
+_______________________________________________________________
 ## Technical Background
 ### Troubleshooting and Potential Issues
 Currently, as the tool loops upstream through each stream reach in the network, any potential topology errors associated with the upstream reach are flagged by adding a value of -11111 to the UpstreamID field for said reach. This code can then be subsequently used by the Find Network Errors tool to identify potential topology errors. These errors can include:
