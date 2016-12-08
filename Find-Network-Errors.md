@@ -56,16 +56,13 @@ _______________________________________________________________
 Methods for finding each error type differ, and can rely on either the stream
 network polyline feature class or the network topology table. 
 
-* Braids: calls the **Find Braids in Stream Network** tool. *error_code = 2*
-* Duplicate reaches: stream reaches with identical lengths. *error_code = 3*
-* Overlapping reaches: each stream reach is compared to neighboring upstream reach. They are considered overlapping if they share nodes other than their beginning/ending nodes. *error_code = 4*
-* Crossed reaches: each stream reach is compared to neighboring upstream reach. They are considered crossed if no they cross, but do not share beginning/ending nodes. *error_code = 5*
-* Disconnected reaches: reaches that are present in the stream network polyline feature class, without associated records in the network topology table are considered disconnected. *error_code = 6*
-* Upstream flow direction: reaches with identical FROM nodes indicate an error in flow direction (see Troubleshooting and Potential Issues section below for known limitations). *error_code = 7*
-* Other potential errors: based on reach records in the network topology table where UpstreamID = -11111. *error_code = 8*
-**NetworkErrors**
-
-The resulting network topology table, including error codes stored in a new attribute field: *ERROR_CODE*. This will be saved to the same file geodatabase where the input stream network is stored.
+* Braids: calls the **Find Braids in Stream Network** tool. `error_code = 2`
+* Duplicate reaches: stream reaches with identical lengths. `error_code = 3`
+* Overlapping reaches: each stream reach is compared to neighboring upstream reach. They are considered overlapping if they share nodes other than their beginning/ending nodes. `error_code = 4`
+* Crossed reaches: each stream reach is compared to neighboring upstream reach. They are considered crossed if no they cross, but do not share beginning/ending nodes. `error_code = 5`
+* Disconnected reaches: reaches that are present in the stream network polyline feature class, without associated records in the network topology table are considered disconnected. `error_code = 6`
+* Upstream flow direction: reaches with identical FROM nodes indicate an error in flow direction (see Troubleshooting and Potential Issues section below for known limitations). `error_code = 7`
+* Other potential errors: based on reach records in the network topology table where UpstreamID = -11111. `error_code = 8`
 
 ### Post-processing
 
@@ -75,6 +72,6 @@ This process can then be repeated by running the repaired stream network feature
 
 ### Troubleshooting and Potential Issues
 
-Because the method for finding flow direction errors is performed in a pairwise fashion(i.e. the reach and the neighboring upstream reach), a reach is considered to have an incorrect flow direction only in relation to the neighboring reach, due to both reaches having the same FROM node values. In the case of a stream branch whereall of the reaches comprising that branch have an incorrect flow direction, the tool will only tag one reach with the flow direction error code.
+Because the method for finding flow direction errors is performed in a pairwise fashion(i.e. the reach and the neighboring upstream reach), a reach is considered to have an incorrect flow direction only in relation to the neighboring reach, due to both reaches having the same FROM node values. In the case of a stream branch where all of the reaches comprising that branch have an incorrect flow direction, the tool will only tag one reach with the flow direction error code.
 
-Therefore, the user should use caution when reviewing reaches where *error_code = 2*. Nearby stream reaches should also be examined to ensure proper flow directionality.
+Therefore, the user should use caution when reviewing reaches where `error_code = 2`. Nearby stream reaches should also be examined to ensure proper flow direction.
