@@ -1,72 +1,61 @@
-This tool is used to move the BranchID from one stream network to another. The stream networks may be the same geometry, or similar geometry (i.e. Stream Network to Valley Bottom Centerline).
+The **Copy Stream BranchIDs** tool moves the branch ID attribute values from one stream network to another. The stream networks may have identical geometry, or similar geometry (i.e. a stream network to a valley bottom centerline).
 
 ![](/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/Images/CopyBranchID01.png)
 
-> Figure: Stream Network BranchID's (blue) transferred to a Valley Centerline with similar (but not the same) geometry. The Valley Centerline now has the same BranchID (black).
+> Figure: Stream network BranchID's (blue) transferred to a valley centerline with similar (but not identical) geometry. The valley centerline now has the same BranchID (black).
 
-This step is required if using the "Transfer by Branch" method in the [Transfer Line Attributes Too](), as both networks will need to have common Stream Branches.
+This step is required if using the "Transfer by Branch" method in the [Transfer Line Attributes](https://github.com/SouthForkResearch/gnat/wiki/Transfer-Line-Attributes) tool, as both networks will need to have common stream branches.
 
 _______________________________________________________________
 ## Usage
-### Parameters
-
-**Input Stream Network with BranchID**
-
-This is the line network that contains the Stream BranchID _to be transferred_. This network should already have a [Stream BranchID](/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Workflow/StreamBranches).
-
-Requirements Include: 
-
-* Features should be in a Projected Coordinate System, not Geographic.
-* all appropriate lines are connected as a network.  This can be checked by running [Network Connectivity Tool](/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/NetworkConnectivity) and rejoining broken lines
-* no braids. Braids will cause the tool to get stuck in a loop.  Braids can be identified and isolated by running the [Find Braids in Network Tool](/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/FindBraids).  Only one braid section should be identified as the main channel and retained.  The connector segments and side channel should be removed.  (GNIS name can be used as a guide to identify the main channel, too).  
-* a File GDB Polyline Feature Class due to field requirements
-* is NOT be Z or M enabled.
-* (Untested) Singlepart features
-
-**Stream BranchID Field**
-
-Field that contains the Stream Branch ID. The default output from the Generate Stream Branch tool is `BranchID`.
-
-**Input Target Line Network**
-
-This is the line network that the Stream BranchID _will be transferred to_. 
-
-Requirements Include: 
-
-* in a Projected Coordinate System, not Geographic.
-* all appropriate lines are connected as a network.  This can be checked by running [Network Connectivity Tool](/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/NetworkConnectivity) and rejoining broken lines
-* no braids. Braids will cause the tool to get stuck in a loop.  Braids can be identified and isolated by running the [Find Braids in Network Tool](/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/FindBraids).  Only one braid section should be identified as the main channel and retained.  The connector segments and side channel should be removed.  (GNIS name can be used as a guide to identify the main channel, too).  
-* a File GDB Polyline Feature Class due to field requirements
-* is NOT be Z or M enabled.
-* (Untested) Singlepart features
-
-**Output Line Network with BranchID**
-
-This is the name and location (in a fgdb) of the new line feature class that contains the transferred Stream Branch ID. The field name will be the same as the Stream BranchID field of the Input.
-
-**Scratch Workspace**
-
-You may use:
-
-1. Create a new file GDB to save temporary processing files (useful for debugging).
-3. If a workspace is not designated, the tool will use the "in_memory" workspace. You will not be able to view the temporary files, _but the processing speed will be much faster_.
-
 
 ### Geoprocessing Environments
  
-* It is recommended to run this tool in 64-bit python geoprocessing.
-* Geoprocessing Environments:
-	* Disable Z and M if you encounter a topology error.
+* We recommended the tool is run with 64-bit python geoprocessing.
+* Disable Z and M geometry in the input stream network polyline feature class.
 
+### Input Parameters
 
+**Input Stream Network with BranchID**
+
+The stream network polyline feature class that contains the stream BranchID _to be transferred_. This network should already have a [Stream BranchID](https://github.com/SouthForkResearch/gnat/wiki/Generate-Stream-Branches).
+
+Data Requirements: 
+
+* Features should be in a projected coordinate system, not geographic.
+* All stream reaches are connected as a network.  This can be checked with the [Build Network Topology Table](https://github.com/SouthForkResearch/gnat/wiki/Build-Network-Topology-Table) tool and [Find Network Errors](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Errors). 
+* Braids will cause the tool to get stuck in a loop. Braids can be identified and isolated by running the [Find Braids in Stream Network](https://github.com/SouthForkResearch/gnat/wiki/Find-Braids-in-Stream-Network) tool. Only one braid section should be identified as the main channel and retained. The connector segments and side channel should be removed. The GNIS name attribute can be used as a guide to identify the main channel, too).  
+* File geodatabase polyline feature class (due to field requirements)
+* Z and M geometry in the Shape field is disabled.
+* Single part features
+
+**Stream BranchID Field**
+
+Field containing the stream branch ID values. The default output from the [Generate Stream Branches](https://github.com/SouthForkResearch/gnat/wiki/Generate-Stream-Branches) tool is `BranchID`.
+
+**Input Target Line Network**
+
+This is the stream network polyline feature class that the stream BranchID _will be transferred to_. 
+
+Data Requirements: 
+
+* same as Input Stream Network with BranchID
+
+**Output Line Network with BranchID**
+
+File name and directory path (in a file geodatabase) of a new polyline feature class containing the transferred stream branch ID. Field name will be the same as the BranchID field of the input.
+
+**Scratch Workspace**
+
+1. Can be a file geodatabase or folder.
+2. If not explicitly designated, the tool will use the "in_memory" workspace by default. Temporary files will not be available for review, but the *processing speed will be much faster*.
+
+_______________________________________________________________
 ## Technical Background
 
 ### Calculation Method
-The tool uses the following calculation method to copy the Stream Branch ID.
-
+The tool uses the following calculation method to copy the stream branch ID.
 
 ### Troubleshooting and Potential Issues
 
-* This tool is currently set up around a specific workflow for generating stream branches. Skipping a workflow step or clean up process may result in erroneous results or tool failure.
-
-### References and Resources
+* The tool is currently set up around a specific workflow for generating stream branches. Skipping a workflow step or clean up process may result in erroneous results or tool failure.
