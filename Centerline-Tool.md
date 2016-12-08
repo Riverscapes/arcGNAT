@@ -1,6 +1,6 @@
-The **Centerline** tool from the Fluvial Corridor toolbox has been modified and imported inside the Stream Network and RiverStyles toolbox. The modifications fix 1) missing centerlines in sections of the valley bottom polygon and 2) extra centerline segments.
+The **Centerline** tool from the FluvialCorridor Toolbox has been modified and imported inside the Stream Network and RiverStyles toolbox. The modifications fix 1) missing centerlines in sections of the valley bottom polygon and 2) extra centerline segments.
 
-Please reference the Fluvial corridor Toolbox for additional Information on this Tool.
+Please reference the [FluvialCorridor Toolbox](http://www.sciencedirect.com/science/article/pii/S0169555X14002219) for additional information on the **Centerline** tool.
 
 ## Usage
 
@@ -62,8 +62,8 @@ Centerline may include bends at the end of some valleys.
 
 ### References and Resources
 
-* [Fluvial corridor toolbox Home](http://umrevs-isig.fr/spip.php?rubrique164)
-* Other Methods for centerline generation
+* [FluvialCorridor Toolbox Home](http://umrevs-isig.fr/spip.php?rubrique164)
+* Other methods for centerline generation
 	* http://www1.pub.informatik.uni-wuerzburg.de/pub/haunert/pdf/HaunertSester2008.pdf
 	* http://gis.stackexchange.com/questions/2775/find-tunnel-center-line
 	* http://gis.stackexchange.com/questions/29863/creating-centrelines-from-road-polygons-casings
