@@ -15,6 +15,8 @@ _______________________________________________________________
 * We recommend running the tool with 64-bit python geoprocessing.
 * Disable Z and M values in the input stream network feature class Shape field.
 
+[[images/seg_form.png]]
+
 ### Input Parameters
  
 **Stream Network Polyline Feature Class**  
