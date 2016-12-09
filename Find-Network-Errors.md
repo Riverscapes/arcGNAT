@@ -27,7 +27,7 @@ for each error type. This table can then be joined back to the input stream netw
 | Overlapping Reaches     | [[images/findNetworkError_overlap.png]]   |  
 | Crossed Reaches         | [[images/findNetworkError_crossed.png]]   |
 | Disconnected Reaches    | [[images/findNetworkError_disconnect.png]]|
-| Upstream flow direction | [[images/findNetworkError_overlap.png]]   |
+| Upstream flow direction | [[images/findNetworkError_flow.png]]      |
 
 _______________________________________________________________________
 ## Usage
