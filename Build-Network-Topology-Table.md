@@ -10,6 +10,8 @@ _______________________________________________________________
 * We recommend that the tool be run using 64-bit python geoprocessing.
 * Disable Z and M geometry in the stream network Shape field.
 
+[[images/buildNetworkTable_form.PNG]]
+
 ### Input Parameters
 **Input Stream Network**
 
