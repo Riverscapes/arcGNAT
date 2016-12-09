@@ -1,7 +1,7 @@
 ## Welcome to the Geomorphic Network and Analysis Toolbox (GNAT) wiki!
 
 # What is GNAT?
-The Geomorphic Network and Analysis Toolbox (GNAT) is a ArcGIS Python toolbox comprised of a set of tools that can process and model geomorphic attributes for a geographic stream network. ... (blah, blah, blah)
+The Geomorphic Network and Analysis Toolbox (GNAT) is a set of ArcGIS geoprocessing scripts used to generate Geomorphic Attributes on a Stream Network, such as NHD or NWI. It is written in Python as an ArcGIS Python Toolbox for ArcGIS 10.1.
 
 # What is GNAT for?
 
