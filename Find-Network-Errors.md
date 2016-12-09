@@ -18,10 +18,11 @@ The resulting **Find Network Errors** table, _NetworkErrors_, stores records for
 each stream reach,and each record includes the reach unique ID and a numeric code 
 for each error type. This table can then be joined back to the input stream network polyline feature class and symbolized in ArcMap to highlight stream reaches with topological errors, which the user can then manually fix using ArcGIS editing tools.
 
-| Error Type        | Example                              |
-| ----------------- | ------------------------------------ |
-| Braids            | [[images\findNetworkError_braid.PNG]]|
-| Duplicate Reaches | [[images\findNetworkError_dup.PNG]]  |
+| Error Type          | Example                                |
+| ------------------- | -------------------------------------- |
+| Braids              | [[images/findNetworkError_braid.png]]  |
+| Duplicate Reaches   | [[images/findNetworkError_dup.png]]    |
+| Overlapping Reaches | [[images/findNetworkError_overlap.png]]|  
 
 _______________________________________________________________
 ## Usage
