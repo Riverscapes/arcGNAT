@@ -5,7 +5,7 @@ and junction points representing confluences for stream reaches with the same
 stream order value. 
 
 Several segmentation method options are available.
-![Image: Segmentation Methods](/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/Images/segmentation_method.png)
+[[images/seg_methods.png]]
 
 _______________________________________________________________
 ## Usage
