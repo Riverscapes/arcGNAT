@@ -1,11 +1,13 @@
-The **Generate Stream Branches** tool dissolves the line network based on GNIS name and stream order attributes, to create stream branches in the stream network polyline feature class. The resulting stream branches can then by used by the **Segment Stream Network** tool for splitting the stream network by the longest, continuous stretches of stream.
+The **Generate Stream Branches** tool dissolves the line network based on GNIS name and stream order attributes, to create stream branches in the stream network polyline feature class. The resulting stream branches can then by used by the [Segment Stream Network]https://github.com/SouthForkResearch/gnat/wiki/Segment-Stream-Network) tool for splitting the stream network by the longest, continuous stretches of stream.
 
-___
+[[images/branchID_example.png]]
+
+_______________________________________________________________
 ## Usage
 
-> For the entire Stream Branch workflow, see [Stream Network and Segmentation](/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Workflow/StreamNetworkandSegmentation)
+[[images/branchID_form.PNG]]
 
-### Parameters
+### Input Parameters
  
 **Input Stream Network** (with Stream Order)
 
@@ -13,43 +15,40 @@ Stream network with Stream Order Attributes (from stream order tool).
 
 **Input Junction Points** (Optional)
 
-Use the Junction Points Output from the Stream Order tool to split branches at Stream Order Convergences. Otherwise, the tool will dissolve all stream order segments that converge with the same stream order value.
+Junction points output from the [Calculate Stream Order](https://github.com/SouthForkResearch/gnat/wiki/Calculate-Stream-Order) tool which will be used to split branches at stream order convergences. Otherwise, the tool will dissolve all stream order segments that converge with the same stream order value.
 
 **Stream Name Field**
 
-Attribute Field with GNIS_Stream Name. Not all segments need to have a stream name - the tool will use Stream Order for segments without a stream name.
+Attribute field with stream names (i.e. GNIS_Name). Not all stream reaches need to have a stream name - the tool will use stream order for segments without a stream name.
 
 **Stream Order Field**
 
-Attribute Field that contains the Stream Order for each line feature.
+Attribute field that contains the stream order value for each line feature.
 
 **Output Line Network with Branch ID**
 
-File GDB polyline feature class. The tool will overwrite existing dataets. 
-
+File geodatabase polyline feature class. Existing datasets will be overwritten. 
 
 **Dissolve Output by BranchID?** (Optional)
 
-* `Checked`: The output stream network will contain all features dissolved by the BranchID. Feature Attributes will be dropped due to the dissolve.
+* `Checked`: The output stream network will contain all features dissolved by the BranchID. Feature attributes will be dropped due to the dissolve.
 
 * `Unchecked`: The output stream network will retain its original features and attributes, with the addition of the `BranchID` field.
 
 **Scratch Workspace** (Optional)
 
-You may use:
+* Can be a file geodatabase or folder, for saving temporary processing datasets.
+* If a workspace is not designated, the tool will use the "in_memory" workspace. Temporary files will not be accessible, but the tool's processing speed will be improved.
 
-1. Create a new file GDB to save temporary processing files (useful for debugging).
-3. If a workspace is not designated, the tool will use the "in_memory" workspace. You will not be able to view the temporary files, _but the processing speed will be much faster_.
-
-____
+_______________________________________________________________
 ## Technical Background
 
-This tool uses the following methodology:
+### Calculation Method
 
-1. Input Line Features are selected by GNIS_name, then Dissolved by GNIS_name.
-2. The Selection is switched, then Dissolved by Stream Order, if present
-3. The Outputs from 2 and 3 are merged.
-5. Split Line at Point using the input Junction Points
-	> This fixes the issue where two tributaries with the same stream order (and no GNIS) are dissolved together. This mainly occurs at the headwaters (i.e. Stream order = 1).
-5. Add a unique Id field (`BranchID`) to identify each branch
-6. The Original input is intersected with the Branches layer, if the output is not to be dissolved. Otherwise, the output is simply copied over from the Branches layer.
+1. Input polyline features are selected by GNIS_Name, then dissolved by GNIS_Name.
+2. The selection is switched, then dissolved by stream order, if present as an attribute
+3. Output datasets from 2 and 3 are merged.
+5. Split line at point, using the input junction points feature class
+	> This fixes the issue when two tributaries with the same stream order (and no GNIS) are dissolved together. Mainly occurs at the headwaters (i.e. stream order = 1).
+5. Add a unique ID field (`BranchID`) to identify each branch.
+6. The original input is intersected with the Branches feature class, if the output is not to be dissolved. Otherwise, the output is simply copied over from Branches.
