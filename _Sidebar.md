@@ -1,6 +1,6 @@
 [Home](https://github.com/SouthForkResearch/gnat/wiki)
 
-[Download and Installation](https://github.com/SouthForkResearch/gnat/wiki/Download-Install)
+[Download and Installation](https://github.com/SouthForkResearch/gnat/wiki/Download-Installation)
 
 Tools
 * Main
