@@ -13,8 +13,9 @@ The Geomorphic Network and Analysis Tool (GNAT) is an ArcGIS Python toolbox, and
 
 1. After downloading the GNAT zip file, unzip to a local directory.
 2. Open `ArcGIS`
-3. Within `ArcGIS`, open the `ArcTools` window. [[images/arctoolbox_icon.PNG]]
-4. In the `ArcTools` window, right-click `ArcToolbox` and select `Add Toolbox`. [[images/arctoolbox_title.PNG]]
-5. In the `Add Toolbox` dialog box, find the unzipped folder containing the unzipped GNAT files, select the `GNAT.pyt` file [[images/gnat_icon.PNG]], and click `Open`.
-6. A new toolbox, `Geomorphic Network and Analysis Toolbox` should now be listed in the `ArcTools` window.
+3. Within `ArcGIS`, open the `ArcTools` window.
+4. In the `ArcTools` window, right-click `ArcToolbox` and select `Add Toolbox`.
+5. In the `Add Toolbox` dialog box, find the unzipped folder containing the unzipped GNAT files, select the `GNAT.pyt` file, and click `Open`.
+6. A new toolbox, `Geomorphic Network and Analysis Toolbox` should now be listed in the `ArcTools` window
+
 [[images/gnat_menu_screenshot.PNG]]
