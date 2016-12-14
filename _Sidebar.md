@@ -14,7 +14,7 @@ Tools
 * Utilities
     * [Calculate Stream Order](https://github.com/SouthForkResearch/gnat/wiki/Calculate-Stream-Order)
     * [Centerline Tool](https://github.com/SouthForkResearch/gnat/wiki/Centerline-Tool)
-    * [Combine Attributes]()
+    * [Combine Attributes](https://github.com/SouthForkResearch/gnat/wiki/CombineAttributes
     * [Copy Stream BranchIDs](https://github.com/SouthForkResearch/gnat/wiki/Copy-Stream-BranchIDs)
     * [Divide Polygon by Segments](https://github.com/SouthForkResearch/gnat/wiki/Divide-Polygon-by-Segments)
     * [Find Braids in Stream Network](https://github.com/SouthForkResearch/gnat/wiki/Find-Braids-in-Stream-Network)
