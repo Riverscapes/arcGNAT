@@ -1,6 +1,3 @@
-Combine Attributes Tool
-=======================
-
 The **Combine Attributes** tool merges feature attributes from two or more polyine feature classes into a single feature class.  
 
 _______________________________________________________________
