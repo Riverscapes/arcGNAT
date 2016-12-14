@@ -1,5 +1,5 @@
 ﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Name:        Stream Network and Riverstyles Toolbox                         #
+# Name:        Geomorphic Network and Analysis Toolbox (GNAT)                 #
 # Purpose:     Tools for generating a Stream Network and for calculating      #  
 #              Riverstyles Metrics.                                           #
 #                                                                             #
@@ -41,11 +41,12 @@ import FindDangles
 import Segmentation
 import FindErrors
 
-strCatagoryStreamNetworkPreparation = "Main\\Stream Network Preparation"
-strCatagoryGeomorphicAnalysis = "Main\\Geomorphic Attributes"
+strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
+strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
+#strCatagoryTransferAttributes = "Main\\3 Attribute Management"
+strCatagoryGeomorphicAnalysis = "Main\\Step 3 - Geomorphic Attributes"
 strCatagoryUtilities = "Utilities"
-strCatagoryTransferAttributes = "Main\\Attribute Management"
-strCatagoryStreamNetworkSegmentation = "Main\\Stream Network Segmentation"
+
 
 class Toolbox(object):
     def __init__(self):
@@ -176,7 +177,7 @@ class CopyBranchIDTool(object):
         self.label = "Copy Stream BranchIDs"
         self.description = "Copy the Stream Branch ID from one Network to another."
         self.canRunInBackground = True
-        self.category = strCatagoryTransferAttributes
+        self.category = strCatagoryUtilities
 
     def getParameterInfo(self):
         """Define parameter definitions"""
@@ -266,7 +267,7 @@ class TransferLineAttributesTool(object):
         self.label = "Transfer Line Attributes"
         self.description = "Transfer Line Attributes from one network to another of a different geometry."
         self.canRunInBackground = True
-        self.category = strCatagoryTransferAttributes
+        self.category = strCatagoryUtilities
 
     def getParameterInfo(self):
         """Define parameter definitions"""
@@ -359,7 +360,7 @@ class CombineAttributesTool(object):
         self.label = "Combine Attributes"
         self.description = "Merge network attributes in different datasets into a single feature class."
         self.canRunInBackground = True
-        self.category = strCatagoryTransferAttributes
+        self.category = strCatagoryUtilities
 
     def getParameterInfo(self):
         """Define parameter definitions"""
