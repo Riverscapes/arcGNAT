@@ -12,7 +12,7 @@ _______________________________________________________________
 * Specify a scratch workspace to save/review intermediate temporary files.
 
 ### Input Parameters
-**Polygon**
+**Valley bottom polygon feature class**
 
 Should be a `valley bottom polygon`, which is an data output of the [Valley Bottom Extraction Tool (VBET)](https://bitbucket.org/jtgilbert/riparian-condition-assessment-tools/wiki/Tool_Documentation/VBET).
 
@@ -21,32 +21,32 @@ Requirements:
 * Single part
 * Only one feature within the polygon feature class
 
-**Polyline**
+**Stream network polyline feature class**
 
-A stream network polyline feature class. The **Centerline** tool will create a centerline in sections of the valley bottom polygon where the line network exists.
+A stream network polyline feature class. The **Centerline** tool will create a centerline in sections of the valley bottom polygon where the stream network exists.
 
 Requirements:
 
 * Line network should be contained inside the valley bottom polygon feature class input.
-* Remove any "dangles' or other artficially short line segments attached to the network. Dangles will cause extraneous centerlines to be created. 
+* Remove any "dangles' or other artificially short line segments attached to the network. Dangles will cause extraneous centerlines to be created. 
 
-**Disaggregation Step**
+**Disaggregation step**
 
 Length used to split the valley bottom polygon margins when creating Thiessen polygons
 
 > TIP: Use smaller values (i.e 10m-25m) to maintain detail in narrow reaches.
 
-**Smoothing**
+**Smoothing tolerance**
 
 Smoothing tolerance for the final centerline. 
 
 > TIP: 20m recommended.
 
-**Output**
+**Output centerline**
 
 Output name and location of a polyline feature class containing the new centerline.
 
-**Delete Temp Files**
+**Delete temporoary files**
 
 If checked, deletes temporary processing files after the tool completes.
 
