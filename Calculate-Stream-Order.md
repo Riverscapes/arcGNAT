@@ -55,7 +55,7 @@ _______________________________________________________________
 
 ### Calculation Method
 
-1. Dissolve the polyline network by junction points
+1. Dissolve the input polyline network by junction points
   * Ignore braided stream reaches (should have been removed in manual preprocessing)
   * Convert multi-part to single-part
   * Unsplit polylines
