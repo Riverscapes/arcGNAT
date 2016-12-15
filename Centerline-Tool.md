@@ -12,6 +12,9 @@ _______________________________________________________________
 * Specify a scratch workspace to save/review intermediate temporary files.
 
 ### Input Parameters
+
+[[images/centerline_form.PNG]]
+
 **Valley bottom polygon feature class**
 
 Should be a `valley bottom polygon`, which is an data output of the [Valley Bottom Extraction Tool (VBET)](https://bitbucket.org/jtgilbert/riparian-condition-assessment-tools/wiki/Tool_Documentation/VBET).
