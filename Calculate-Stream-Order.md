@@ -1,6 +1,6 @@
 The **Calculate Stream Order** tool calculates the Strahler stream order for all reaches in a stream network polyline feature class. The output is a polyline feature class that is dissolved by sections between stream confluences. The resulting stream order attributes can then be transferred to other geographically coincident stream networks. Strahler order can also be a useful attribute for improving line network routes. 
 
-![](/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/Images/StreamOrder01.png)
+[[images/stream_order_example.png]]
 
 _______________________________________________________________
 ## Usage
@@ -28,7 +28,7 @@ Data requirements:
 
 `ObjectID` value of the downstream outlet reach.
 
-**Output Line Network with Stream Order**
+**Output Network with Stream Order**
 
 File name and directory location (in a file geodatabase) of the output polyline feature class that will include the stream order as an attribute.
 
@@ -42,7 +42,7 @@ File geodatabase or folder to store temporary processing files. If a workspace i
 
 ### Outputs
 
-**Output Line Network with Stream Order**
+**Output Network with Stream Order**
 
 Output polyline feature class containing the same attributes as the input stream network, with the addition of a `StreamOrder` attribute field.
 
