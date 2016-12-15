@@ -12,6 +12,8 @@ _______________________________________________________________
 
 ### Input Parameters
 
+[[images/stream_order_form.PNG]]
+
 **Input stream network**
 
 Stream network polyline feature class that will be dissolved by stream order. 
