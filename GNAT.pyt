@@ -574,7 +574,7 @@ class PlanformTool(object):
         param4.filter.list = ["Polyline"]
 
         param5 = arcpy.Parameter(
-            displayName="Output Stream Netwokr with Planform Attribute",
+            displayName="Output Stream Network with Planform Attribute",
             name="OutputFCPlanformCenterline",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -939,21 +939,21 @@ class StreamOrderTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Input Stream Network",
+            displayName="Input stream network",
             name="InputStreamNetwork",
             datatype="GPFeatureLayer",
             parameterType="Required",
             direction="Input")
 
         param1 = arcpy.Parameter(
-            displayName="Downstream Reach ID",
+            displayName="Downstream reach ID",
             name="DownstreamReach",
             datatype="GPLong", #Integer
             parameterType="Required",
             direction="Input")
 
         param2 = arcpy.Parameter(
-            displayName="Output Line Network with Stream Order",
+            displayName="Output network with stream order",
             name="outputStreamOrderFC",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -961,7 +961,7 @@ class StreamOrderTool(object):
         param2.filter.list = ["Polyline"]
 
         param3 = arcpy.Parameter(
-            displayName="Output Junction Points",
+            displayName="Output junction points",
             name="outputJunctionPointsFC",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -969,7 +969,7 @@ class StreamOrderTool(object):
         param3.filter.list = ["Point"]
 
         param4 = arcpy.Parameter(
-            displayName="Scratch Workspace",
+            displayName="Scratch workspace",
             name="InputTempWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
@@ -1279,7 +1279,7 @@ class FluvialCorridorCenterlineTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Polygon",
+            displayName="Valley bottom polygon feature class",
             name="InputPolygon",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -1287,7 +1287,7 @@ class FluvialCorridorCenterlineTool(object):
         param0.filter.list = ["Polygon"]
 
         param1 = arcpy.Parameter(
-            displayName="Polyline",
+            displayName="Stream network polyline feature class",
             name="InputFCPolyline",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -1302,14 +1302,14 @@ class FluvialCorridorCenterlineTool(object):
             direction="Input")
 
         param3 = arcpy.Parameter(
-            displayName="Smoothing",
+            displayName="Smoothing tolerance",
             name="InputSmoothing",
             datatype="GPLong",
             parameterType="Required",
             direction="Input")
 
         param4 = arcpy.Parameter(
-            displayName="Output",
+            displayName="Output centerline",
             name="OutputFCPolyline",
             datatype="DEFeatureClass",
             parameterType="Required",
