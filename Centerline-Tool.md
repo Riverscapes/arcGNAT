@@ -46,7 +46,7 @@ Smoothing tolerance for the final centerline.
 
 Output name and location of a polyline feature class containing the new centerline.
 
-**Delete temporoary files**
+**Delete temporary files**
 
 If checked, deletes temporary processing files after the tool completes.
 
