@@ -28,7 +28,7 @@ Data requirements:
 
 `ObjectID` value of the downstream outlet reach.
 
-**Output Line Network with Stream Order**
+**Output Network with Stream Order**
 
 File name and directory location (in a file geodatabase) of the output polyline feature class that will include the stream order as an attribute.
 
@@ -42,7 +42,7 @@ File geodatabase or folder to store temporary processing files. If a workspace i
 
 ### Outputs
 
-**Output Line Network with Stream Order**
+**Output Network with Stream Order**
 
 Output polyline feature class containing the same attributes as the input stream network, with the addition of a `StreamOrder` attribute field.
 
@@ -55,7 +55,7 @@ _______________________________________________________________
 
 ### Calculation Method
 
-1. Dissolve the polyline network by junction points
+1. Dissolve the input polyline network by junction points
   * Ignore braided stream reaches (should have been removed in manual preprocessing)
   * Convert multi-part to single-part
   * Unsplit polylines
