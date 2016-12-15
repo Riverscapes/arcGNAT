@@ -10,7 +10,7 @@ Tools
   * Step 2 - Stream Network Segmentation
     * [Segment Stream Network](https://github.com/SouthForkResearch/gnat/wiki/Segment-Stream-Network)
   * Step 3 - Geomorphic Attributes
-    * [Stream Sinuosity and PLanform](https://github.com/SouthForkResearch/gnat/wiki/Stream-Sinuosity-and-Planform)
+    * [Stream Sinuosity and Planform](https://github.com/SouthForkResearch/gnat/wiki/Stream-Sinuosity-and-Planform)
 * Utilities
     * [Calculate Stream Order](https://github.com/SouthForkResearch/gnat/wiki/Calculate-Stream-Order)
     * [Centerline Tool](https://github.com/SouthForkResearch/gnat/wiki/Centerline-Tool)
