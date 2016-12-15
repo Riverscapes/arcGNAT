@@ -12,7 +12,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-**Input Stream Network**
+**Input stream network**
 
 Stream network polyline feature class that will be dissolved by stream order. 
 
@@ -24,29 +24,29 @@ Data requirements:
 * Must be a file geodatabase polyline feature class (due to field requirements)
 * Z and M geometry disabled for the Shape field.
 
-**Downstream Reach ID**
+**Downstream reach ID**
 
 `ObjectID` value of the downstream outlet reach.
 
-**Output Network with Stream Order**
+**Output network with stream order**
 
 File name and directory location (in a file geodatabase) of the output polyline feature class that will include the stream order as an attribute.
 
-**Output Junction Points**
+**Output junction points**
 
 File name and directory location (in a file geodatabase) of the output point feature class which includes locations of stream order transitions (used for splitting tributaries, see post processing step).
 
-**Scratch Workspace** (Optional)
+**Scratch workspace** (Optional)
 
 File geodatabase or folder to store temporary processing files. If a workspace is not designated, the tool will use the "in_memory" workspace. The temporary files will not be available for review, but the processing speed will be greatly improved.
 
 ### Outputs
 
-**Output Network with Stream Order**
+**Output network with stream order**
 
 Output polyline feature class containing the same attributes as the input stream network, with the addition of a `StreamOrder` attribute field.
 
-**Output Junction Points**
+**Output junction points**
 
 Output point feature class representing stream junctions of streams with the same Strahler order value.
 
