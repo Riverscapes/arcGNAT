@@ -1189,7 +1189,7 @@ class DividePolygonBySegmentsTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Segmented Centerline of Polygon",
+            displayName="Segmented Polyline Feature Class",
             name="InputFCCenterline",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -1197,7 +1197,7 @@ class DividePolygonBySegmentsTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Polygon to Segment",
+            displayName="Polygon Feature Class to Segment",
             name="InputFCPolygon",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -1205,7 +1205,7 @@ class DividePolygonBySegmentsTool(object):
         param1.filter.list = ["Polygon"]       
         
         param2 = arcpy.Parameter(
-            displayName="Output Segmented Polygon",
+            displayName="Output Segmented Polygon Feature Class",
             name="fcSegmentedPolygons",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -1229,7 +1229,7 @@ class DividePolygonBySegmentsTool(object):
         param4.value = "10.0"
 
         param5 = arcpy.Parameter(
-            displayName="Junction Buffer (Meters)",
+            displayName="Junction Buffer Distance (Meters)",
             name="dblJunctionBuffer",
             datatype="GPDouble",
             parameterType="Optional",
