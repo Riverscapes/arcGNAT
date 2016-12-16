@@ -1,7 +1,5 @@
 The **Copy Stream BranchIDs** tool moves the branch ID attribute values from one stream network to another. The stream networks may have identical geometry, or similar geometry (i.e. a stream network to a valley bottom centerline).
 
-> Figure: Stream network BranchID's (blue) transferred to a valley centerline with similar (but not identical) geometry. The valley centerline now has the same BranchID (black).
-
 This step is required if using the "Transfer by Branch" method in the [Transfer Line Attributes](https://github.com/SouthForkResearch/gnat/wiki/Transfer-Line-Attributes) tool, as both networks will need to have common stream branches.
 
 _______________________________________________________________
@@ -13,6 +11,8 @@ _______________________________________________________________
 * Disable Z and M geometry in the input stream network polyline feature class.
 
 ### Input Parameters
+
+[[images/copy_branchIDs_form.PNG]]
 
 **Input Stream Network with BranchID**
 
