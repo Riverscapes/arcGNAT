@@ -1,4 +1,4 @@
-The **Combine Attributes** tool merges feature attributes from two or more polyine feature classes into a single feature class.  
+The **Combine Attributes** tool merges feature attributes from two or more polyline feature classes into a single feature class.  
 
 _______________________________________________________________
 ## Usage
@@ -17,7 +17,7 @@ Polyline feature classes representing linear stream networks.  Multiple inputs a
 
 **Bounding or Buffer Polygon**
 
-Polygon feature class that provides a spatial boundary for processing, which should geographically contain all input networks. Contains the Thiessen polygons used to split the the “To” line network based on the “From” networks.Stream networks that are located outside of this polygon boundary will not have attributes transfered.
+Polygon feature class that provides a spatial boundary for processing, which should geographically contain all input networks. Contains the Thiessen polygons used to split the the “To” line network based on the “From” networks.Stream networks that are located outside of this polygon boundary will not have attributes transferred.
 
 **Is Polygon Segmented?** (optional)
 
@@ -34,4 +34,4 @@ _______________________________________________________________
 
 ### Calculation Method
 
-The **Combine Attributes** tool sends all input polyline feature classes in sequence to the [Transfer Line Attributes](https://github.com/SouthForkResearch/gnat/wiki/Transfer-Line-Attributes) tool.  The first polyline feature class in the list will have attributes transfered to it from all remaining feature classes in the list.
+The **Combine Attributes** tool sends all input polyline feature classes in sequence to the [Transfer Line Attributes](https://github.com/SouthForkResearch/gnat/wiki/Transfer-Line-Attributes) tool.  The first polyline feature class in the list will have attributes transferred to it from all remaining feature classes in the list.
