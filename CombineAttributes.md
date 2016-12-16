@@ -17,17 +17,17 @@ Polyline feature classes representing linear stream networks.  Multiple inputs a
 
 **Bounding or Buffer Polygon**
 
-Polygon feature class that provides a spatial boundary for processing, which should geographically contain all input networks. Contains the Thiessen polygons used to split the the “To” line network based on the “From” networks.Stream networks that are located outside of this polygon boundary will not have attributes transferred.
+Polygon feature class that provides a spatial boundary for processing, which should geographically contain all input networks. The polygon will contain the Thiessen polygons used to split the the “To” line network based on the “From” networks. Stream networks that are located outside of this polygon boundary will not have attributes transferred.
 
 **Is Polygon Segmented?** (optional)
 
-`Checked`: the bounding/buffer polygon is divided based on the “From” line network (i.e. using the [Divide Polygon by Segments](https://github.com/SouthForkResearch/gnat/wiki/Divide-Polygon-by-Segments) tool). This will reduce the amount of processing needed to run the tool.
+`Checked`: the bounding polygon is divided based on the “From” line network (i.e. using the [Divide Polygon by Segments](https://github.com/SouthForkResearch/gnat/wiki/Divide-Polygon-by-Segments) tool). This will reduce the amount of processing needed to run the tool.
 
-`Unchecked`: divide the bounding/buffer polygon into segments as part of the processing.
+`Unchecked`: divide the bounding polygon into segments as part of the processing.
 
 **Output Line Network**
 
-Polyline feature class with all merged attributes.
+Polyline feature class which includes all merged attributes.
 
 _______________________________________________________________
 ## Technical Background
