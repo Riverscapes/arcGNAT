@@ -11,17 +11,20 @@ _______________________________________________________________
 * Segment the flowline (i.e. centerline) as desired using the [Segment Stream Network](https://github.com/SouthForkResearch/gnat/wiki/Segment-Stream-Network) tool.
 
 ### Input Parameters
-**Segmented Centerline of Polygon** 
 
-Segmented stream network polyline feature class that will be used to divide the polygon into segments.
+[[images/divide_polygon_by_segments_form.PNG]]
 
-**Polygon to Segment**
+**Segmented Polyline Feature Class** 
 
-Polygon feature class to be segmented by the centerline.
+Segmented stream network or centerline polyline feature class that will be used to divide the polygon into segments.
 
-**Output Segmented Polygon**
+**Polygon Feature Class to Segment**
 
-File name and directory location of the output polygon feature class.
+Polygon feature class to be segmented by the segmented polyline feature class.
+
+**Output Segmented Polygon Feature Class**
+
+File name and directory location of the output segmented polygon feature class.
 
 **Scratch Workspace (optional)**
 
@@ -29,11 +32,11 @@ File geodatabase or folder for storing temporary processing files.
 
 **Centerline Point Density (Meters) (optional)**
 
-Density of Thiessen polygon seed points to use within the junction buffer. Higher density should result in a finer resolution of the segmented edges in the output polygon.
+File geodatabase or folder for storing temporary processing files.
 
-**Junction Buffer (Meters) (optional)**
+**Junction Buffer Distance (Meters) (optional)**
 
-Buffer to limit the generation of Thiessen seed points around tributary junctions only. Can reduce processing time.
+Buffer to limit the generation of Thiessen seed points around tributary junctions only. This parameter can reduce processing time.
 
 ### Outputs##
 
