@@ -7,9 +7,9 @@ _______________________________________________________________
 * We recommend that the tool be run using 64-bit python geoprocessing.
 * Disable Z and M geometry in the stream network Shape field.
 
-[[images/combine_attributes_form.PNG]]
-
 ### Input Parameters
+
+[[images/combine_attributes_form.PNG]]
 
 **Input Line Networks**
 
