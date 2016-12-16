@@ -9,7 +9,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-[[images/combine_attributes_form.PNG]]
+[[images/combine_attributes_form.png]]
 
 **Input polyline feature classes**
 
