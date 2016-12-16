@@ -365,7 +365,7 @@ class CombineAttributesTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Input Line Networks",
+            displayName="Input polyline feature classes",
             name="InputFCList",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -374,7 +374,7 @@ class CombineAttributesTool(object):
         param0.filter.list = ["Polyline"]
         
         param1 = arcpy.Parameter(
-            displayName="Bounding or Buffer Polygon",
+            displayName="Bounding or buffer polygon feature class",
             name="InputFCBounding Polygon",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -382,7 +382,7 @@ class CombineAttributesTool(object):
         param1.filter.list = ["Polygon"] 
         
         param2 = arcpy.Parameter(
-            displayName="Is Polygon Segmented?",
+            displayName="Is polygon segmented?",
             name="InputBoolIsSegmented",
             datatype="GPBoolean", 
             parameterType="Optional",
@@ -390,7 +390,7 @@ class CombineAttributesTool(object):
         param2.value = False
 
         param3 = arcpy.Parameter(
-            displayName="Output Line Network",
+            displayName="Output polyline feature class",
             name="OutputFCCombinedNetwork",
             datatype="DEFeatureClass",
             parameterType="Required",
