@@ -74,18 +74,19 @@ Point feature class representing stream junctions where streams have the same st
 
 _______________________________________________________________
 ## Technical Background
-### Troubleshooting and Potential Issues###
-
-Topology errors in the input stream network polyline feature class will cause issues with the stream order calculation processing step.
 
 ### Calculation Method
 
 This tool uses the following processing workflow:
 
-1. Determine stream order.
+1. Determine stream order for each connected network.  If the number of networks >1, then stream order is calculated for each network section independently. 
 2. The stream network is dissolved by stream branch. Branch IDs are calculated.
 3. A search cursor loops through the reach features
   * If `"Remaining segment at in flow (top) of stream branch"` or `"Remaining segment at out flow (bottom) of stream branch"` is selected, then positions along the stream branch are found using the specified segment length, until the end of the branch is reached. These positions are stored as `Points`.
   * If `"Divide remainder between all segments per stream branch"`is specified, then the number of "positions" that can be made are determined by dividing the total branch length by the user-defined segment length and taking the integer of the result. Next, each position is found along the branch as a ratio of the position number and the total number of positions. This incorporates the 'remainder' evenly along the length of the stream branch.
 4. The line network is split by the points created in step 3 (whichever method was used) to create the new segments.
 5. A unique reach ID value is added to each of the new segments.
+
+### Troubleshooting and Potential Issues###
+
+Topology errors in the input stream network polyline feature class will cause issues with the stream order calculation processing step.
