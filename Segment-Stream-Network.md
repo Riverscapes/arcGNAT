@@ -44,15 +44,15 @@ Attribute field (i.e. GNIS_Name) in the stream network polyline feature class th
 
 **Segmentation Method**
 
-When a stream reach is segmented there is almost always a sliver of stream length that remains after segmentation occurs.  For example, if a stream reach is 811m long and the segmentation length is 300m, 2 300m segments will be generated and there will be a 211m sliver of stream remaining.  The tool has three different methods for handling the 211m section. 
+When a stream reach is segmented there is almost always a sliver of stream length that remains after segmentation occurs.  For example, if a stream reach is 3145m long and the segmentation length is 500m, 6 500m segments will be generated and there will be a 145m sliver of stream remaining.  The tool has three different methods for handling the 145m section: 
 
 Three segmentation methods are available:
 
-1. Remaining segment sliver at inflow (top) of stream **branch**
+1. Remaining segment sliver at inflow (top) of stream reach (6 500m segments and 1 145m segment)
 
-2. Remaining segment sliver at outflow (bottom) of stream **branch**
+2. Remaining segment sliver at outflow (bottom) of stream reach (6 500m segments and 1 145m segment)
 
-3. Divide remainder sliver length between all reaches per stream **branch**
+3. Divide remainder sliver length between all reaches per stream reach (6 525m segments)
 
 **Output Segmented Line Network**
   
