@@ -1,10 +1,10 @@
-The **Segment Stream Network** tool splits stream reaches within a network into 
-segments of equal, user-defined length. The tool produces a segmented stream 
+The **Segment Stream Network** tool splits a stream network into 
+segments of equal, user-defined lengths. The tool produces a segmented stream 
 network polyline feature class, a network feature class with stream order, 
 and junction points representing confluences for stream reaches with the same 
 stream order value. 
 
-Several segmentation method options are available.
+Several segmentation method options are available (see Segmentation Method section below).
 [[images/seg_methods.png]]
 
 _______________________________________________________________
