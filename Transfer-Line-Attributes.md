@@ -11,6 +11,9 @@ _______________________________________________________________
 * The "From" network is segmented (the "To" network may also be segmented) and attributed as desired.
 
 ### Input Parameters
+
+[[images/transfer_form.PNG]]
+
 **Input “From” Line Network**
 
 The polyline feature class from which attributes will be transferred. This feature class is used to "resegment" the “To” line network.
