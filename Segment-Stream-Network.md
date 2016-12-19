@@ -4,7 +4,7 @@ network polyline feature class, a network feature class with stream order,
 and junction points representing confluences for stream reaches with the same 
 stream order value. 
 
-Several segmentation method options are available (see Segmentation Method section below).
+The tool offers three segmentation methods for handling the 'leftover' or 'slivers' of stream length that occur when a stream reach is not equally divisible by the user-provided segmentation length.  (see Segmentation Method section below).
 [[images/seg_methods.png]]
 
 _______________________________________________________________
@@ -25,7 +25,7 @@ Polyline feature class representing the stream network for the analysis area.
 
 * Requirements: 
   * Projected coordinate system, not geographic.
-  * (Optional) All appropriate lines are connected as a network. The user can find unconnected stream reaches by building a network topology table with the [Build Network Topology Table](https://github.com/SouthForkResearch/gnat/wiki/Build-Network-Topology-Table) tool, finding errors using the [Find Network Errors](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Errors) toolt, then manually correcting topology errors using editing tools in ArcMap.
+  * (Optional) All appropriate lines are connected as a network. The user can find unconnected stream reaches by building a network topology table with the [Build Network Topology Table](https://github.com/SouthForkResearch/gnat/wiki/Build-Network-Topology-Table) tool, finding errors using the [Find Network Errors](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Errors) tool, then manually correcting topology errors using editing tools in ArcMap.
   * Must be a file geodatabase polyline feature class due to field requirements
   * The network consists of single-part features only.
 
@@ -36,21 +36,23 @@ The desired length of each stream segment, using the input stream network featur
 
 **Downstream Reach ID**
    
-Object ID value of the stream reach that represents the outflow point (i.e. furthest downstream) for the stream network.
+Object ID value of the stream reach that represents the outflow point (i.e. farthest downstream) for the stream network.
 
 **Stream Name Field**
   
-Attribute field (i.e. GNIS_Name) in the stream network polyline feature class that will be used by the internal stream ordering and branching processes. Stream reach records with a blank (i.e. ' ') or NULL values in this field will not be dissolved.
+Attribute field (i.e. GNIS_Name) in the stream network polyline feature class that will be used to dissolve the stream network into new stream reaches before segmentation.  Stream reach records with a blank (i.e. ' ') or NULL values in this field will not be dissolved.
 
 **Segmentation Method**
 
+When a stream reach is segmented there is almost always a sliver of stream length that remains after segmentation occurs.  For example, if a stream reach is 811m long and the segmentation length is 300m, 2 300m segments will be generated and there will be a 211m sliver of stream remaining.  The tool has three different methods for handling the 211m section. 
+
 Three segmentation methods are available:
 
-1. Remaining segment at inflow (top) of stream branch
+1. Remaining segment sliver at inflow (top) of stream **branch**
 
-2. Remaining segment at outflow (bottom) of stream branch
+2. Remaining segment sliver at outflow (bottom) of stream **branch**
 
-3. Divide remainder between all reaches per stream branch
+3. Divide remainder sliver length between all reaches per stream **branch**
 
 **Output Segmented Line Network**
   
