@@ -56,7 +56,7 @@ Three segmentation methods are available:
 
 **Output Segmented Line Network**
   
-The feature class which will store the resulting segmented stream network. In addition, stream order and junction point feature classes are also output into the same file geodatabase.
+Name of the feature class which will store the resulting segmented stream network. In addition, stream order and junction point feature classes are also output into the same file geodatabase.
 
 ### Outputs
 
