@@ -28,11 +28,11 @@ File name and directory location of the output segmented polygon feature class.
 
 **Scratch Workspace (optional)**
 
-File geodatabase or folder for storing temporary processing files.
+File geodatabase or folder for storing temporary processing data files.  
 
 **Centerline Point Density (Meters) (optional)**
 
-File geodatabase or folder for storing temporary processing files.
+Density of Thiessan polygon seed point use within the junction buffer. Higher density should result in a finer resolution of the segmented edges in the output polygon feature class.
 
 **Junction Buffer Distance (Meters) (optional)**
 
@@ -42,7 +42,7 @@ Buffer to limit the generation of Thiessen seed points around tributary junction
 
 **Output Polygon**
 
-Polygon split at segment and confluence junctions.
+Polygon feature class with splits at segment and confluence junctions.
 
 _______________________________________________________________
 ## Technical Background
