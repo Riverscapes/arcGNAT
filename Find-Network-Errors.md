@@ -37,9 +37,9 @@ _______________________________________________________________________
 * We recommend running the tool using 64-bit python geoprocessing.
 * Disable Z and M values in the input stream network feature class Shape field.
 
-[[images/find_errors_form.PNG]]
-
 ### Input Parameters
+
+[[images/find_errors_form.PNG]]
 
 **Processed Input Stream Network**
 
