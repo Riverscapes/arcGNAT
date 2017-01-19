@@ -213,8 +213,22 @@ def queryNodes(inputID, fcNodePoint):
     return nodeDict
 
 
+def selectDownstreamReach(fcNetwork, intOutflowReachID):
+    oid = arcpy.Describe(fcNetwork).OIDFieldName
+    expr = """"{0}" = {1}""".format(oid, intOutflowReachID)
+    arcpy.SelectLayerByAttribute_management(fcNetwork, "NEW_SELECTION", expr)
+    arcpy.CopyFeatures_management(fcNetwork, "in_memory\\downstream_reach")
+    downstream_reach_lyr = "downstream_reach_lyr"
+    arcpy.MakeFeatureLayer_management("in_memory\\downstream_reach", downstream_reach_lyr)
+    return downstream_reach_lyr
+
+
 def main(fcNetwork,intOutflowReachID):
     gis_tools.checkReq(fcNetwork)
+
+    # Create in_memory downstream reach feature record
+    arcpy.MakeFeatureLayer_management(fcNetwork, "fcNetwork_lyr")
+    downstream_reach = selectDownstreamReach("fcNetwork_lyr", intOutflowReachID)
 
     # Data paths
     descStreamNetwork = arcpy.Describe(fcNetwork)
@@ -240,6 +254,14 @@ def main(fcNetwork,intOutflowReachID):
     arcpy.MakeFeatureLayer_management(fcNetwork, fcStreamNetworkInput_lyr)
     arcpy.FeatureClassToFeatureClass_conversion(fcStreamNetworkInput_lyr, "in_memory", "fcStreamNetworkTemp")
     arcpy.MakeFeatureLayer_management(fcStreamNetworkTemp, fcStreamNetworkTemp_lyr)
+
+    # Find object ID of downstream reach feature from in_memory version of stream network feature class
+    oid = arcpy.Describe(fcStreamNetworkTemp_lyr).OIDFieldName
+    arcpy.SelectLayerByLocation_management(fcStreamNetworkTemp_lyr, "ARE_IDENTICAL_TO", downstream_reach)
+    with arcpy.da.SearchCursor(fcStreamNetworkTemp_lyr, [oid]) as cursor:
+        for row in cursor:
+            downstream_oid = row[0]
+    arcpy.SelectLayerByAttribute_management(fcStreamNetworkTemp_lyr, "CLEAR_SELECTION")
 
     add_fields = ["IsHeadwater", "ReachID"]
     list_fields = arcpy.ListFields(fcStreamNetworkTemp_lyr)
@@ -278,7 +300,7 @@ def main(fcNetwork,intOutflowReachID):
 
     # Process
     fcNodePoint = calcNodes(fcStreamNetworkTemp) # build node point feature class
-    network_tree(intOutflowReachID,tableNetwork,fcStreamNetworkTemp_lyr,fcNodePoint)
+    network_tree(downstream_oid,tableNetwork,fcStreamNetworkTemp_lyr,fcNodePoint)
     checkcount()
 
     # Write outputs
