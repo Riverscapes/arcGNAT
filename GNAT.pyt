@@ -141,7 +141,7 @@ class BuildNetworkTopologyTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Downstream Reach",
+            displayName="Downstream Reach Object ID",
             name="DownstreamReach",
             datatype="GPLong", #Integer
             parameterType="Required",
