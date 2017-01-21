@@ -21,6 +21,7 @@
 
 # # Import Modules # #
 import arcpy
+import time
 import FindBraidedNetwork as braid
 import ClearInMemory as in_mem
 import gis_tools
@@ -328,7 +329,8 @@ def main(fcNetwork,intOutflowReachID):
     arcpy.SelectLayerByAttribute_management("LineLayer","NEW_SELECTION", where)
     arcpy.CalculateField_management("LineLayer","IsHeadwater",1,"PYTHON")
     arcpy.SelectLayerByAttribute_management("LineLayer", "CLEAR_SELECTION")
-    arcpy.FeatureClassToFeatureClass_conversion("LineLayer", fileGDB, nameNetwork + "_processed")
+    time_stamp = time.strftime("%Y%m%d%H%M")
+    arcpy.FeatureClassToFeatureClass_conversion("LineLayer", fileGDB, nameNetwork + "_" + time_stamp)
 
     # Cleanup
     arcpy.Compact_management(fileGDB)
