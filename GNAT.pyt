@@ -1379,7 +1379,7 @@ class FindErrorsTool(object):
             direction="Input")
 
         param2 = arcpy.Parameter(
-            displayName="Downstream Reach ID",
+            displayName="Downstream Reach Object ID",
             name="DownstreamReach",
             datatype="GPLong",  # Integer
             parameterType="Required",
