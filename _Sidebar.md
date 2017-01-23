@@ -6,7 +6,7 @@ Tools
 * Main
   * Step 1 - Stream Network Preparation
     * [Build Network Topology Table](https://github.com/SouthForkResearch/gnat/wiki/Build-Network-Topology-Table)
-    * [Find Network Errors](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Errors)
+    * [Find Network Features](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Features)
   * Step 2 - Stream Network Segmentation
     * [Segment Stream Network](https://github.com/SouthForkResearch/gnat/wiki/Segment-Stream-Network)
   * Step 3 - Geomorphic Attributes
