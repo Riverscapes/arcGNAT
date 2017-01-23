@@ -17,10 +17,11 @@
 
 # Import arcpy module
 import os
+import sys
 import itertools
 import arcpy
 from arcpy.sa import *
-# import gis_tools
+
 
 # Set environmental variables
 arcpy.env.overwriteOutput = True
@@ -277,39 +278,50 @@ def main(in_network_fc, in_network_table, outflow_id):
     # Get file geodatabase from input stream network feature class
     file_gdb_path = arcpy.Describe(in_network_fc).path
 
-    # Create temporary, in_memory version of stream network table
-    if arcpy.Exists("in_network_fc"):
-        arcpy.Delete_management("in_network_fc")
-    if arcpy.Exists("in_network_table"):
-        arcpy.Delete_management("in_network_table")
-    if arcpy.Exists("tmp_memory_table"):
-        arcpy.Delete_management("tmp_memory_table")
-    arcpy.MakeTableView_management(in_network_table, "in_network_table_view")
-    arcpy.CopyRows_management("in_network_table_view", r"in_memory\tmp_network_table")
-    arcpy.MakeTableView_management(r"in_memory\tmp_network_table", "tmp_network_table_view")
+    # Check if input network feature class has required attribute fields
+    req_fields = ["IsHeadwater", "ReachID", "IsBraided"]
+    input_fields = []
+    field_objects = arcpy.ListFields(in_network_fc)
+    for obj in field_objects:
+        input_fields.append(obj.name)
+    if set(req_fields) < set(input_fields):
+        # Create temporary, in_memory version of stream network table
+        if arcpy.Exists("in_network_fc"):
+            arcpy.Delete_management("in_network_fc")
+        if arcpy.Exists("in_network_table"):
+            arcpy.Delete_management("in_network_table")
+        if arcpy.Exists("tmp_memory_table"):
+            arcpy.Delete_management("tmp_memory_table")
+        arcpy.MakeTableView_management(in_network_table, "in_network_table_view")
+        arcpy.CopyRows_management("in_network_table_view", r"in_memory\tmp_network_table")
+        arcpy.MakeTableView_management(r"in_memory\tmp_network_table", "tmp_network_table_view")
 
-    # add required fields
-    list_fields = arcpy.ListFields("tmp_network_table_view", "ERROR_CODE")
-    if len(list_fields) != 1:
-        arcpy.AddField_management("tmp_network_table_view", "ERROR_CODE", "LONG")
-        arcpy.CalculateField_management("tmp_network_table_view", "ERROR_CODE", "0", "PYTHON_9.3")
+        # Add required fields
+        error_field = arcpy.ListFields("tmp_network_table_view", "ERROR_CODE")
+        if len(error_field) != 1:
+            arcpy.AddField_management("tmp_network_table_view", "ERROR_CODE", "LONG")
+            arcpy.CalculateField_management("tmp_network_table_view", "ERROR_CODE", "0", "PYTHON_9.3")
 
-    # Find errors
-    flow_direction("tmp_network_table_view")
-    braids(in_network_fc, "tmp_network_table_view")
-    duplicates(in_network_fc, "tmp_network_table_view")
-    reach_pair_errors(in_network_fc, "tmp_network_table_view", outflow_id)
-    disconnected(in_network_fc, "tmp_network_table_view")
-    other_errors("tmp_network_table_view")
+        # Find errors
+        flow_direction("tmp_network_table_view")
+        braids(in_network_fc, "tmp_network_table_view")
+        duplicates(in_network_fc, "tmp_network_table_view")
+        reach_pair_errors(in_network_fc, "tmp_network_table_view", outflow_id)
+        disconnected(in_network_fc, "tmp_network_table_view")
+        other_errors("tmp_network_table_view")
 
-    # Clean up and write final error table
-    oid_field = arcpy.Describe("tmp_network_table_view").OIDFieldName
-    keep_fields = [oid_field, "ReachID", "ERROR_CODE"]
-    list_obj = arcpy.ListFields("tmp_network_table_view")
-    tmp_field_names = [f.name for f in list_obj]
-    for field_name in tmp_field_names:
-        if field_name not in keep_fields:
-            arcpy.DeleteField_management("tmp_network_table_view", field_name)
-    expr = """"{0}" > {1}""".format("ERROR_CODE", "0")
-    arcpy.SelectLayerByAttribute_management("tmp_network_table_view", "NEW_SELECTION", expr)
-    arcpy.CopyRows_management("tmp_network_table_view", file_gdb_path + "\NetworkErrors")
+        # Clean up and write final error table
+        oid_field = arcpy.Describe("tmp_network_table_view").OIDFieldName
+        keep_fields = [oid_field, "ReachID", "ERROR_CODE"]
+        list_obj = arcpy.ListFields("tmp_network_table_view")
+        tmp_field_names = [f.name for f in list_obj]
+        for field_name in tmp_field_names:
+            if field_name not in keep_fields:
+                arcpy.DeleteField_management("tmp_network_table_view", field_name)
+        expr = """"{0}" > {1}""".format("ERROR_CODE", "0")
+        arcpy.SelectLayerByAttribute_management("tmp_network_table_view", "NEW_SELECTION", expr)
+        arcpy.CopyRows_management("tmp_network_table_view", file_gdb_path + "\NetworkErrors")
+    else:
+        arcpy.AddError(in_network_fc + " does not include required attribute fields. Please use the feature class " \
+                                     "produced by the Build Network Topology Table tool.")
+        sys.exit(0)
