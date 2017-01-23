@@ -35,15 +35,13 @@ import CombineAttributes
 import MovingWindow
 import FindCrossingLines
 import GenerateStreamBranches
-import OutsideValleyBottom
 import CopyBranchID
 import FindDangles
 import Segmentation
-import FindErrors
+import FindNetworkFeatures
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
-#strCatagoryTransferAttributes = "Main\\3 Attribute Management"
 strCatagoryGeomorphicAnalysis = "Main\\Step 3 - Geomorphic Attributes"
 strCatagoryUtilities = "Utilities"
 
@@ -72,11 +70,10 @@ class Toolbox(object):
                       FluvialCorridorCenterlineTool,
                       CombineAttributesTool,
                       #MovingWindowTool,
-                      OutsideValleyBottomTool,
                       CopyBranchIDTool,
                       #FindDanglesandDuplicatesTool,
                       SegmentationTool,
-                      FindErrorsTool]
+                      FindNetworkFeaturesTool]
 
 # Stream Network Prep Tools #
 class FindBraidedNetworkTool(object):
@@ -768,94 +765,6 @@ class FindCrossingLinesTool(object):
 
         return
 
-class OutsideValleyBottomTool(object):
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "Find Network Outside Polygon"
-        self.description = ""
-        self.canRunInBackground = True
-        self.category = strCatagoryUtilities
-
-    def getParameterInfo(self):
-        """Define parameter definitions"""
-
-        param0 = arcpy.Parameter(
-            displayName="Input Stream Network",
-            name="InputStreamNetwork",
-            datatype="GPFeatureLayer", 
-            parameterType="Required",
-            direction="Input")
-        param0.filter.list = ["Polyline"]
-
-        param1 = arcpy.Parameter(
-            displayName="Input Valley Bottom Polygon",
-            name="InputVBPolygon",
-            datatype="GPFeatureLayer",
-            parameterType="Required",
-            direction="Input")
-        param1.filter.list = ["Polygon"]
-        
-        param2 = arcpy.Parameter(
-            displayName="Output Workspace",
-            name="Output Workspace",
-            datatype="DEWorkspace",
-            parameterType="Required",
-            direction="Input")
-
-        param3 = arcpy.Parameter(
-            displayName="Scratch Workspace",
-            name="ScratchWorkspace",
-            datatype="DEWorkspace",
-            parameterType="Required",
-            direction="Input")
-        
-        param4 = arcpy.Parameter(
-            displayName="Output Stream Network",
-            name="OutputStreamNetwork",
-            datatype="GPString",
-            parameterType="Required",
-            direction="Input",
-            multiValue=True)
-
-        param5 = arcpy.Parameter(
-            displayName="Output Workspace",
-            name="strOutputWorkspace",
-            datatype="DEWorkspace",
-            parameterType="Required",
-            direction="Input")
-
-        params = [param0,param1,param2,param3,param5,param4]
-        return params
-
-    def isLicensed(self):
-        """Set whether tool is licensed to execute."""
-        return True
-
-    def updateParameters(self, parameters):
-        """Modify the values and properties of parameters before internal
-        validation is performed.  This method is called whenever a parameter
-        has been changed."""
-        return
-
-    def updateMessages(self, parameters):
-        """Modify the messages created by internal validation for each tool
-        parameter.  This method is called after internal validation."""
-        
-        testProjected(parameters[0])
-        testProjected(parameters[1])
-        testWorkspacePath(parameters[3])
-        return
-
-    def execute(self, parameters, messages):
-        """The source code of the tool."""
-        reload(OutsideValleyBottom)
-        OutsideValleyBottom.main(parameters[0].valueAsText,
-                                 parameters[1].valueAsText,
-                                 parameters[2].valueAsText,
-                                 parameters[3].valueAsText,
-                                 parameters[4].valueAsText)
-
-        return
 
 class FindDanglesandDuplicatesTool(object):
     def __init__(self):
@@ -1353,11 +1262,11 @@ class FluvialCorridorCenterlineTool(object):
 
         return
 
-class FindErrorsTool(object):
+class FindNetworkFeaturesTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Find Network Errors Tool"
-        self.description = "Find topological errors in a stream network feature class."
+        self.label = "Find Network Features"
+        self.description = "Find topological features and errors in a stream network feature class."
         self.canRunInBackground = False
         self.category = strCatagoryStreamNetworkPreparation
 
@@ -1405,8 +1314,8 @@ class FindErrorsTool(object):
 
     def execute(self, p, messages):
         """The source code of the tool."""
-        reload(FindErrors)
-        FindErrors.main(p[0].valueAsText,
+        reload(FindNetworkFeatures)
+        FindNetworkFeatures.main(p[0].valueAsText,
                         p[1].valueAsText,
                         p[2].valueAsText)
 
@@ -1845,7 +1754,7 @@ def testMValues(parameter):
     if parameter.value:
         if arcpy.Exists(parameter.value):
             if arcpy.Describe(parameter.value).hasM is True:
-                parameter.setWarningMessage("Input " + parameter.name + " shoud not be M-enabled. Make sure to Disable M-values in the Environment Settings for this tool.")
+                parameter.setWarningMessage("Input " + parameter.name + " should not be M-enabled. Make sure to Disable M-values in the Environment Settings for this tool.")
                 return False
             else:
                 return True
