@@ -57,7 +57,7 @@ Object ID of the downstream reach (i.e. the outflow) in the stream network polyl
 
 ### Outputs
 
-**NetworkErrors**
+**NetworkFeatures**
 
 The resulting network topology table, including feature codes stored in a new attribute field: `feature_code`. The table will be saved to the same file geodatabase where the input stream network is stored.
 
