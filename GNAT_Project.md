@@ -68,6 +68,4 @@ Network with a Stream Branch ID field applied. Original attributes are retained.
 #### Other Analysis types?
 
 ## Example Project File
-
-<script src="https://gist.github.com/KellyMWhitehead/8a198d59ed3e1df69c4c39733e865327.js"></script>
-
+[Example XML](https://gist.github.com/KellyMWhitehead/8a198d59ed3e1df69c4c39733e865327)
