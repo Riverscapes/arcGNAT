@@ -1,19 +1,18 @@
-# GNAT Project
-
-## Concepts
+# Introduction
 
 The concepts here are based on the two-step process for generating a confinement Project. 
 
 ![](https://docs.google.com/drawings/d/1Y2zYp1tdWn-FWincxK55xr-zfW4yJCfg7Nw4UEpONRk/pub?w=1326&h=722)
 
-### Project
+# GNAT Project
 
 MetaData
+
 - Region
 - Watershed
 - User/Operator
 
-### Inputs
+## Inputs
 
 The only input the GNAT project is a stream network.
 
@@ -22,7 +21,7 @@ MetaData
 - Source or type (NHD+ V02, 
 - Scale?
 
-### Realization
+## Realization
 
 A GNAT realization represents steps 1 and 2 in the current GNAT workflow.
  
@@ -31,13 +30,18 @@ A GNAT realization represents steps 1 and 2 in the current GNAT workflow.
 3. Network Errors are Cleaned up
 4. Regenerate Topology table, if needed.
 
-Params/Metadata
+Params
 
 -
 
+Metadata
+
+- Editing Notes
+
 Outputs
--GNAT Network
--GNAT Network Table
+
+- GNAT Network
+- GNAT Network Table
 
 ### Analyses
 
@@ -47,16 +51,18 @@ An "Analysis" represents a Segmented or Stream Branch processed network. These c
 
 Network split by segments with original attributes retained. Segmentation is identified by a SegmentID Field.
 
-Params:
--SegID Field
+Params
+
+- SegID Field
 - Pre-Segmentation Dissolve Options (None, Stream Branches)
 - Segmentation Distance
 - Segmentation Direction ("Move Upstream", "Move Downstream")
 - Segmentation Remainder Option ("End","Proportional")
 
 Outputs
--Segmented GNAT Network
--Gnat network table
+
+- Segmented GNAT Network
+- Gnat network table
 
 #### Stream Branch
 
@@ -67,5 +73,8 @@ Network with a Stream Branch ID field applied. Original attributes are retained.
 
 #### Other Analysis types?
 
+Are there other types of analyses here? I also think it is possible to have a project just link to the realization and not a specific analysis. 
+
 ## Example Project File
+
 [Example XML](https://gist.github.com/KellyMWhitehead/8a198d59ed3e1df69c4c39733e865327)
