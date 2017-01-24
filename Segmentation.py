@@ -133,7 +133,7 @@ def segOptionA(in_hydro, seg_length, outFGB):
 def segOptionBC(fcDissolvedStreamBranch,
          inputDistance,
          segMethod,
-         fcOutputStreamNetwork,
+         fcTempStreamNetwork=r"in_memory\temp_network",
          outputSegmentIDField="LineOID",
          scratchWorkspace=r"in_memory"):
     """Segment the input stream network feature class using one of two methods:
@@ -142,7 +142,7 @@ def segOptionBC(fcDissolvedStreamBranch,
     2. Remainder is divided amongst each stream segment
     """
 
-    gis_tools.resetData(fcOutputStreamNetwork)
+    gis_tools.resetData(fcTempStreamNetwork)
     listPoints = []
 
     if segMethod == "Remaining segment at outflow (bottom) of stream branch":
@@ -172,24 +172,24 @@ def segOptionBC(fcDissolvedStreamBranch,
     with arcpy.da.InsertCursor(fcSplitPoints,["SHAPE@"]) as icSplitPoints:
         for point in listPoints:
             icSplitPoints.insertRow([point])
-    arcpy.SplitLineAtPoint_management(fcDissolvedStreamBranch,fcSplitPoints,fcOutputStreamNetwork,"1 Meters")
-    gis_tools.addUniqueIDField(fcOutputStreamNetwork,outputSegmentIDField)
+    arcpy.SplitLineAtPoint_management(fcDissolvedStreamBranch,fcSplitPoints,fcTempStreamNetwork,"1 Meters")
+    gis_tools.addUniqueIDField(fcTempStreamNetwork,outputSegmentIDField)
 
     # Remove unnecessary fields
-    fieldObjects = arcpy.ListFields(fcOutputStreamNetwork)
-    oidField = arcpy.Describe(fcOutputStreamNetwork).OIDFieldName
-    shapeField = arcpy.Describe(fcOutputStreamNetwork).shapeFieldName
-    lengthField = arcpy.Describe(fcOutputStreamNetwork).lengthFieldName
+    fieldObjects = arcpy.ListFields(fcTempStreamNetwork)
+    oidField = arcpy.Describe(fcTempStreamNetwork).OIDFieldName
+    shapeField = arcpy.Describe(fcTempStreamNetwork).shapeFieldName
+    lengthField = arcpy.Describe(fcTempStreamNetwork).lengthFieldName
     keepFields = [oidField, shapeField, lengthField, "LineOID"]
     for field in fieldObjects:
         if field.name not in keepFields:
-            arcpy.DeleteField_management(fcOutputStreamNetwork, [field.name])
+            arcpy.DeleteField_management(fcTempStreamNetwork, [field.name])
 
-    return fcOutputStreamNetwork
+    return fcTempStreamNetwork
 
 
 # # Main Function # #
-def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, outputFCSegments):
+def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boolMerge, outputFCSegments):
     """Segment a stream network into user-defined length intervals."""
 
     # Get output workspace from output feature class
@@ -228,10 +228,15 @@ def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, out
     # Segment using method with remainder at inflow of each stream reach (i.e. Jesse's method)
     if segMethod == "Remaining segment at inflow (top) of stream branch":
         strm_seg = segOptionA(strm_dslv, inputDistance, outFGB)
-        arcpy.FeatureClassToFeatureClass_conversion(strm_seg, outFGB, outFile)
     # Segment using method with remainder at outflow, or divided remainder (i.e. Kelly's method)
     else:
-        strm_seg = segOptionBC(strm_dslv, inputDistance, segMethod, outputFCSegments)
+        strm_seg = segOptionBC(strm_dslv, inputDistance, segMethod)
+
+    if boolMerge == 'true':
+        arcpy.AddMessage("Merging attributes and geometry from " + inputFCStreamNetwork + " with segmented stream network...")
+        arcpy.Intersect_analysis([inputFCStreamNetwork, strm_seg], outputFCSegments)
+    else:
+        arcpy.CopyFeatures_management(strm_seg, outputFCSegments)
 
     # Finalize the process
     ClearInMemory.main()

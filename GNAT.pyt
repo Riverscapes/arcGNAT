@@ -477,14 +477,21 @@ class SegmentationTool(object):
         param4.filter.list = Segmentation.listStrSegMethod
 
         param5 = arcpy.Parameter(
+            displayName="Merge attributes and geometry from input stream network with output?",
+            name="boolMerge",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input")
+
+        param6 = arcpy.Parameter(
             displayName="Output Segmented Line Network",
             name="outputStreamOrderFC",
             datatype="DEFeatureClass",
             parameterType="Required",
             direction="Output")
-        param5.filter.list = ["Polyline"]
+        param6.filter.list = ["Polyline"]
 
-        return [param0,param1,param2,param3,param4,param5]
+        return [param0,param1,param2,param3,param4,param5,param6]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -516,7 +523,8 @@ class SegmentationTool(object):
                           p[2].valueAsText,
                           p[3].valueAsText,
                           p[4].valueAsText,
-                          p[5].valueAsText)
+                          p[5].valueAsText,
+                          p[6].valueAsText)
         return
 
 # Geomorphic Attributes Tools #
