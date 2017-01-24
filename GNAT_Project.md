@@ -68,8 +68,8 @@ Outputs
 
 Network with a Stream Branch ID field applied. Original attributes are retained.
 
--GNAT Network with Stream Branch ID's
--Gnat network table
+- GNAT Network with Stream Branch ID's
+- Gnat network table
 
 #### Other Analysis types?
 
