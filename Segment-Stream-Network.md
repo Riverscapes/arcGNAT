@@ -54,7 +54,7 @@ Three segmentation methods are available:
 
 3. Divide remainder sliver length between all reaches per stream reach (6 525m segments)
 
-**Merge attributes and geometry from input stream network with output? (optional)
+**Merge attributes and geometry from input stream network with output? (optional)**
 
 If this option is selected, the Segmentation tool will produce a stream network feature class which is the result of intersecting the original input stream network feature class, with the segmented stream network polyline feature class.  The resulting feature class will include the original feature attributes, and the `LineOID` attribute field produced by the segmentation process.
 
