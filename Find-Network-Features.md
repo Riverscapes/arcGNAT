@@ -1,5 +1,5 @@
 The **Find Network Features** tool finds topological features and errors within a stream
-network polyline feature class. The stream network  is assumed to be a single-part non-braided topological network. Currently the  **Find Network Features** tool can find these topological features:
+network polyline feature class. The stream network  is assumed to be a single-part non-braided topological network. Currently the  **Find Network Features** tool can find these topological features (some of which could be considered errors):
 
 * Braids
 * Duplicate reaches
