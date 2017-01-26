@@ -25,7 +25,7 @@ Polyline feature class representing the stream network for the analysis area.
 
 * Requirements: 
   * Projected coordinate system, not geographic.
-  * (Optional) All appropriate lines are connected as a network. The user can find unconnected stream reaches by building a network topology table with the [Build Network Topology Table](https://github.com/SouthForkResearch/gnat/wiki/Build-Network-Topology-Table) tool, finding errors using the [Find Network Errors](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Errors) tool, then manually correcting topology errors using editing tools in ArcMap.
+  * (Optional) All appropriate lines are connected as a network. The user can find unconnected stream reaches by building a network topology table with the [Build Network Topology Table](https://github.com/SouthForkResearch/gnat/wiki/Build-Network-Topology-Table) tool, finding errors using the [Find Network Features](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Features) tool, then manually correcting topology errors using editing tools in ArcMap.
   * Must be a file geodatabase polyline feature class due to field requirements
   * The network consists of single-part features only.
 
@@ -56,7 +56,7 @@ Three segmentation methods are available:
 
 **Merge attributes and geometry from input stream network with output? (optional)**
 
-If this option is selected, the Segmentation tool will produce a stream network feature class which is the result of intersecting the original input stream network feature class, with the segmented stream network polyline feature class.  The resulting feature class will include the original feature attributes, and the `LineOID` attribute field produced by the segmentation process.
+If this option is selected, the Segmentation tool will produce a stream network feature class which is the result of intersecting the original input stream network feature class with the segmented stream network polyline feature class.  The resulting feature class will include the original feature attributes, and the `LineOID` attribute field produced by the segmentation process.
 
 **Output Segmented Line Network**
   
