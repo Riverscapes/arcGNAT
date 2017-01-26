@@ -2,7 +2,7 @@ The **Build Network Topology Table** tool builds a table comprised of records fo
 
 The resulting output table, which will be named *StreamNetwork*, can serve as an input for the [Find Network Features](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Features) tool which can be used to find topology errors in the stream network. 
 
-If stream networks are not connected, stream reaches within the disconnected networks will not be included in the resulting network table. The [Find Network Featuresd](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Features) tool can explicitly identify these disconnected networks.
+If stream networks are not connected, stream reaches within the disconnected networks will not be included in the resulting network table. The [Find Network Features](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Features) tool can explicitly identify these disconnected networks.
 
 [[images/buildNetworkTable_example.PNG]]
 
