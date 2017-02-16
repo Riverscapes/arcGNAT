@@ -45,7 +45,7 @@ def braids(in_network_fc, tmp_network_tbl):
     arcpy.MakeFeatureLayer_management(in_network_fc, in_network_fc_lyr)
 
     # Set global variables
-    FEATURE_CODE = 2
+    FTR_CODE = 2
 
     # Create temporary in_memory version of input stream network
     tmp_network_fc = r"in_memory\tmp_network_fc"
@@ -61,7 +61,7 @@ def braids(in_network_fc, tmp_network_tbl):
 
     # Add code values to network table
     arcpy.AddJoin_management(tmp_network_tbl, "ReachID", "braids_lyr", "ReachID", "KEEP_COMMON")
-    arcpy.CalculateField_management(tmp_network_tbl, "FEATURE_CODE", FEATURE_CODE, "PYTHON_9.3")
+    arcpy.CalculateField_management(tmp_network_tbl, "FTR_CODE", FTR_CODE, "PYTHON_9.3")
     arcpy.RemoveJoin_management(tmp_network_tbl)
 
     # Clean up
@@ -77,7 +77,7 @@ def duplicates(in_network_fc, tmp_network_tbl):
     arcpy.MakeFeatureLayer_management(in_network_fc, in_network_fc_lyr)
 
     # Set global variables
-    FEATURE_CODE = 3
+    FTR_CODE = 3
 
     # Create temporary in_memory version of in_network_fc
     tmp_network_fc = r"in_memory\tmp_network_fc"
@@ -105,7 +105,7 @@ def duplicates(in_network_fc, tmp_network_tbl):
 
     # Add feature code values to network table
     arcpy.AddJoin_management(tmp_network_tbl, "ReachID", "duplicates_only_lyr", "ReachID", "KEEP_COMMON")
-    arcpy.CalculateField_management(tmp_network_tbl, "FEATURE_CODE", FEATURE_CODE, "PYTHON_9.3")
+    arcpy.CalculateField_management(tmp_network_tbl, "FTR_CODE", FTR_CODE, "PYTHON_9.3")
     arcpy.RemoveJoin_management(tmp_network_tbl)
 
     # Clean up
@@ -124,7 +124,7 @@ def reach_pairs(in_network_fc, tmp_network_tbl, reach_id):
     arcpy.MakeFeatureLayer_management(in_network_fc, in_network_fc_lyr)
 
     # Create a list with reach ID and associated upstream ID
-    field_name_list = ['ReachID', 'UpstreamID', 'FEATURE_CODE']
+    field_name_list = ['ReachID', 'UpstreamID', 'FTR_CODE']
     with arcpy.da.SearchCursor(tmp_network_tbl, field_name_list) as scursor:
         for srow in scursor:
             reach_pair = [srow[0], srow[1]]
@@ -141,17 +141,17 @@ def reach_pairs(in_network_fc, tmp_network_tbl, reach_id):
 
             # Update record in network table
             if result_overlap != 0:
-                with arcpy.da.UpdateCursor(tmp_network_tbl, ["ReachID", "FEATURE_CODE"], expr) as ucursor:
+                with arcpy.da.UpdateCursor(tmp_network_tbl, ["ReachID", "FTR_CODE"], expr) as ucursor:
                     for urow in ucursor:
                         urow[1] = result_overlap
                         ucursor.updateRow(urow)
             elif result_cross != 0:
-                with arcpy.da.UpdateCursor(tmp_network_tbl, ["ReachID", "FEATURE_CODE"], expr) as ucursor:
+                with arcpy.da.UpdateCursor(tmp_network_tbl, ["ReachID", "FTR_CODE"], expr) as ucursor:
                     for urow in ucursor:
                         urow[1] = result_cross
                         ucursor.updateRow(urow)
             else:
-                with arcpy.da.UpdateCursor(tmp_network_tbl, ["ReachID", "FEATURE_CODE"], expr) as ucursor:
+                with arcpy.da.UpdateCursor(tmp_network_tbl, ["ReachID", "FTR_CODE"], expr) as ucursor:
                     for urow in ucursor:
                         if urow[1] != 0:
                             pass
@@ -169,24 +169,24 @@ def reach_pairs(in_network_fc, tmp_network_tbl, reach_id):
 
 def overlap(tmp_network_fc):
     # Set global constant
-    FEATURE_CODE = 4
+    FTR_CODE = 4
 
     with arcpy.da.SearchCursor(tmp_network_fc, ['ReachID', 'SHAPE@']) as cursor:
         for r1,r2 in itertools.combinations(cursor, 2):
             if r1[1].overlaps(r2[1]):
-                return FEATURE_CODE
+                return FTR_CODE
             else:
                 return 0
 
 
 def cross(tmp_network_fc):
     # Set global constant
-    FEATURE_CODE = 5
+    FTR_CODE = 5
 
     with arcpy.da.SearchCursor(tmp_network_fc, ['ReachID', 'SHAPE@']) as cursor:
         for r1,r2 in itertools.combinations(cursor, 2):
             if r1[1].crosses(r2[1]):
-                return FEATURE_CODE
+                return FTR_CODE
             else:
                 return 0
 
@@ -195,7 +195,7 @@ def cross(tmp_network_fc):
 def disconnected(in_network_fc, tmp_network_tbl):
     arcpy.AddMessage("...disconnected reaches")
 
-    FEATURE_CODE = 6
+    FTR_CODE = 6
 
     in_network_fc_lyr = "in_network_fc_lyr"
     arcpy.MakeFeatureLayer_management(in_network_fc, in_network_fc_lyr)
@@ -215,17 +215,17 @@ def disconnected(in_network_fc, tmp_network_tbl):
     arcpy.AddField_management("disconnected_view", "UpstreamID", "LONG")
     arcpy.AddField_management("disconnected_view", "TO_NODE", "DOUBLE")
     arcpy.AddField_management("disconnected_view", "FROM_NODE", "DOUBLE")
-    arcpy.AddField_management("disconnected_view", "FEATURE_CODE", "SHORT")
-    with arcpy.da.SearchCursor("disconnected_view", ["ReachID", "UpstreamID", "TO_NODE", "FROM_NODE", "FEATURE_CODE"]) as scursor:
-        with arcpy.da.InsertCursor(tmp_network_tbl, ["ReachID", "UpstreamID", "TO_NODE", "FROM_NODE", "FEATURE_CODE"]) as icursor:
+    arcpy.AddField_management("disconnected_view", "FTR_CODE", "SHORT")
+    with arcpy.da.SearchCursor("disconnected_view", ["ReachID", "UpstreamID", "TO_NODE", "FROM_NODE", "FTR_CODE"]) as scursor:
+        with arcpy.da.InsertCursor(tmp_network_tbl, ["ReachID", "UpstreamID", "TO_NODE", "FROM_NODE", "FTR_CODE"]) as icursor:
             for srow in scursor:
                 icursor.insertRow(srow)
 
     arcpy.SelectLayerByAttribute_management(tmp_network_tbl, "NEW_SELECTION", """"UpstreamID" IS NULL""")
-    with arcpy.da.UpdateCursor(tmp_network_tbl, ["FEATURE_CODE"]) as ucursor:
+    with arcpy.da.UpdateCursor(tmp_network_tbl, ["FTR_CODE"]) as ucursor:
         for urow in ucursor:
             if urow[0] == None:
-                urow[0] = FEATURE_CODE
+                urow[0] = FTR_CODE
                 ucursor.updateRow(urow)
         #del urow, ucursor
 
@@ -238,11 +238,11 @@ def disconnected(in_network_fc, tmp_network_tbl):
 def flow_direction(tmp_network_tbl):
     arcpy.AddMessage("...flow direction")
 
-    FEATURE_CODE = 7
+    FTR_CODE = 7
 
     upstream_fields = ["UpstreamID","FROM_NODE","TO_NODE"]
     val_dict = {r[0]:(r[1:]) for r in arcpy.da.SearchCursor(tmp_network_tbl, upstream_fields)}
-    update_fields = ["OID@","ReachID","UpstreamID","FROM_NODE","FEATURE_CODE"]
+    update_fields = ["OID@","ReachID","UpstreamID","FROM_NODE","FTR_CODE"]
 
     with arcpy.da.UpdateCursor(tmp_network_tbl, update_fields) as ucursor:
         for urow in ucursor:
@@ -250,7 +250,7 @@ def flow_direction(tmp_network_tbl):
             if key_val in val_dict:
                 if urow[1] != val_dict[key_val]:
                     if urow[3] == val_dict[key_val][0]:
-                        urow[4] = FEATURE_CODE
+                        urow[4] = FTR_CODE
                         ucursor.updateRow(urow)
     return
 
@@ -260,14 +260,14 @@ def other_errors(tmp_network_tbl):
     arcpy.AddMessage("...other potential issues")
 
     # Set global variables
-    FEATURE_CODE = 8
+    FTR_CODE = 8
 
     # Select records UpstreamID == -11111
     expr = """"{0}" = {1}""".format("UpstreamID", -11111)
     arcpy.SelectLayerByAttribute_management(tmp_network_tbl,"NEW_SELECTION", expr)
 
     # Add code values to network table
-    arcpy.CalculateField_management(tmp_network_tbl, "FEATURE_CODE", FEATURE_CODE, "PYTHON_9.3")
+    arcpy.CalculateField_management(tmp_network_tbl, "FTR_CODE", FTR_CODE, "PYTHON_9.3")
     arcpy.SelectLayerByAttribute_management(tmp_network_tbl, "CLEAR_SELECTION")
 
 
@@ -275,10 +275,11 @@ def main(in_network_fc, in_network_table, outflow_id):
     arcpy.AddMessage("Searching for topology features and issues: ")
 
     # Get file geodatabase from input stream network feature class
-    file_gdb_path = arcpy.Describe(in_network_fc).path
+    wspace_path = arcpy.Describe(in_network_fc).path
+    wspace_type = arcpy.Describe(wspace_path).dataType
 
     # Check if input network feature class has required attribute fields
-    req_fields = ["IsHeadwater", "ReachID", "IsBraided"]
+    req_fields = ["IsHeadwatr", "ReachID", "IsBraided"]
     input_fields = []
     field_objects = arcpy.ListFields(in_network_fc)
     for obj in field_objects:
@@ -296,10 +297,10 @@ def main(in_network_fc, in_network_table, outflow_id):
         arcpy.MakeTableView_management(r"in_memory\tmp_network_table", "tmp_network_table_view")
 
         # Add required fields
-        code_field = arcpy.ListFields("tmp_network_table_view", "FEATURE_CODE")
+        code_field = arcpy.ListFields("tmp_network_table_view", "FTR_CODE")
         if len(code_field) != 1:
-            arcpy.AddField_management("tmp_network_table_view", "FEATURE_CODE", "LONG")
-            arcpy.CalculateField_management("tmp_network_table_view", "FEATURE_CODE", "0", "PYTHON_9.3")
+            arcpy.AddField_management("tmp_network_table_view", "FTR_CODE", "LONG")
+            arcpy.CalculateField_management("tmp_network_table_view", "FTR_CODE", "0", "PYTHON_9.3")
 
         # Find network features and issues
         flow_direction("tmp_network_table_view")
@@ -311,15 +312,18 @@ def main(in_network_fc, in_network_table, outflow_id):
 
         # Clean up and write final output table
         oid_field = arcpy.Describe("tmp_network_table_view").OIDFieldName
-        keep_fields = [oid_field, "ReachID", "FEATURE_CODE"]
+        keep_fields = [oid_field, "ReachID", "FTR_CODE"]
         list_obj = arcpy.ListFields("tmp_network_table_view")
         tmp_field_names = [f.name for f in list_obj]
         for field_name in tmp_field_names:
             if field_name not in keep_fields:
                 arcpy.DeleteField_management("tmp_network_table_view", field_name)
-        expr = """"{0}" > {1}""".format("FEATURE_CODE", "0")
+        expr = """"{0}" > {1}""".format("FTR_CODE", "0")
         arcpy.SelectLayerByAttribute_management("tmp_network_table_view", "NEW_SELECTION", expr)
-        arcpy.CopyRows_management("tmp_network_table_view", file_gdb_path + "\NetworkFeatures")
+        if wspace_type == "Folder":
+            arcpy.CopyRows_management("tmp_network_table_view", wspace_path + "\NetworkFeatures.dbf")
+        elif wspace_type == "Workspace":
+            arcpy.CopyRows_management("tmp_network_table_view", wspace_path + "\NetworkFeatures")
     else:
         arcpy.AddError(in_network_fc + " does not include required attribute fields. Please use the feature class " \
                                      "produced by the Build Network Topology Table tool.")
