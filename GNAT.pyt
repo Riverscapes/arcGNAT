@@ -262,14 +262,14 @@ class TransferLineAttributesTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
         self.label = "Transfer Line Attributes"
-        self.description = "Transfer Line Attributes from one network to another of a different geometry."
+        self.description = "Transfer polyline attributes from one network polyine feature class to another with similar geometry."
         self.canRunInBackground = True
         self.category = strCatagoryUtilities
 
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="""Input "From" Line Network""",
+            displayName="""Input "From" polyline feature class""",
             name="InputFCFromLine",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -277,19 +277,19 @@ class TransferLineAttributesTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="""Input "To" Line Network""",
+            displayName="""Input "To" polyline feature class""",
             name="InputFCToLine",
             datatype="GPFeatureLayer", 
             parameterType="Required",
             direction="Input")
         param1.filter.list = ["Polyline"]
         
-        param2 = arcpy.Parameter(
-            displayName="Stream Branch ID Field",
-            name="fieldBranchID",
-            datatype="GPString",
-            parameterType="Required",
-            direction="Input")
+        #param2 = arcpy.Parameter(
+        #    displayName="Stream Branch ID Field",
+        #    name="fieldBranchID",
+        #    datatype="GPString",
+        #    parameterType="Required",
+        #    direction="Input")
         
         #param3 = arcpy.Parameter(
         #    displayName="Is Polygon Segmented?",
@@ -299,23 +299,23 @@ class TransferLineAttributesTool(object):
         #    direction="Input")
         #param3.value = False
 
-        param3 = arcpy.Parameter(
-            displayName="Output Line Network",
+        param2 = arcpy.Parameter(
+            displayName="Output polyline feature class",
             name="OutputFCLineNetwork",
             datatype="DEFeatureClass",
             parameterType="Required",
             direction="Output")
-        param3.filter.list = ["Polyline"]
+        param2.filter.list = ["Polyline"]
 
-        param4 = arcpy.Parameter(
-            displayName="Save Temp Files to Scratch Workspace",
+        param3 = arcpy.Parameter(
+            displayName="Scratch workspace",
             name="scratchWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
-        param4.filter.list = ["Local Database"]
+        param3.filter.list = ["Local Database"]
         
-        return [param0,param1,param2,param3,param4]
+        return [param0,param1,param2,param3]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -333,9 +333,7 @@ class TransferLineAttributesTool(object):
         parameter.  This method is called after internal validation."""
         testProjected(parameters[0])
         testProjected(parameters[1])
-        if not parameters[2].altered:
-            populateFields(parameters[0],parameters[2],"StreamBranchID")
-        testWorkspacePath(parameters[4])
+        testWorkspacePath(parameters[3])
         return
 
     def execute(self, p, messages):
@@ -346,8 +344,7 @@ class TransferLineAttributesTool(object):
         TransferAttributesToLine.main(p[0].valueAsText,
                                       p[1].valueAsText,
                                       p[2].valueAsText,
-                                      p[3].valueAsText,
-                                      getTempWorkspace(p[4].valueAsText))
+                                      getTempWorkspace(p[3].valueAsText))
 
         return
 
