@@ -163,7 +163,6 @@ def segOptionBC(fcDissolvedStreamBranch,
                 for intPosition in range(intNumberOfPositions):
                     
                     dblProportionalPosition = float(intPosition)/intNumberOfPositions
-                    #arcpy.AddMessage(" Position: " + str(intPosition) + " of " + str(intNumberOfPositions) + " | " + str(dblProportionalPosition))
                     listPoints.append(gLine.positionAlongLine(dblProportionalPosition,True))
 
     fcSplitPoints = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SEG_SplitPoints")
@@ -193,14 +192,20 @@ def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boo
     """Segment a stream network into user-defined length intervals."""
 
     # Get output workspace from output feature class
-    outFGB = os.path.dirname(outputFCSegments)
-    outFile = os.path.basename(outputFCSegments)
+    out_wspace = os.path.dirname(outputFCSegments)
+    out_file = os.path.basename(outputFCSegments)
+    wspace_type = arcpy.Describe(out_wspace).dataType
 
     # Data pre-processing, includes calculating stream order and branch ID using GNAT modules
     spatial_join_fc = r"in_memory\spatial_join_fc"
-    strm_order_fc_out = outFGB + r"\strm_order"
-    strm_junc_fc_out = outFGB + r"\strm_junctions"
-    strm_branch_fc_out = outFGB + r"\strm_branch"
+    if wspace_type == "Folder":
+        strm_order_fc_out = out_wspace + r"\strm_order.shp"
+        strm_junc_fc_out = out_wspace + r"\strm_junctions.shp"
+        strm_branch_fc_out = out_wspace + r"\strm_branch.shp"
+    elif wspace_type == "Workspace":
+        strm_order_fc_out = out_wspace + r"\strm_order"
+        strm_junc_fc_out = out_wspace + r"\strm_junctions"
+        strm_branch_fc_out = out_wspace + r"\strm_branch"
     strm_order_fc_lyr = "strm_order_fc_lyr"
     strm_branch_fc_lyr = "strm_branch_fc_lyr"
     spatial_join_fc_lyr = "spatial_join_fc_lyr"
@@ -209,7 +214,7 @@ def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boo
     
     strm_order_fc, junctions_fc = StreamOrder.main(inputFCStreamNetwork, reachID, strm_order_fc_out, strm_junc_fc_out)
     strm_branch_fc = GenerateStreamBranches.main(strm_order_fc, junctions_fc, strmIndex,
-                                 "Stream_Order", strm_branch_fc_out, "true", "in_memory")
+                                 "strm_order", strm_branch_fc_out, "true", "in_memory")
     arcpy.MakeFeatureLayer_management(strm_order_fc, strm_order_fc_lyr)
     arcpy.MakeFeatureLayer_management(strm_branch_fc, strm_branch_fc_lyr)
 
@@ -227,7 +232,7 @@ def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boo
 
     # Segment using method with remainder at inflow of each stream reach (i.e. Jesse's method)
     if segMethod == "Remaining segment at inflow (top) of stream branch":
-        strm_seg = segOptionA(strm_dslv, inputDistance, outFGB)
+        strm_seg = segOptionA(strm_dslv, inputDistance, out_wspace)
     # Segment using method with remainder at outflow, or divided remainder (i.e. Kelly's method)
     else:
         strm_seg = segOptionBC(strm_dslv, inputDistance, segMethod)

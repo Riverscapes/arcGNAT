@@ -483,7 +483,7 @@ class SegmentationTool(object):
         param6 = arcpy.Parameter(
             displayName="Output Segmented Line Network",
             name="outputStreamOrderFC",
-            datatype="DEFeatureClass",
+            datatype="GPFeatureLayer",
             parameterType="Required",
             direction="Output")
         param6.filter.list = ["Polyline"]
