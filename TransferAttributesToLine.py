@@ -30,6 +30,9 @@ def main(fcFromLine,
 
     gis_tools.resetData(fcOutputLineNetwork)
 
+    if tempWorkspace == '':
+        tempWorkspace == "in_memory"
+
     # Make bounding polygon
     fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FromLineBuffer")
     arcpy.Buffer_analysis(fcFromLine,fcFromLineBuffer,"10 Meters","FULL","ROUND","ALL")
