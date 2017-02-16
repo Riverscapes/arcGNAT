@@ -152,10 +152,6 @@ def checkcount():
 def calcNodes(fcStreamNetwork):
     arcpy.AddMessage("Calculating stream network nodes...")
     arcpy.MakeFeatureLayer_management(fcStreamNetwork, "StreamNetwork_lyr")
-    # descStreamNetwork = arcpy.Describe(fcStreamNetwork)
-    # fileGDBpath = descStreamNetwork.path
-    # networkVrtx = fileGDBpath + "\\networkVrtx"
-    #arcpy.CreateFeatureclass_management(fileGDBpath, "networkVrtx", "POINT", "", "DISABLED", "DISABLED", fcStreamNetwork)
     networkVrtx = "in_memory\\networkVrtx"
     arcpy.CreateFeatureclass_management("in_memory", "networkVrtx", "POINT", "", "DISABLED", "DISABLED", fcStreamNetwork )
     arcpy.AddField_management(networkVrtx, "ReachID", "LONG")
@@ -233,9 +229,10 @@ def main(fcNetwork,intOutflowReachID):
 
     # Data paths
     descStreamNetwork = arcpy.Describe(fcNetwork)
-    fileGDB = descStreamNetwork.path
+    wspace = descStreamNetwork.path
+    wspace_type = arcpy.Describe(wspace)
     nameNetwork = descStreamNetwork.baseName
-    tableNetworkFile = fileGDB + "\\StreamNetworkTable"
+    tableNetworkFile = wspace + "\\StreamNetworkTable"
     tableNetwork = "in_memory\\StreamNetworkTable"
 
     # NetworkTable Prep
@@ -264,11 +261,11 @@ def main(fcNetwork,intOutflowReachID):
             downstream_oid = row[0]
     arcpy.SelectLayerByAttribute_management(fcStreamNetworkTemp_lyr, "CLEAR_SELECTION")
 
-    add_fields = ["IsHeadwater", "ReachID"]
+    add_fields = ["IsHeadwatr", "ReachID"]
     list_fields = arcpy.ListFields(fcStreamNetworkTemp_lyr)
     name_fields = [f.name for f in list_fields]
     oid_field = arcpy.Describe(fcStreamNetworkTemp_lyr).OIDFieldName
-    if add_fields[0] in name_fields: # add IsHeadwater field
+    if add_fields[0] in name_fields: # add IsHeadwatr field
         arcpy.DeleteField_management(fcStreamNetworkTemp_lyr, add_fields[0])
     arcpy.AddField_management(fcStreamNetworkTemp, add_fields[0], "SHORT")
     if add_fields[1] in name_fields:
@@ -284,7 +281,7 @@ def main(fcNetwork,intOutflowReachID):
     braided_field = arcpy.ListFields(fcStreamNetworkTemp_lyr, "IsBraided")
     if len(braided_field) > 0:
         arcpy.DeleteField_management(fcStreamNetworkTemp_lyr, "IsBraided")
-    braid.main(fcStreamNetworkTemp_lyr) # find braids, add to "IsBraided" field if it hasn't been done already
+    braid.main(fcStreamNetworkTemp_lyr) # find braid features, add to "IsBraided" field
     whereBraidedReaches = """ "IsBraided" = 1 """
     arcpy.MakeFeatureLayer_management(fcStreamNetworkTemp_lyr,"lyrBraidedReaches")
     arcpy.SelectLayerByAttribute_management("lyrBraidedReaches","NEW_SELECTION",whereBraidedReaches)
@@ -316,24 +313,26 @@ def main(fcNetwork,intOutflowReachID):
                     icNetworkTable.insertRow([pair[0],pair[1],nodeDict['FROM_NODE'], nodeDict['TO_NODE']])
         except RuntimeError as e:
             print "Runtime error: {0}".format(e)
-    arcpy.TableToTable_conversion(tableNetwork, fileGDB, "StreamNetworkTable") # write in-memory table to disc
+    if wspace_type.dataType == "Folder":
+        arcpy.TableToTable_conversion(tableNetwork, wspace, "StreamNetworkTable.dbf")
+    elif wspace_type.dataType == "Workspace":
+        arcpy.TableToTable_conversion(tableNetwork, wspace, "StreamNetworkTable")
 
     if arcpy.Exists("LineLayer"):
         arcpy.Delete_management("LineLayer")
     arcpy.MakeFeatureLayer_management(fcStreamNetworkTemp,"LineLayer")
-    arcpy.CalculateField_management(fcStreamNetworkTemp,"IsHeadwater",0,"PYTHON") #clear field
+    arcpy.CalculateField_management(fcStreamNetworkTemp,"IsHeadwatr",0,"PYTHON")
     if len(listHeadwaterIDs) > 1:
         where = oid_field + ' IN ' + str(tuple(listHeadwaterIDs))
     else:
         where = oid_field + ' = ' + str(listHeadwaterIDs[0]) # corner case of one headwater
     arcpy.SelectLayerByAttribute_management("LineLayer","NEW_SELECTION", where)
-    arcpy.CalculateField_management("LineLayer","IsHeadwater",1,"PYTHON")
+    arcpy.CalculateField_management("LineLayer","IsHeadwatr",1,"PYTHON")
     arcpy.SelectLayerByAttribute_management("LineLayer", "CLEAR_SELECTION")
     time_stamp = time.strftime("%Y%m%d%H%M")
-    arcpy.FeatureClassToFeatureClass_conversion("LineLayer", fileGDB, nameNetwork + "_" + time_stamp)
+    arcpy.FeatureClassToFeatureClass_conversion("LineLayer", wspace, nameNetwork + "_" + time_stamp)
 
     # Cleanup
-    arcpy.Compact_management(fileGDB)
     in_mem.main()
 
     return
