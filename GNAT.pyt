@@ -1127,30 +1127,22 @@ class DividePolygonBySegmentsTool(object):
         param2.filter.list = ["Polygon"]
 
         param3 = arcpy.Parameter(
-            displayName="Scratch Workspace",
-            name="scratchWorkspace",
-            datatype="DEWorkspace", 
-            parameterType="Optional",
-            direction="Input")
-        param3.filter.list = ["Local Database"]
-
-        param4 = arcpy.Parameter(
             displayName="Centerline Point Density (Meters)",
             name="DoublePointDensity",
             datatype="GPDouble",
             parameterType="Optional",
             direction="Input")
-        param4.value = "10.0"
+        param3.value = "10.0"
 
-        param5 = arcpy.Parameter(
+        param4 = arcpy.Parameter(
             displayName="Junction Buffer Distance (Meters)",
             name="dblJunctionBuffer",
             datatype="GPDouble",
             parameterType="Optional",
             direction="Input")
-        param5.value = "120"
+        param4.value = "120"
         
-        return [param0,param1,param2,param3,param4,param5]
+        return [param0,param1,param2,param3,param4]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -1172,13 +1164,11 @@ class DividePolygonBySegmentsTool(object):
     def execute(self, p, messages):
         """The source code of the tool."""
         reload(DividePolygonBySegment)
-
         DividePolygonBySegment.main(p[0].valueAsText,
                                     p[1].valueAsText,
                                     p[2].valueAsText,
                                     p[3].valueAsText,
-                                    p[4].valueAsText,
-                                    p[5].valueAsText)
+                                    p[4].valueAsText)
 
         return
 

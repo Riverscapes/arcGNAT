@@ -25,30 +25,26 @@ import geometry_functions
 def main(fcInputCenterline,
          fcInputPolygon,
          fcSegmentedPolygons,
-         workspaceTemp,
          dblPointDensity=10.0,
          dblJunctionBuffer=120.00):
-    
-    arcpy.AddMessage("GNAT Divide Polygon By Segment Tool")
-    arcpy.AddMessage("GNAT DPS: Saving Polygon Results to: " + fcSegmentedPolygons)
-    arcpy.AddMessage("GNAT DPS: Saving Temporary Files to: " + workspaceTemp)
+
+    workspaceTemp = "in_memory"
+
+    arcpy.AddMessage("GNAT DPS: Saving polygon results to: " + fcSegmentedPolygons)
 
     arcpy.env.OutputMFlag = "Disabled"
     arcpy.env.OutputZFlag = "Disabled"
 
-    arcpy.AddMessage("arcpy M Output Flag: " + str(arcpy.env.OutputMFlag))
-
-    ## Copy Centerline to Temp Workspace
+    # Copy centerline to temporary workspace
     fcCenterline = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_Centerline")
     arcpy.CopyFeatures_management(fcInputCenterline,fcCenterline)
 
-    ## Build Thiessan Polygons
-    arcpy.AddMessage("GNAT DPS: Building Thiessan Polygons")
+    # Build Thiessan polygons
+    arcpy.AddMessage("GNAT DPS: Building Thiessan polygons")
     arcpy.env.extent = fcInputPolygon ## Set full extent to build Thiessan polygons over entire line network.
     arcpy.Densify_edit(fcCenterline,"DISTANCE",str(dblPointDensity) + " METERS")
 
     fcTribJunctionPoints = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_TribJunctionPoints") # All Segment Junctions??
-    #gis_tools.findSegmentJunctions(fcCenterline,fcTribJunctionPoints,"ALL")
     arcpy.Intersect_analysis(fcCenterline,fcTribJunctionPoints,output_type="POINT")
 
     fcThiessanPoints = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_ThiessanPoints")
@@ -64,8 +60,8 @@ def main(fcInputCenterline,
     fcThiessanPolyClip = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_TheissanPolyClip")
     arcpy.Clip_analysis(fcThiessanPoly,fcInputPolygon,fcThiessanPolyClip)
 
-    ### Code to Split the Junction Thiessan Polys ###
-    arcpy.AddMessage("GNAT DPS: Split Junction Thiessan Polygons")
+    # Split the junction Thiessan polygons
+    arcpy.AddMessage("GNAT DPS: Split junction Thiessan polygons")
     lyrTribThiessanPolys = gis_tools.newGISDataset("Layer","lyrTribThiessanPolys")
     arcpy.MakeFeatureLayer_management(fcThiessanPolyClip,lyrTribThiessanPolys)
     arcpy.SelectLayerByLocation_management(lyrTribThiessanPolys,"INTERSECT",fcTribJunctionPoints,selection_type="NEW_SELECTION")
@@ -73,10 +69,10 @@ def main(fcInputCenterline,
     fcSplitPoints = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_SplitPoints")
     arcpy.Intersect_analysis([lyrTribThiessanPolys,fcCenterline],fcSplitPoints,output_type="POINT")
 
-    arcpy.AddMessage("GNAT DPS: Moving Starting Vertices of Junction Polygons")
+    arcpy.AddMessage("GNAT DPS: Moving starting vertices of junction polygons")
     geometry_functions.changeStartingVertex(fcTribJunctionPoints,lyrTribThiessanPolys)
 
-    arcpy.AddMessage("GNAT DPS: Vertices Moved.")
+    arcpy.AddMessage("GNAT DPS: Vertices moved")
     fcThiessanTribPolyEdges = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_ThiessanTribPolyEdges")
     arcpy.FeatureToLine_management(lyrTribThiessanPolys,fcThiessanTribPolyEdges)
 
@@ -96,8 +92,8 @@ def main(fcInputCenterline,
                               "NEAR_X",
                               "NEAR_Y")
 
-    ### Select Polys by Centerline ###
-    arcpy.AddMessage("GNAT DPS: Select Polygons By Centerline")
+    ### Select polygons by centerline ###
+    arcpy.AddMessage("GNAT DPS: Select polygons by centerline")
     fcThiessanEdges = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_ThiessanEdges")
     arcpy.FeatureToLine_management(fcThiessanPolyClip,fcThiessanEdges)
 
@@ -124,7 +120,6 @@ def main(fcInputCenterline,
                               "JOIN_FID",
                               multi_part="SINGLE_PART")
 
-    #fcSegmentedPolygons = gis_tools.newGISDataset(workspaceOutput,"SegmentedPolygons")
     lyrPolygonsDissolved = gis_tools.newGISDataset("Layer","lyrPolygonsDissolved")
     arcpy.MakeFeatureLayer_management(fcPolygonsDissolved,lyrPolygonsDissolved)
     arcpy.SelectLayerByAttribute_management(lyrPolygonsDissolved,"NEW_SELECTION",""" "JOIN_FID" = -1 """)
@@ -132,15 +127,14 @@ def main(fcInputCenterline,
     arcpy.Eliminate_management(lyrPolygonsDissolved,fcSegmentedPolygons,"LENGTH")
 
 
-    arcpy.AddMessage("GNAT DPS: Tool Complete.")
+    arcpy.AddMessage("GNAT DPS: Tool complete")
     return
 
-# # Run as Script # #
+# # Run as script # #
 if __name__ == "__main__":
 
     main(sys.argv[1],
          sys.argv[2],
          sys.argv[3],
          sys.argv[4],
-         sys.argv[5],
-         sys.argv[6])
+         sys.argv[5])

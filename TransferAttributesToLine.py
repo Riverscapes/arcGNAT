@@ -46,7 +46,7 @@ def main(fcFromLine,
     arcpy.EliminatePolygonPart_management(fcDissolveBuffer,fcFinalBuffer,"PERCENT",part_area_percent="99.9",part_option="CONTAINED_ONLY")
 
     fcSegmentedBoundingPolygons = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_SegmentedBoundingPolygons")
-    DividePolygonBySegment.main(fcFromLine,fcFinalBuffer,fcSegmentedBoundingPolygons,tempWorkspace)
+    DividePolygonBySegment.main(fcFromLine,fcFinalBuffer,fcSegmentedBoundingPolygons)
 
     # Split points of "To" line at intersection of polygon segments
     fcIntersectSplitPoints = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_IntersectSplitPoints")
