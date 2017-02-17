@@ -108,7 +108,6 @@ class FindBraidedNetworkTool(object):
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
-        
         testProjected(parameters[0])
         return
 
