@@ -1029,15 +1029,15 @@ class StreamBranchesTool(object):
 class SinuosityTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Sinuosity by Segment"
-        self.description = "Calculate Sinuosity in linework by Segment"
+        self.label = "Sinuosity by Stream Segment"
+        self.description = "Calculate Sinuosity in a polyline feature class by segment"
         self.canRunInBackground = True
         self.category = strCatagoryUtilities
 
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Input Stream Network or Centerline",
+            displayName="Input stream network or centerline polyline feature class",
             name="InputFCCenterline",
             datatype="GPFeatureLayer", 
             parameterType="Required",
@@ -1045,22 +1045,29 @@ class SinuosityTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Sinuosity Field Name",
+            displayName="Output polyline feature class with sinousity",
+            name="OutputFCCenterline",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Output")
+        param1.filter.list = ["Polyline"]
+
+        param2 = arcpy.Parameter(
+            displayName="Sinuosity attribute field name",
             name="InputFieldNameSinuosity",
-            datatype="GPString", 
+            datatype="GPString",
             parameterType="Required",
             direction="Input")
-        param1.value = "Sinuosity"
+        param2.value = "Sinuosity"
 
         param3 = arcpy.Parameter(
-            displayName="Save Temp Files to Scratch Workspace",
+            displayName="Scratch workspace",
             name="scratchWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
-        param3.filter.list = ["Local Database"]
         
-        return [param0,param1,param3]
+        return [param0,param1,param2,param3]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -1076,7 +1083,7 @@ class SinuosityTool(object):
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
-        testWorkspacePath(parameters[2])
+        testWorkspacePath(parameters[3])
         return
 
     def execute(self, p, messages):
@@ -1087,7 +1094,8 @@ class SinuosityTool(object):
         Sinuosity.main(
             p[0].valueAsText,
             p[1].valueAsText,
-            getTempWorkspace(p[2].valueAsText))
+            p[2].valueAsText,
+            getTempWorkspace(p[3].valueAsText))
 
         return
 
