@@ -41,14 +41,18 @@ def main(inputFCPolylineNetwork,
         arcpy.Delete_management(outputFCIntersectPoints)
 
     # Preprocess Network
-    fcNetworkDissolvedUnsplit = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_NetworkDissolvedUnsplit")
-    arcpy.Dissolve_management(inputFCPolylineNetwork,fcNetworkDissolvedUnsplit,multi_part="SINGLE_PART",unsplit_lines="DISSOLVE_LINES")
+    #fcNetworkDissolvedUnsplit = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_NetworkDissolvedUnsplit")
+    fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace, "GNAT_SO_NetworkDissolved")
+    #arcpy.Dissolve_management(inputFCPolylineNetwork,fcNetworkDissolvedUnsplit,multi_part="SINGLE_PART",unsplit_lines="DISSOLVE_LINES")
+    arcpy.Dissolve_management(inputFCPolylineNetwork, fcNetworkDissolved, multi_part="SINGLE_PART",
+                             unsplit_lines="DISSOLVE_LINES")
     
     fcNetworkIntersectPoints = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_NetworkIntersectPoints")
-    arcpy.Intersect_analysis(fcNetworkDissolvedUnsplit,fcNetworkIntersectPoints,"ALL",output_type="POINT")
-    
-    fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"NetworkDissolved")
-    arcpy.SplitLineAtPoint_management(fcNetworkDissolvedUnsplit, fcNetworkIntersectPoints, fcNetworkDissolved)
+    #arcpy.Intersect_analysis(fcNetworkDissolvedUnsplit,fcNetworkIntersectPoints,"ALL",output_type="POINT")
+    arcpy.Intersect_analysis(fcNetworkDissolved, fcNetworkIntersectPoints, "ALL", output_type="POINT")
+
+    #fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"NetworkDissolved")
+    #arcpy.SplitLineAtPoint_management(fcNetworkDissolvedUnsplit, fcNetworkIntersectPoints, fcNetworkDissolved)
 
     listFields = arcpy.ListFields(fcNetworkDissolved,"strm_order")
     if len(listFields) == 0:
