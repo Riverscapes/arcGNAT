@@ -25,7 +25,7 @@ import ClearInMemory
 def main(inputFCPolylineNetwork,
          inputDownstreamID,
          outputFCPolylineStreamOrder,
-         outputFCJunctionPoints,
+         outputFCIntersectPoints,
          scratchWorkspace= "in_memory"):
 
     # Set Processing Environments
@@ -37,8 +37,8 @@ def main(inputFCPolylineNetwork,
 
     if arcpy.Exists(outputFCPolylineStreamOrder):
        arcpy.Delete_management(outputFCPolylineStreamOrder)
-    if arcpy.Exists(outputFCJunctionPoints):
-        arcpy.Delete_management(outputFCJunctionPoints)
+    if arcpy.Exists(outputFCIntersectPoints):
+        arcpy.Delete_management(outputFCIntersectPoints)
 
     # Preprocess Network
     fcNetworkDissolvedUnsplit = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_NetworkDissolvedUnsplit")
@@ -127,11 +127,11 @@ def main(inputFCPolylineNetwork,
     arcpy.Intersect_analysis([fcNetworkDissolved,inputFCPolylineNetwork],outputFCPolylineStreamOrder)
         
     arcpy.DeleteIdentical_management(fcStreamOrderTransistionPoints,"Shape")
-    arcpy.CopyFeatures_management(fcStreamOrderTransistionPoints,outputFCJunctionPoints)
+    arcpy.CopyFeatures_management(fcNetworkIntersectPoints,outputFCIntersectPoints)
 
     ClearInMemory.main()
 
-    return outputFCPolylineStreamOrder, outputFCJunctionPoints
+    return outputFCPolylineStreamOrder, outputFCIntersectPoints
 
 # # Other Functions # #
 def newListPairs(number):
@@ -153,5 +153,5 @@ if __name__ == "__main__":
     # inputFCPolylineNetwork = r"C:\JL\Testing\GNAT\Issue28\input.gdb\Methow_NHDFlowline"
     # inputDownstreamID = 36
     # outputFCPolylineStreamOrder = r"C:\JL\Testing\GNAT\Issue28\input.gdb\strm_order"
-    # outputFCJunctionPoints = r"C:\JL\Testing\GNAT\Issue28\input.gdb\strm_junctions"
-    # main(inputFCPolylineNetwork, inputDownstreamID, outputFCPolylineStreamOrder, outputFCJunctionPoints)
+    # outputFCIntersectPoints = r"C:\JL\Testing\GNAT\Issue28\input.gdb\strm_junctions"
+    # main(inputFCPolylineNetwork, inputDownstreamID, outputFCPolylineStreamOrder, outputFCIntersectPoints)
