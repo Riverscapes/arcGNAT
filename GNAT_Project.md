@@ -75,6 +75,36 @@ Network with a Stream Branch ID field applied. Original attributes are retained.
 
 Are there other types of analyses here? I also think it is possible to have a project just link to the realization and not a specific analysis. 
 
+## Workflow
+The following is a proposed workflow for using GNAT in project Mode. The main issue is that Network prep has some cyclical and manual steps, so a realization does not appear until the user commits the updates.
+
+1. Project Management (Toolset level)
+   1. New GNAT Project
+      + Creates XML
+      + Project Meta
+   2. Load Raw Network to Project
+      + Copies Line Network to Inputs
+2. Main/Step 1 - Network Prep
+   1. Generate Topology Table
+      + Generates Companion Topology Table
+      + ** Does not output to Realization **
+   2. Generate Network Features/Errors
+      + Uses table and network geometry to find attributes
+      + ** Does not output to Realization **
+   3. (Manual) Repair network errors
+      + Manual Step
+      + Repeat step 1 and 2 after this
+   4. Commit Network
+      + User Names Realization
+      + Copies Network and Table to Realization Level of Project (Outputs/RealizationName/Network)
+3. Step 2 - Network Segments
+   1. Segmentation Tool
+      + Applies segmentation to network (as segID)
+      + Keeps original Attributes (Need to retain some type of Original ReachID)
+      + Save at Analysis level (Outputs/RealizationName/Analyses/AnalysisName)
+4. Step 3 - Geomorphic Attributes
+   + This probably represents a separate project?
+
 ## Example Project File
 
 [Example XML](https://gist.github.com/KellyMWhitehead/8a198d59ed3e1df69c4c39733e865327)
