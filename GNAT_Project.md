@@ -87,10 +87,10 @@ The following is a proposed workflow for using GNAT in project Mode. The main is
 2. Main/Step 1 - Network Prep
    1. Generate Topology Table
       + Generates Companion Topology Table
-      + ** Does not output to Realization **
+      + **Does not output to Realization**
    2. Generate Network Features/Errors
       + Uses table and network geometry to find attributes
-      + ** Does not output to Realization **
+      + **Does not output to Realization**
    3. (Manual) Repair network errors
       + Manual Step
       + Repeat step 1 and 2 after this
