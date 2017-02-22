@@ -3,14 +3,15 @@
 # Purpose:     Segment the Stream Network using distance Intervals            #
 #                                                                             #
 # Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
+#              Jesse Langdon (jesse@southforkresearch.org)                    #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
-# Created:     2015-Sept-15                                                    #
-# Version:     1.3                                                            #
-# Modified:    2015-Sept-15                                                    #
+# Created:     2015-Sept-15                                                   #
+# Version:     2.0 beta                                                       #
+# Modified:    2017-Feb-22                                                    #
 #                                                                             #
-# Copyright:   (c) Kelly Whitehead 2015                                       #
+# Copyright:   (c) Kelly Whitehead, Jesse Langdon 2017                        #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
@@ -200,11 +201,11 @@ def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boo
     spatial_join_fc = r"in_memory\spatial_join_fc"
     if wspace_type == "Folder":
         strm_order_fc_out = out_wspace + r"\strm_order.shp"
-        strm_junc_fc_out = out_wspace + r"\strm_junctions.shp"
+        strm_node_fc_out = out_wspace + r"\strm_nodes.shp"
         strm_branch_fc_out = out_wspace + r"\strm_branch.shp"
     elif wspace_type == "Workspace":
         strm_order_fc_out = out_wspace + r"\strm_order"
-        strm_junc_fc_out = out_wspace + r"\strm_junctions"
+        strm_node_fc_out = out_wspace + r"\strm_nodes"
         strm_branch_fc_out = out_wspace + r"\strm_branch"
     strm_order_fc_lyr = "strm_order_fc_lyr"
     strm_branch_fc_lyr = "strm_branch_fc_lyr"
@@ -212,8 +213,8 @@ def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boo
 
     gis_tools.checkReq(inputFCStreamNetwork) # process will terminate if input requirements not met
     
-    strm_order_fc, junctions_fc = StreamOrder.main(inputFCStreamNetwork, reachID, strm_order_fc_out, strm_junc_fc_out)
-    strm_branch_fc = GenerateStreamBranches.main(strm_order_fc, junctions_fc, strmIndex,
+    strm_order_fc, nodes_fc = StreamOrder.main(inputFCStreamNetwork, reachID, strm_order_fc_out, strm_node_fc_out)
+    strm_branch_fc = GenerateStreamBranches.main(strm_order_fc, nodes_fc, strmIndex,
                                  "strm_order", strm_branch_fc_out, "true", "in_memory")
     arcpy.MakeFeatureLayer_management(strm_order_fc, strm_order_fc_lyr)
     arcpy.MakeFeatureLayer_management(strm_branch_fc, strm_branch_fc_lyr)

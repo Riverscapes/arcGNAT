@@ -1,16 +1,17 @@
 ﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Name:        Generate Stream Order Tool                                     #
-# Purpose:     Generate Stream order for a stream network                     #
+# Name:        Generate Stream Order                                          #
+# Purpose:     Generate stream order for a stream network                     #
 #                                                                             #
 # Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
+#              Jesse Langdon (jesse@southforkresearch.org)                    #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     1.1                                                            #
-# Modified:    2015-Apr-27                                                    #
+# Version:     2.0 beta                                                       #
+# Modified:    2017-Feb-22                                                    #
 #                                                                             #
-# Copyright:   (c) Kelly Whitehead 2015                                       #
+# Copyright:   (c) Kelly Whitehead, Jesse Langdon 2017                        #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
@@ -21,18 +22,17 @@ import arcpy
 import gis_tools
 import ClearInMemory
 
-# # Main Function # #
 def main(inputFCPolylineNetwork,
          inputDownstreamID,
          outputFCPolylineStreamOrder,
          outputFCIntersectPoints,
          scratchWorkspace= "in_memory"):
 
-    # Set Processing Environments
+    # Set processing environments
     arcpy.env.outputMflag = "Disabled"
     arcpy.env.outputZflag = "Disabled"
 
-    # Initialize Stream Order
+    # Initialize stream order
     intCurrentOrder = 1
 
     if arcpy.Exists(outputFCPolylineStreamOrder):
@@ -40,19 +40,16 @@ def main(inputFCPolylineNetwork,
     if arcpy.Exists(outputFCIntersectPoints):
         arcpy.Delete_management(outputFCIntersectPoints)
 
-    # Preprocess Network
-    #fcNetworkDissolvedUnsplit = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_NetworkDissolvedUnsplit")
+    # Preprocess network
     fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace, "GNAT_SO_NetworkDissolved")
-    #arcpy.Dissolve_management(inputFCPolylineNetwork,fcNetworkDissolvedUnsplit,multi_part="SINGLE_PART",unsplit_lines="DISSOLVE_LINES")
     arcpy.Dissolve_management(inputFCPolylineNetwork, fcNetworkDissolved, multi_part="SINGLE_PART",
                              unsplit_lines="DISSOLVE_LINES")
     
-    fcNetworkIntersectPoints = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SO_NetworkIntersectPoints")
-    #arcpy.Intersect_analysis(fcNetworkDissolvedUnsplit,fcNetworkIntersectPoints,"ALL",output_type="POINT")
+    fcNetworkIntersectPoints = gis_tools.newGISDataset(scratchWorkspace, "GNAT_SO_NetworkIntersectPoints")
     arcpy.Intersect_analysis(fcNetworkDissolved, fcNetworkIntersectPoints, "ALL", output_type="POINT")
-
-    #fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace,"NetworkDissolved")
-    #arcpy.SplitLineAtPoint_management(fcNetworkDissolvedUnsplit, fcNetworkIntersectPoints, fcNetworkDissolved)
+    arcpy.AddXY_management(fcNetworkIntersectPoints)
+    fcNetworkNodes = gis_tools.newGISDataset(scratchWorkspace, "GNAT_SO_NetworkNodes")
+    arcpy.Dissolve_management(fcNetworkIntersectPoints,fcNetworkNodes, ["POINT_X", "POINT_Y"], "#", "SINGLE_PART")
 
     listFields = arcpy.ListFields(fcNetworkDissolved,"strm_order")
     if len(listFields) == 0:
@@ -131,13 +128,13 @@ def main(inputFCPolylineNetwork,
     arcpy.Intersect_analysis([fcNetworkDissolved,inputFCPolylineNetwork],outputFCPolylineStreamOrder)
         
     arcpy.DeleteIdentical_management(fcStreamOrderTransistionPoints,"Shape")
-    arcpy.CopyFeatures_management(fcNetworkIntersectPoints,outputFCIntersectPoints)
+    arcpy.CopyFeatures_management(fcNetworkNodes,outputFCIntersectPoints)
 
     ClearInMemory.main()
 
     return outputFCPolylineStreamOrder, outputFCIntersectPoints
 
-# # Other Functions # #
+
 def newListPairs(number):
     list = []
     for i1 in range(1,number + 1):
@@ -145,17 +142,10 @@ def newListPairs(number):
             list.append(tuple([i1,i2]))
     return list
 
-# # Run as Script # #
+
 if __name__ == "__main__":
     main(sys.argv[1],
          sys.argv[2],
          sys.argv[3],
          sys.argv[4],
          sys.argv[5])
-
-    # TESTING
-    # inputFCPolylineNetwork = r"C:\JL\Testing\GNAT\Issue28\input.gdb\Methow_NHDFlowline"
-    # inputDownstreamID = 36
-    # outputFCPolylineStreamOrder = r"C:\JL\Testing\GNAT\Issue28\input.gdb\strm_order"
-    # outputFCIntersectPoints = r"C:\JL\Testing\GNAT\Issue28\input.gdb\strm_junctions"
-    # main(inputFCPolylineNetwork, inputDownstreamID, outputFCPolylineStreamOrder, outputFCIntersectPoints)
