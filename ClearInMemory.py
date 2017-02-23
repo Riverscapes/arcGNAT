@@ -9,7 +9,7 @@
 import arcpy
 
 def main():
-    arcpy.env.workspace = r"IN_MEMORY"
+    arcpy.env.workspace = r"in_memory"
     arcpy.AddMessage("Deleting in_memory data...")
 
     list_fc = arcpy.ListFeatureClasses()
