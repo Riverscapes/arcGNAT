@@ -35,7 +35,6 @@ arcpy.env.overwriteOutput = True
 #===============================================================================
 # CODING
 #===============================================================================
-#def SLEM(Line, Distance, Output, TempFolder, TF):
 def SLEM(Line, Distance, Output, TF):
     
     CopyLine = arcpy.CopyFeatures_management(Line, r"in_memory\CopyLine")

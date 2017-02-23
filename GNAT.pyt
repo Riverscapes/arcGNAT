@@ -868,7 +868,7 @@ class FluvialCorridorCenterlineTool(object):
         param0 = arcpy.Parameter(
             displayName="Valley bottom polygon feature class",
             name="InputPolygon",
-            datatype="DEFeatureClass",
+            datatype="GPFeatureLayer",
             parameterType="Required",
             direction="Input")
         param0.filter.list = ["Polygon"]
@@ -876,7 +876,7 @@ class FluvialCorridorCenterlineTool(object):
         param1 = arcpy.Parameter(
             displayName="Stream network polyline feature class",
             name="InputFCPolyline",
-            datatype="DEFeatureClass",
+            datatype="GPFeatureLayer",
             parameterType="Required",
             direction="Input")
         param1.filter.list = ["Polyline"]
@@ -887,6 +887,7 @@ class FluvialCorridorCenterlineTool(object):
             datatype="GPLong",
             parameterType="Required",
             direction="Input")
+        param2.value = "5.0"
 
         param3 = arcpy.Parameter(
             displayName="Smoothing tolerance",
@@ -894,23 +895,18 @@ class FluvialCorridorCenterlineTool(object):
             datatype="GPLong",
             parameterType="Required",
             direction="Input")
+        param3.value = "10.0"
 
         param4 = arcpy.Parameter(
-            displayName="Output centerline",
+            displayName="Output centerline feature class",
             name="OutputFCPolyline",
             datatype="DEFeatureClass",
             parameterType="Required",
             direction="Output")
-        #param4.filter.list = ["Polyline"]
+        param4.filter.list = ["Polyline"]
 
-        param5 = arcpy.Parameter(
-            displayName="Delete temporary files",
-            name="InputDeleteTempFiles",
-            datatype="GPBoolean",
-            parameterType="Required",
-            direction="Input")
 
-        return [param0,param1,param2,param3,param4,param5]
+        return [param0,param1,param2,param3,param4]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -935,8 +931,7 @@ class FluvialCorridorCenterlineTool(object):
                                   p[1].valueAsText,
                                   p[2].valueAsText,
                                   p[3].valueAsText,
-                                  p[4].valueAsText,
-                                  p[5].valueAsText)
+                                  p[4].valueAsText)
 
         return
 
