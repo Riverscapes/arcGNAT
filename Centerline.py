@@ -36,22 +36,16 @@ def main(Polygon,Polyline,DisaggregationStep,Smoothing,Output,DeleteTF):
     # Allow the temporary outputs overwrite
     arcpy.env.overwriteOutput = True
 
-    # Inputs
-    #Polygon = arcpy.GetParameterAsText(0)
-    #Polyline = arcpy.GetParameterAsText(1)
-    #DisaggregationStep = arcpy.GetParameterAsText(2)
-    #Smoothing = arcpy.GetParameterAsText(3)
-    #Output = arcpy.GetParameterAsText(4)
-    #DeleteTF = arcpy.GetParameterAsText(5)
-
     # Dervied variable from inputs
     name = os.path.split(os.path.splitext(Polygon)[0])[1]
-    ScratchW = SWPN.ScratchWPathName ()
+    ScratchW = "in_memory"
+
+    DeleteTF == "true"
 
     # Number of steps
     nstep = 12
-    if str(DeleteTF) == "false" :
-        nstep+=-1
+    # if str(DeleteTF) == "false" :
+    #     nstep+=-1
     ncurrentstep=1
 
 
@@ -126,13 +120,12 @@ def main(Polygon,Polyline,DisaggregationStep,Smoothing,Output,DeleteTF):
 
     ncurrentstep+=1
     arcpy.AddMessage("Split the input polygon - Step " + str(ncurrentstep) + "/" + str(nstep))
-    PolySplitTEMP = dS.SLEM(FracPoly, DisaggregationStep, "%ScratchWorkspace%\\PolySplitTEMP", ScratchW, "true")
+    PolySplitTEMP = dS.SLEM(FracPoly, DisaggregationStep, ScratchW, "true")
     PolySplit = arcpy.Sort_management(PolySplitTEMP, "%ScratchWorkspace%\\PolySplit", [["Rank_UGO", "ASCENDING"],["Distance","ASCENDING"]])
 
     ncurrentstep+=1
     arcpy.AddMessage("Converting Split polygon to points - Step " + str(ncurrentstep) + "/" + str(nstep))
     PolySplitToPoint = arcpy.FeatureToPoint_management(PolySplit, "%ScratchWorkspace%\\PolySplitToPoint", "INSIDE")
-
 
     #/creating the Thiessen polygons and the centerline
     ncurrentstep+=1
@@ -158,7 +151,6 @@ def main(Polygon,Polyline,DisaggregationStep,Smoothing,Output,DeleteTF):
     arcpy.AddMessage("Smoothing centerline - Step " + str(ncurrentstep) + "/" + str(nstep))
     Centerline = arcpy.SmoothLine_cartography(RawCenterline, Output, "PAEK", Smoothing, "FIXED_CLOSED_ENDPOINT", "NO_CHECK")
 
-
     #/deleting residual fields
     try :
         arcpy.DeleteField_management(Centerline, ["FID_Dissolve1ToLine", "FID_Dissolve1", "FID_Dissolve1_1", "ORIG_FID", "Rank_UGO", "Rank_UGO_1", "FID_"+str(name)])
@@ -168,12 +160,6 @@ def main(Polygon,Polyline,DisaggregationStep,Smoothing,Output,DeleteTF):
         arcpy.DeleteField_management(Centerline, ["FID_Dissol", "FID_Diss_1", "FID_Diss_2", "FID_"+str(name)[0:6], "ORIG_FID", "Rank_UGO", "Rank_UGO_1", "Shape_Leng", "Shape_Le_1"])
     except :
         pass
-
-
-
-
-
-
 
 
     #===============================================================================
