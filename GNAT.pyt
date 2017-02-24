@@ -360,21 +360,28 @@ class SegmentationTool(object):
         param4.filter.list = Segmentation.listStrSegMethod
 
         param5 = arcpy.Parameter(
-            displayName="Merge attributes and geometry from input stream network with output?",
-            name="boolMerge",
+            displayName="Split stream network at confluences before segmenting",
+            name="boolNode",
             datatype="GPBoolean",
             parameterType="Optional",
             direction="Input")
 
         param6 = arcpy.Parameter(
+            displayName="Merge attributes and geometry from input stream network with output",
+            name="boolMerge",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input")
+
+        param7 = arcpy.Parameter(
             displayName="Output Segmented Line Network",
             name="outputStreamOrderFC",
             datatype="GPFeatureLayer",
             parameterType="Required",
             direction="Output")
-        param6.filter.list = ["Polyline"]
+        param7.filter.list = ["Polyline"]
 
-        return [param0,param1,param2,param3,param4,param5,param6]
+        return [param0,param1,param2,param3,param4,param5,param6,param7]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -395,7 +402,6 @@ class SegmentationTool(object):
         
         testLayerSelection(parameters[0])
         testProjected(parameters[0])
-        testWorkspacePath(parameters[5])
         return
 
     def execute(self, p, messages):
@@ -407,7 +413,8 @@ class SegmentationTool(object):
                           p[3].valueAsText,
                           p[4].valueAsText,
                           p[5].valueAsText,
-                          p[6].valueAsText)
+                          p[6].valueAsText,
+                          p[7].valueAsText)
         return
 
 

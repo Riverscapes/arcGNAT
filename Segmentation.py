@@ -189,7 +189,7 @@ def segOptionBC(fcDissolvedStreamBranch,
 
 
 # # Main Function # #
-def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boolMerge, outputFCSegments):
+def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boolNode, boolMerge, outputFCSegments):
     """Segment a stream network into user-defined length intervals."""
 
     # Get output workspace from output feature class
@@ -211,7 +211,7 @@ def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boo
     strm_branch_fc_lyr = "strm_branch_fc_lyr"
     spatial_join_fc_lyr = "spatial_join_fc_lyr"
 
-    gis_tools.checkReq(inputFCStreamNetwork) # process will terminate if input requirements not met
+    gis_tools.checkReq(inputFCStreamNetwork) # process terminates if input requirements not met
     
     strm_order_fc, nodes_fc = StreamOrder.main(inputFCStreamNetwork, reachID, strm_order_fc_out, strm_node_fc_out)
     strm_branch_fc = GenerateStreamBranches.main(strm_order_fc, nodes_fc, strmIndex,
@@ -231,12 +231,19 @@ def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boo
     strm_dslv = r"in_memory\strm_dslv"
     arcpy.Dissolve_management(spatial_join_fc_lyr, strm_dslv, "BranchID", "", "SINGLE_PART", "DISSOLVE_LINES")
 
+    # Split dissolved network at intersection nodes before segmentation, if option is chosen by user
+    if boolNode == "true":
+        strm_split_node = r"in_memory\strm_split_node"
+        arcpy.SplitLineAtPoint_management(strm_dslv, strm_node_fc_out, strm_split_node, "0.0001 Meters")
+    else:
+        strm_split_node = strm_dslv
+
     # Segment using method with remainder at inflow of each stream reach (i.e. Jesse's method)
     if segMethod == "Remaining segment at inflow (top) of stream branch":
-        strm_seg = segOptionA(strm_dslv, inputDistance, out_wspace)
+        strm_seg = segOptionA(strm_split_node, inputDistance, out_wspace)
     # Segment using method with remainder at outflow, or divided remainder (i.e. Kelly's method)
     else:
-        strm_seg = segOptionBC(strm_dslv, inputDistance, segMethod)
+        strm_seg = segOptionBC(strm_split_node, inputDistance, segMethod)
 
     if boolMerge == 'true':
         arcpy.AddMessage("Merging attributes and geometry from " + inputFCStreamNetwork + " with segmented stream network...")
