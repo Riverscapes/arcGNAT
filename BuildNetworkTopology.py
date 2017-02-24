@@ -21,6 +21,7 @@
 
 # # Import Modules # #
 import arcpy
+import os
 import time
 import FindBraidedNetwork as braid
 import ClearInMemory as in_mem
@@ -220,6 +221,23 @@ def selectDownstreamReach(fcNetwork, intOutflowReachID):
     return downstream_reach_lyr
 
 
+def checkSuffix(fcNetwork):
+    fc_name = os.path.splitext(os.path.basename(fcNetwork))[0]
+    suffix = fc_name[-6:]
+    if suffix[:4] == "_run" and int(suffix[-2:]):
+        return True
+    else:
+        return False
+
+def incrementRun(fcNetwork):
+    fc_name = os.path.splitext(os.path.basename(fcNetwork))[0]
+    run_int = int(fc_name[-2:])
+    run_int += 1
+    return "{:02}".format(run_int)
+
+
+
+
 def main(fcNetwork,intOutflowReachID):
     gis_tools.checkReq(fcNetwork)
 
@@ -329,8 +347,15 @@ def main(fcNetwork,intOutflowReachID):
     arcpy.SelectLayerByAttribute_management("LineLayer","NEW_SELECTION", where)
     arcpy.CalculateField_management("LineLayer","IsHeadwatr",1,"PYTHON")
     arcpy.SelectLayerByAttribute_management("LineLayer", "CLEAR_SELECTION")
-    time_stamp = time.strftime("%Y%m%d%H%M")
-    arcpy.FeatureClassToFeatureClass_conversion("LineLayer", wspace, nameNetwork + "_" + time_stamp)
+
+    # increment output file name with new run number, and write to disk
+    if checkSuffix(fcNetwork):
+        run_str = incrementRun(fcNetwork)
+        name_strip = nameNetwork[:-6]
+        output_name = "{0}{1}{2}".format(name_strip, "_run", run_str)
+    else:
+        output_name = "{0}{1}".format(nameNetwork, "_run01")
+    arcpy.FeatureClassToFeatureClass_conversion("LineLayer", wspace, output_name)
 
     # Cleanup
     in_mem.main()
