@@ -17,6 +17,7 @@
 #!/usr/bin/env python
 
 # # Import Modules # #
+import os
 import sys
 import arcpy
 import gis_tools
@@ -26,6 +27,7 @@ def main(inputFCPolylineNetwork,
          inputDownstreamID,
          outputFCPolylineStreamOrder,
          outputFCIntersectPoints,
+         outputFCJunctionPoints,
          scratchWorkspace= "in_memory"):
 
     # Set processing environments
@@ -127,8 +129,9 @@ def main(inputFCPolylineNetwork,
     # Outputs
     arcpy.Intersect_analysis([fcNetworkDissolved,inputFCPolylineNetwork],outputFCPolylineStreamOrder)
         
-    arcpy.DeleteIdentical_management(fcStreamOrderTransistionPoints,"Shape")
-    arcpy.CopyFeatures_management(fcNetworkNodes,outputFCIntersectPoints)
+    arcpy.DeleteIdentical_management(fcStreamOrderTransistionPoints, "Shape")
+    arcpy.CopyFeatures_management(fcNetworkNodes, outputFCIntersectPoints)
+    arcpy.CopyFeatures_management(fcNetworkIntersectPoints, outputFCJunctionPoints)
 
     ClearInMemory.main()
 

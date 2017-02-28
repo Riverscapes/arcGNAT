@@ -553,25 +553,29 @@ class StreamOrderTool(object):
         param2.filter.list = ["Polyline"]
 
         param3 = arcpy.Parameter(
-            displayName="Output junction points",
-            name="outputJunctionPointsFC",
+            displayName="Output confluence node points",
+            name="outputNodePointsFC",
             datatype="DEFeatureClass",
             parameterType="Required",
             direction="Output")
         param3.filter.list = ["Point"]
 
         param4 = arcpy.Parameter(
+            displayName="Output junction points",
+            name="outputJunctionPointsFC",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Output")
+        param4.filter.list = ["Point"]
+
+        param5 = arcpy.Parameter(
             displayName="Scratch workspace",
             name="InputTempWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
-        #param4.filter.list = ["Local Database"]
-        #param4.value = str(arcpy.env.scratchWorkspace)
 
-        #listControlParams = GNAT_Control_Parameters()
-
-        return [param0,param1,param2,param3,param4]# + listControlParams
+        return [param0,param1,param2,param3,param4,param5]# + listControlParams
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -599,7 +603,8 @@ class StreamOrderTool(object):
                          p[1].valueAsText,
                          p[2].valueAsText,
                          p[3].valueAsText,
-                         p[4].valueAsText)
+                         p[4].valueAsText,
+                         p[5].valueAsText)
         return
 
 
