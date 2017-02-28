@@ -16,14 +16,13 @@ _______________________________________________________________
 
 **Input stream network**
 
-Stream network polyline feature class that will be dissolved by stream order. 
+Stream network polyline feature class that will be dissolved by stream order. Can be a geodatabase feature class or shapefile.
 
 Data requirements: 
 
 * Projected coordinate system, not geographic.
 * All appropriate polylines are connected as a network. This can be checked with the [Build Network Topology Table](https://github.com/SouthForkResearch/gnat/wiki/Build-Network-Topology-Table) and [Find Network Errors](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Errors) tools. The user can then manually rejoin disconnected stream reaches using editing tools in ArcMap.
 * All braids removed. Braids can be identified and isolated by running the [Find Braids in Stream Network](https://github.com/SouthForkResearch/gnat/wiki/Find-Braids-in-Stream-Network) tool, or by the aforementioned [Find Network Errors](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Errors) tool. Only one braid segment should be identified as the main channel and retained. Connector segments and side channels should be removed. GNIS names can serve as a guide to identify the main channel.  
-* Must be a file geodatabase polyline feature class (due to field requirements)
 * Z and M geometry disabled for the Shape field.
 
 **Downstream reach ID**
@@ -32,11 +31,11 @@ Data requirements:
 
 **Output network with stream order**
 
-File name and directory location (in a file geodatabase) of the output polyline feature class that will include the stream order as an attribute.
+File name and directory location of the output polyline feature class that will include the stream order as an attribute.
 
 **Output junction points**
 
-File name and directory location (in a file geodatabase) of the output point feature class which includes locations of stream order transitions (used for splitting tributaries, see post processing step).
+File name and directory location of the output point feature class which includes locations of stream order transitions (used for splitting tributaries, see post processing step).
 
 **Scratch workspace** (Optional)
 
