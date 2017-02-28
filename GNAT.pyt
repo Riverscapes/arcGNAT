@@ -1007,7 +1007,6 @@ class FindNetworkFeaturesTool(object):
 
         return
 
-
 # Other Functions # 
 def setEnvironmentSettings():
     arcpy.env.OutputMFlag = "Disabled"
