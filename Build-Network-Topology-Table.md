@@ -35,7 +35,7 @@ Point feature class representing beginning ("FROM") and ending ("TO") nodes for 
 
 **Output Stream Network Feature Class**
 
-A copy of the input stream network feature class, but with three new fields added: `IsHeadwater`, `ReachID`, and `IsBraided`.  In addition, the output stream network feature class will have the same name as the input feature class, but with a timestamp appended to the name, with the format `YYYYDDMMhhmm`.  Can be a geodatabase feature class or shapefile.
+A copy of the input stream network feature class, but with three new fields added: `IsHeadwater`, `ReachID`, and `IsBraided`.  In addition, the output stream network feature class will have the same name as the input feature class, but with a suffix appended to the file name, with the format `_runXX`.  Can be a geodatabase feature class or shapefile.
 
 _______________________________________________________________
 ## Technical Background
