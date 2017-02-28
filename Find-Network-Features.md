@@ -43,13 +43,11 @@ _______________________________________________________________________
 
 **Processed Input Stream Network**
 
-Stream network polyline feature class that has been output by the **Build Network
-Topology Table** tool. The feature class name should include "_processed" as a
-suffix. 
+Stream network polyline feature class that has been output by the **Build Network Topology Table** tool. Most likely the feature class name will include a suffix using the following format: "_runXX" (i.e. run01, run02, etc), however, this is not required.
 
 **Stream Network Table**
 
-Stream network topology table, in a file geodatabase format. This table is output from the **Build Network Topology Table**. The table hould be named _StreamNetwork_.
+Stream network topology table, in either a DBF file or geodatabase table format. This table is output from the **Build Network Topology Table**. The table should be named _StreamNetwork_.
 
 **Downstream Reach ID**
 
@@ -59,7 +57,7 @@ Object ID of the downstream reach (i.e. the outflow) in the stream network polyl
 
 **NetworkFeatures**
 
-The resulting network topology table, including feature codes stored in a new attribute field: `feature_code`. The table will be saved to the same file geodatabase where the input stream network is stored.
+The resulting network topology table, including feature codes stored in a new attribute field: `feature_code`. The table will be saved to the same workspace where the input stream network dataset is stored.
 
 _______________________________________________________________
 ## Technical Background
@@ -69,13 +67,13 @@ _______________________________________________________________
 Methods for finding each feature type differ, and can rely on either the stream
 network polyline feature class or the network topology table. 
 
-* Braids: calls the **Find Braids in Stream Network** tool. `feature_code = 2`
-* Duplicate reaches: stream reaches with identical lengths. `feature_code = 3`
-* Overlapping reaches: each stream reach is compared to neighboring upstream reach. They are considered overlapping if they share nodes other than their beginning/ending nodes. `feature_code = 4`
-* Crossed reaches: each stream reach is compared to neighboring upstream reach. They are considered crossed if no they cross, but do not share beginning/ending nodes. `feature_code = 5`
-* Disconnected reaches: reaches that are present in the stream network polyline feature class, without associated records in the network topology table are considered disconnected. `feature_code = 6`
-* Upstream flow direction: reaches with identical FROM nodes indicate an error in flow direction (see Troubleshooting and Potential Issues section below for known limitations). `feature_code = 7`
-* Other potential errors: based on reach records in the network topology table where UpstreamID = -11111. `feature_code = 8`
+* `feature_code = 2` - Braids: calls the **Find Braids in Stream Network** tool.
+* `feature_code = 3` - Duplicate reaches: stream reaches with identical lengths.
+* `feature_code = 4` - Overlapping reaches: each stream reach is compared to neighboring upstream reach. They are considered overlapping if they share nodes other than their beginning/ending nodes.
+* `feature_code = 5` - Crossed reaches: each stream reach is compared to neighboring upstream reach. They are considered crossed if no they cross, but do not share beginning/ending nodes.
+* `feature_code = 6` - Disconnected reaches: reaches that are present in the stream network polyline feature class, without associated records in the network topology table are considered disconnected.
+* `feature_code = 7` - Upstream flow direction: reaches with identical FROM nodes indicate an error in flow direction (see Troubleshooting and Potential Issues section below for known limitations).
+* `feature_code = 8` - Other potential errors: based on reach records in the network topology table where UpstreamID = -11111.
 
 ### Post-processing
 

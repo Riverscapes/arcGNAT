@@ -18,16 +18,16 @@ _______________________________________________________________
 ### Input Parameters
 **Input Stream Network**
 
-Stream network polyline feature class. The output network topology table will store a record for each reach within this network.  
+Stream network polyline feature class. The output network topology table will store a record for each reach within this network.  This dataset can be in a geodatabase feature class or shapefile format. 
 
 **Downstream Reach Object ID**
 
-Object ID of the downstream reach (i.e. the outflow) in the stream network polyline feature class. This will be the first record in the output network topology table.
+Object ID of the downstream reach feature (i.e. the outflow) in the stream network polyline feature class. This will be the first record in the output network topology table.
 
 ### Outputs
 **StreamNetwork**
 
-The resulting network topology table.  This will be saved to the same file geodatabase where the input stream network is stored.
+The resulting network topology table.  This will be saved to the same workspace where the input stream network is stored. The table can be in a DBF or geodatabase table file format.
 
 **networkVrtx**
 
@@ -35,12 +35,12 @@ Point feature class representing beginning ("FROM") and ending ("TO") nodes for 
 
 **Output Stream Network Feature Class**
 
-A copy of the input stream network feature class, but with three new fields added: `IsHeadwater`, `ReachID`, and `IsBraided`.  In addition, the output stream network feature class will have the same name as the input feature class, but with a timestamp appended to the name, with the format `YYYYDDMMhhmm`.
+A copy of the input stream network feature class, but with three new fields added: `IsHeadwater`, `ReachID`, and `IsBraided`.  In addition, the output stream network feature class will have the same name as the input feature class, but with a timestamp appended to the name, with the format `YYYYDDMMhhmm`.  Can be a geodatabase feature class or shapefile.
 
 _______________________________________________________________
 ## Technical Background
 ### Troubleshooting and Potential Issues
-Currently, as the tool loops upstream through each stream reach in the network, any potential topology errors associated with the upstream reach are flagged by adding a value of -11111 to the UpstreamID field for said reach. This code can then be subsequently used by the Find Network Features tool to identify potential topology errors. These errors include:
+Currently, as the tool loops upstream through each stream reach in the network, any potential topology errors associated with the upstream reach are flagged by adding a value of -11111 to the UpstreamID field for said reach. This code can then be subsequently used by the [Find Network Features](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Features) tool to identify potential topology errors. These errors include:
 
 * stream reaches with the same beginning node, but no upstream reach.
 * branches where either the beginning or ending node is not coincident with a node from the adjoining reach.

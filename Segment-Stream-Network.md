@@ -26,7 +26,6 @@ Polyline feature class representing the stream network for the analysis area.
 * Requirements: 
   * Projected coordinate system, not geographic.
   * (Optional) All appropriate lines are connected as a network. The user can find unconnected stream reaches by building a network topology table with the [Build Network Topology Table](https://github.com/SouthForkResearch/gnat/wiki/Build-Network-Topology-Table) tool, finding errors using the [Find Network Features](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Features) tool, then manually correcting topology errors using editing tools in ArcMap.
-  * Must be a file geodatabase polyline feature class due to field requirements
   * The network consists of single-part features only.
 
 **Segment Length (Meters)**
@@ -40,7 +39,7 @@ Object ID value of the stream reach that represents the outflow point (i.e. fart
 
 **Stream Name Field**
   
-Attribute field (i.e. GNIS_Name) in the stream network polyline feature class that will be used to dissolve the stream network into new stream reaches before segmentation.  Stream reach records with a blank (i.e. ' ') or NULL values in this field will not be dissolved.
+Attribute field (i.e. GNIS_Name) in the stream network polyline feature class that will be used to dissolve the stream network into new stream reaches before segmentation. Stream reach records with a blank (i.e. ' ') or NULL values in this field will not be dissolved.
 
 **Segmentation Method**
 
@@ -56,11 +55,11 @@ Three segmentation methods are available:
 
 **Merge attributes and geometry from input stream network with output? (optional)**
 
-If this option is selected, the Segmentation tool will produce a stream network feature class which is the result of intersecting the original input stream network feature class with the segmented stream network polyline feature class.  The resulting feature class will include the original feature attributes, and the `LineOID` attribute field produced by the segmentation process.
+If this option is selected, the Segmentation tool will produce a stream network feature class which is the result of intersecting the original input stream network feature class with the segmented stream network polyline feature class. The resulting feature class will include the original feature attributes, and the `LineOID` attribute field produced by the segmentation process.
 
 **Output Segmented Line Network**
   
-Name of the feature class which will store the resulting segmented stream network. In addition, stream order and junction point feature classes are also output into the same file geodatabase.
+Name of the feature class which will store the resulting segmented stream network. In addition, stream order, junction point, and stream node feature classes are also output into the same workspace.
 
 ### Outputs
 
@@ -75,6 +74,10 @@ Polyline feature class representing stream branches. Generated during tool proce
 **strm_junctions**
 
 Point feature class representing stream junctions where streams have the same stream order. 
+
+**strm_node**
+
+Point feature class representing confluences within the stream network.
 
 _______________________________________________________________
 ## Technical Background

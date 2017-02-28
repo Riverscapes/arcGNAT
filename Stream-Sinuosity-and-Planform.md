@@ -1,4 +1,4 @@
-The **Stream Sinuosity and Planform** tool calculates sinuosity (per polyline feature) for valley centerline and flowline network. Also transfers the valley sinuosity to the stream network and calculates river planform attribute.
+The **Stream Sinuosity and Planform** tool calculates sinuosity (per polyline feature) for valley centerline and stream network features. The tool also transfers the valley sinuosity to the stream network and calculates river planform attribute.
 
 _______________________________________________________________
 ## Usage
@@ -20,7 +20,7 @@ Segmented valley bottom centerline polyline feature class. Valley sinuosity valu
 
 **Input Valley Bottom Polygon**
 
-Valley bottom polygon feature class of the stream network. This can serve as input to the [Transfer Line Attribute](https://github.com/SouthForkResearch/gnat/wiki/Transfer-Line-Attributes) tool.
+Valley bottom polygon feature class of the stream network. This can also serve as input to the [Transfer Line Attribute](https://github.com/SouthForkResearch/gnat/wiki/Transfer-Line-Attributes) tool.
 
 > This required input will be deprecated in future versions of this tool.
 
@@ -53,7 +53,7 @@ _______________________________________________________________
 
 ### Calculation Method
 
-1. Use [Sinuosity By Segment Tool]() for stream and valley centerlines
+1. Use [Sinuosity By Segment Tool](https://github.com/SouthForkResearch/gnat/wiki/Sinuosity-by-Segment) for stream and valley centerlines
   * Convert segment ends to points
   * Find straight-line distance
   * Calculate sinuosity (straight-line distance/segment distance)
