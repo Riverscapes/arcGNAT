@@ -21,7 +21,7 @@
 
 # # Import Modules # #
 import arcpy
-from os import path
+from os import path,makedirs
 import BuildNetworkTopology
 import FindBraidedNetwork
 import ValleyPlanform
@@ -34,12 +34,13 @@ import CombineAttributes
 import GenerateStreamBranches
 import Segmentation
 import FindNetworkFeatures
+import GNATProject
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
 strCatagoryGeomorphicAnalysis = "Main\\Step 3 - Geomorphic Attributes"
 strCatagoryUtilities = "Utilities"
-
+strCatagoryProjectManagement = "Project Management"
 
 class Toolbox(object):
     def __init__(self):
@@ -61,7 +62,248 @@ class Toolbox(object):
                       FluvialCorridorCenterlineTool,
                       CombineAttributesTool,
                       SegmentationTool,
-                      FindNetworkFeaturesTool]
+                      FindNetworkFeaturesTool,
+                      NewGNATProject,
+                      LoadNetworkToProject,
+                      CommitRealization]
+
+
+# GNAT Project Management
+class NewGNATProject(object):
+    """Define parameter definitions"""
+
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Create a New GNAT Project"
+        self.description = "Create a New GNAT Project."
+        self.canRunInBackground = False
+        self.category = strCatagoryProjectManagement
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Project Name",
+            name="projectName",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+
+        param1 = arcpy.Parameter(
+            displayName="Project Folder",
+            name="projectFolder",
+            datatype="DEWorkspace",
+            parameterType="Required",
+            direction="Input")
+        param1.filter.list = ["File System"]
+
+        param2 = arcpy.Parameter(
+            displayName="User Name (Operator)",
+            name="metaOperator",
+            datatype="GPString",
+            parameterType="Optional",
+            direction="Input")
+
+        param3 = arcpy.Parameter(
+            displayName="Region",
+            name="metaRegion",
+            datatype="GPString",
+            parameterType="Optional",
+            direction="Input")
+        param3.filter.list = ["CRB"]
+
+        param4 = arcpy.Parameter(
+            displayName="Watershed (HUC 8 Name)",
+            name="metaWatershed",
+            datatype="GPString",
+            parameterType="Optional",
+            direction="Input")
+        #TODO  add param4.filter.list = [], load and read from program.xml
+
+        params = [param0,param1,param2,param3,param4]
+        return params
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(GNATProject)
+        newConfinementProject = GNATProject.RiverscapesProject()
+        newConfinementProject.create(p[0].valueAsText,"GNAT")
+        newConfinementProject.addProjectMetadata("Operator",p[2].valueAsText)
+        newConfinementProject.addProjectMetadata("Region",p[3].valueAsText)
+        newConfinementProject.addProjectMetadata("Watershed",p[4].valueAsText)
+        newConfinementProject.writeProjectXML(path.join(p[1].valueAsText,"GNATProject.xml"))
+
+        return
+
+class LoadNetworkToProject(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Load Input Datsets"
+        self.description = "Load Input Stream Network to GNAT Project. Tool Documentation: https://bitbucket.org/KellyWhitehead/geomorphic-network-and-analysis-toolbox/wiki/Tool_Documentation/MovingWindow"
+        self.canRunInBackground = False
+        self.category = strCatagoryProjectManagement
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+
+        p1 = paramStreamNetwork
+
+        params = [paramProjectXML,
+                  p1]
+        return params
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(GNATProject)
+
+        newConfinementProject = GNATProject.RiverscapesProject()
+        newConfinementProject.loadProjectXML(p[0].valueAsText)
+
+        pathProject = arcpy.Describe(p[0].valueAsText).path
+
+        # Create Project Paths if they do not exist
+        pathInputs = pathProject + "\\Inputs"
+        if not arcpy.Exists(pathInputs):
+            makedirs(pathInputs)
+
+        # KMW - The following is a lot of repeated code for each input. It contains file and folder creation and copying, rather than useing the project module to do this. This could be streamlined in the future, but
+        # is working at the moment.
+        if p[1].valueAsText: # Stream Network Input
+            pathStreamNetworks = pathInputs + "\\StreamNetworks"
+            nameStreamNetwork = arcpy.Describe(p[1].valueAsText).basename
+            if not arcpy.Exists(pathStreamNetworks):
+                makedirs(pathStreamNetworks)
+            id_streamnetwork = GNATProject.get_input_id(pathStreamNetworks, "StreamNetwork")
+            pathStreamNetworkID = path.join(pathStreamNetworks, id_streamnetwork)
+            makedirs(pathStreamNetworkID)
+            arcpy.FeatureClassToFeatureClass_conversion(p[1].valueAsText, pathStreamNetworkID, nameStreamNetwork)
+            newConfinementProject.addInputDataset(nameStreamNetwork,
+                                                  id_streamnetwork,
+                                                  path.join(path.relpath(pathStreamNetworkID, pathProject),
+                                                            nameStreamNetwork) + ".shp",
+                                                  p[1].valueAsText)
+
+        # Write new XML
+        newConfinementProject.writeProjectXML(p[0].valueAsText)
+
+        return
+
+class CommitRealization(object):
+
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Commit Stream Network"
+        self.description = "Commit Changes to the Stream Network as a new Realization in the GNAT Project."
+        self.canRunInBackground = False
+        self.category = strCatagoryProjectManagement
+        return
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+
+        paramRealization = arcpy.Parameter(
+            displayName="Realization Name",
+            name="realization",
+            datatype="GPString",
+            parameterType="Optional",
+            direction="Input")
+
+        paramNetworkTable = arcpy.Parameter(
+            displayName="Network Table",
+            name="tblNetwork",
+            datatype="DETable",
+            parameterType="Required",
+            direction="Input")
+
+        params = [paramProjectXML,
+                  paramRealization,
+                  paramStreamNetwork,
+                  paramNetworkTable]
+
+        return params
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, p):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+
+        if p[0].altered:
+            if p[0].value and arcpy.Exists(p[0].valueAsText):
+
+                currentProject = GNATProject.RiverscapesProject()
+                currentProject.loadProjectXML(p[0].valueAsText)
+
+                if p[1].altered:
+                    if p[1].value:
+                        #p[2].value = path.join(currentProject.projectPath, "Outputs", p[1].valueAsText) + "\\GNAT_StreamNetwork.shp"
+                        pass
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+
+        if parameters[0].valueAsText:
+            newConfinementProject = GNATProject.RiverscapesProject()
+            newConfinementProject.loadProjectXML(parameters[0].valueAsText)
+
+            for realization in newConfinementProject.Realizations:
+                if realization == parameters[1].valueAsText:
+                    parameters[1].setErrorMessage("Realization " + parameters[1].valueAsText + " already exists.")
+                    break
+
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+
+        # if in project mode, create workspaces as needed.
+        if p[0].valueAsText:
+            newConfinementProject = GNATProject.RiverscapesProject()
+            newConfinementProject.loadProjectXML(p[0].valueAsText)
+            if p[1].valueAsText:
+                outPath = makedirs(path.join(newConfinementProject.projectPath, "Outputs",p[1].valueAsText))
+
+                arcpy.Copy_management(p[2].valueAsText,outPath + "//GNAT_StreamNetwork.shp")
+                arcpy.Copy_management(p[3].valueAsText,outPath + "//GNAT_NetworkTable.dbf")
+
+        return
 
 
 # Stream Network Prep Tools #
@@ -753,7 +995,9 @@ class SinuosityTool(object):
             parameterType="Optional",
             direction="Input")
         
-        return [param0,param1,param2,param3]
+        return [param0,param1,
+                #param2,
+                param3]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -780,8 +1024,8 @@ class SinuosityTool(object):
         Sinuosity.main(
             p[0].valueAsText,
             p[1].valueAsText,
-            p[2].valueAsText,
-            getTempWorkspace(p[3].valueAsText))
+            #p[2].valueAsText,
+            getTempWorkspace(p[2].valueAsText))
 
         return
 
@@ -1007,11 +1251,11 @@ class FindNetworkFeaturesTool(object):
 
         return
 
-# Other Functions # 
+# Other Functions #
 def setEnvironmentSettings():
     arcpy.env.OutputMFlag = "Disabled"
     arcpy.env.OutputZFlag = "Disabled"
-     
+
     return
 
 def getTempWorkspace(strWorkspaceParameter):
@@ -1065,8 +1309,8 @@ def testLayerSelection(parameter):
             if desc.dataType == "FeatureLayer":
                 if desc.FIDSet:
                     parameter.setWarningMessage("Input layer " + parameter.name + " contains a selection. Clear the selection in order to run this tool on all features in the layer.")
-    
-    return 
+
+    return
 
 def testWorkspacePath(parameterWorkspace):
 
@@ -1084,3 +1328,20 @@ def testWorkspacePath(parameterWorkspace):
                 if " " in strPath:
                     parameterWorkspace.setWarningMessage(parameterWorkspace.name + " contains a space in the file path name and could cause Geoprocessing issues. Please use a different workspace that does not contain a space in the path name.")
     return
+
+# Common Params
+paramProjectXML = arcpy.Parameter(
+    displayName="GNAT Project XML",
+    name="projectXML",
+    datatype="DEFile",
+    parameterType="Optional",
+    direction="Input")
+paramProjectXML.filter.list = ["xml"]
+
+paramStreamNetwork = arcpy.Parameter(
+    displayName="Input Stream Network",
+    name="InputFCStreamNetwork",
+    datatype="DEFeatureClass",
+    parameterType="Required",
+    direction="Input")
+paramStreamNetwork.filter.list = ["Polyline"]
