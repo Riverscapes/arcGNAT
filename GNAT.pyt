@@ -21,7 +21,7 @@
 
 # # Import Modules # #
 import arcpy
-from os import path,makedirs
+from os import path, makedirs
 import BuildNetworkTopology
 import FindBraidedNetwork
 import ValleyPlanform
@@ -34,7 +34,7 @@ import CombineAttributes
 import GenerateStreamBranches
 import Segmentation
 import FindNetworkFeatures
-import GNATProject
+import Riverscapes
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
@@ -96,6 +96,13 @@ class NewGNATProject(object):
             direction="Input")
         param1.filter.list = ["File System"]
 
+        paramBoolNewFolder = arcpy.Parameter(
+            displayName="Create New Project Folder?",
+            name="boolNewFolder",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input")
+
         param2 = arcpy.Parameter(
             displayName="User Name (Operator)",
             name="metaOperator",
@@ -119,7 +126,7 @@ class NewGNATProject(object):
             direction="Input")
         #TODO  add param4.filter.list = [], load and read from program.xml
 
-        params = [param0,param1,param2,param3,param4]
+        params = [param0,param1,paramBoolNewFolder,param2,param3,param4]
         return params
 
     def isLicensed(self):
@@ -141,13 +148,24 @@ class NewGNATProject(object):
 
     def execute(self, p, messages):
         """The source code of the tool."""
-        reload(GNATProject)
-        newConfinementProject = GNATProject.RiverscapesProject()
-        newConfinementProject.create(p[0].valueAsText,"GNAT")
-        newConfinementProject.addProjectMetadata("Operator",p[2].valueAsText)
-        newConfinementProject.addProjectMetadata("Region",p[3].valueAsText)
-        newConfinementProject.addProjectMetadata("Watershed",p[4].valueAsText)
-        newConfinementProject.writeProjectXML(path.join(p[1].valueAsText,"GNATProject.xml"))
+        reload(Riverscapes)
+
+        arcpy.AddMessage(p[2].valueAsText)
+
+        projectFolder = p[1].valueAsText
+
+        if p[2].valueAsText == "true":
+            projectFolder = path.join(p[1].valueAsText,p[0].valueAsText)
+            makedirs(projectFolder)
+
+        GNATProject = Riverscapes.Project()
+        GNATProject.create(p[0].valueAsText,"GNAT")
+        GNATProject.addProjectMetadata("GNAT_Project_Version","0.1")
+        GNATProject.addProjectMetadata("Operator",p[3].valueAsText)
+        GNATProject.addProjectMetadata("Region",p[4].valueAsText)
+        GNATProject.addProjectMetadata("Watershed",p[5].valueAsText)
+        GNATProject.addProjectMetadata("GIS","Arc/ESRI")
+        GNATProject.writeProjectXML(path.join(projectFolder,"GNATProject") + ".xml")
 
         return
 
@@ -164,8 +182,16 @@ class LoadNetworkToProject(object):
 
         p1 = paramStreamNetwork
 
+        paramNetworkTable = arcpy.Parameter(
+            displayName="Network Table",
+            name="tblNetwork",
+            datatype="DETable",
+            parameterType="Optional",
+            direction="Input")
+
         params = [paramProjectXML,
-                  p1]
+                  p1,
+                  paramNetworkTable]
         return params
 
     def isLicensed(self):
@@ -186,10 +212,10 @@ class LoadNetworkToProject(object):
 
     def execute(self, p, messages):
         """The source code of the tool."""
-        reload(GNATProject)
+        reload(Riverscapes)
 
-        newConfinementProject = GNATProject.RiverscapesProject()
-        newConfinementProject.loadProjectXML(p[0].valueAsText)
+        GNATProject = Riverscapes.Project()
+        GNATProject.loadProjectXML(p[0].valueAsText)
 
         pathProject = arcpy.Describe(p[0].valueAsText).path
 
@@ -205,18 +231,29 @@ class LoadNetworkToProject(object):
             nameStreamNetwork = arcpy.Describe(p[1].valueAsText).basename
             if not arcpy.Exists(pathStreamNetworks):
                 makedirs(pathStreamNetworks)
-            id_streamnetwork = GNATProject.get_input_id(pathStreamNetworks, "StreamNetwork")
+            id_streamnetwork = Riverscapes.get_input_id(pathStreamNetworks, "StreamNetwork")
             pathStreamNetworkID = path.join(pathStreamNetworks, id_streamnetwork)
             makedirs(pathStreamNetworkID)
             arcpy.FeatureClassToFeatureClass_conversion(p[1].valueAsText, pathStreamNetworkID, nameStreamNetwork)
-            newConfinementProject.addInputDataset(nameStreamNetwork,
-                                                  id_streamnetwork,
-                                                  path.join(path.relpath(pathStreamNetworkID, pathProject),
-                                                            nameStreamNetwork) + ".shp",
-                                                  p[1].valueAsText)
+            GNATProject.addInputDataset(nameStreamNetwork,
+                                        id_streamnetwork,
+                                        path.join(path.relpath(pathStreamNetworkID, pathProject),
+                                        nameStreamNetwork) + ".shp",
+                                        p[1].valueAsText)
+
+            if p[2].value:
+                id_streamnetworkTable = Riverscapes.get_input_id(pathStreamNetworks, "StreamNetworkTable")
+                extStreamNetworkTable = arcpy.Describe(p[2].valueAsText).extension
+                nameStreamNetworkTable = arcpy.Describe(p[2].valueAsText).basename
+                arcpy.TableToTable_conversion(p[2].valueAsText, pathStreamNetworkID, nameStreamNetworkTable)
+                GNATProject.addInputDataset(nameStreamNetworkTable,
+                                            id_streamnetworkTable,
+                                            path.join(path.relpath(pathStreamNetworkID, pathProject),
+                                            nameStreamNetworkTable) + "." + extStreamNetworkTable,
+                                            p[2].valueAsText)
 
         # Write new XML
-        newConfinementProject.writeProjectXML(p[0].valueAsText)
+        GNATProject.writeProjectXML(p[0].valueAsText)
 
         return
 
@@ -237,6 +274,13 @@ class CommitRealization(object):
             displayName="Realization Name",
             name="realization",
             datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+
+        paramIDField = arcpy.Parameter(
+            displayName="Unique Reach ID Field",
+            name="reachIDfield",
+            datatype="Field",
             parameterType="Optional",
             direction="Input")
 
@@ -244,12 +288,13 @@ class CommitRealization(object):
             displayName="Network Table",
             name="tblNetwork",
             datatype="DETable",
-            parameterType="Required",
+            parameterType="Optional",
             direction="Input")
 
         params = [paramProjectXML,
                   paramRealization,
                   paramStreamNetwork,
+                  paramIDField,
                   paramNetworkTable]
 
         return params
@@ -266,13 +311,15 @@ class CommitRealization(object):
         if p[0].altered:
             if p[0].value and arcpy.Exists(p[0].valueAsText):
 
-                currentProject = GNATProject.RiverscapesProject()
-                currentProject.loadProjectXML(p[0].valueAsText)
+                GNATProject = Riverscapes.Project()
+                GNATProject.loadProjectXML(p[0].valueAsText)
 
                 if p[1].altered:
                     if p[1].value:
-                        #p[2].value = path.join(currentProject.projectPath, "Outputs", p[1].valueAsText) + "\\GNAT_StreamNetwork.shp"
+                        #p[2].value = path.join(GNATProject.projectPath, "Outputs", p[1].valueAsText) + "\\GNAT_StreamNetwork.shp"
                         pass
+            if p[2].value and arcpy.Exists(p[2].valueAsText):
+                populateFields(p[2],p[3],"Net_ID")
         return
 
     def updateMessages(self, parameters):
@@ -280,10 +327,10 @@ class CommitRealization(object):
         parameter.  This method is called after internal validation."""
 
         if parameters[0].valueAsText:
-            newConfinementProject = GNATProject.RiverscapesProject()
-            newConfinementProject.loadProjectXML(parameters[0].valueAsText)
+            GNATProject = Riverscapes.Project()
+            GNATProject.loadProjectXML(parameters[0].valueAsText)
 
-            for realization in newConfinementProject.Realizations:
+            for realization in GNATProject.Realizations:
                 if realization == parameters[1].valueAsText:
                     parameters[1].setErrorMessage("Realization " + parameters[1].valueAsText + " already exists.")
                     break
@@ -292,16 +339,59 @@ class CommitRealization(object):
 
     def execute(self, p, messages):
         """The source code of the tool."""
+        reload(Riverscapes)
 
         # if in project mode, create workspaces as needed.
         if p[0].valueAsText:
-            newConfinementProject = GNATProject.RiverscapesProject()
-            newConfinementProject.loadProjectXML(p[0].valueAsText)
-            if p[1].valueAsText:
-                outPath = makedirs(path.join(newConfinementProject.projectPath, "Outputs",p[1].valueAsText))
+            GNATProject = Riverscapes.Project()
+            GNATProject.loadProjectXML(p[0].valueAsText)
 
-                arcpy.Copy_management(p[2].valueAsText,outPath + "//GNAT_StreamNetwork.shp")
-                arcpy.Copy_management(p[3].valueAsText,outPath + "//GNAT_NetworkTable.dbf")
+            if p[1].valueAsText:
+                outPath = path.join(GNATProject.projectPath, "Outputs",p[1].valueAsText)
+                makedirs(outPath)
+
+                outputGNATNetwork = path.join(outPath, "GNAT_StreamNetwork") + ".shp"
+                outputNetworkTable = path.join(outPath , "GNAT_NetworkTable") + ".dbf"
+
+                # todo if not idfield, then create one named NetID
+
+                # Stream Network
+                idRawStreamNetwork = GNATProject.get_dataset_id(p[2].valueAsText)
+
+                arcpy.Copy_management(p[2].valueAsText,outputGNATNetwork)
+                datasetGNATNetwork = Riverscapes.dataset()
+                datasetGNATNetwork.create("GNAT_StreamNetwork",
+                                          path.relpath(outputGNATNetwork, GNATProject.projectPath))
+
+                # Todo Get all fields as Meta for input or realization?
+
+
+
+
+                # Network Table (Optional)
+                idRawNetworkTable = None
+                datasetGNATNetworkTable = None
+                if p[4].value:
+                    if arcpy.Exists(p[4].valueAsText):
+                        idRawNetworkTable = GNATProject.get_dataset_id(p[3].valueAsText)
+
+                        arcpy.Copy_management(p[4].valueAsText,outputNetworkTable)
+
+                        datasetGNATNetworkTable = Riverscapes.dataset()
+                        datasetGNATNetworkTable.create("GNAT_NetworkTable",
+                                                       path.relpath(outputNetworkTable, GNATProject.projectPath))
+                        datasetGNATNetworkTable.type = "Table"
+
+                realization = Riverscapes.GNATRealization()
+                realization.create(p[1].valueAsText,
+                               idRawStreamNetwork,
+                               datasetGNATNetwork,
+                               idRawNetworkTable,
+                               datasetGNATNetworkTable)
+                realization.parameters["FieldNetworkID"] = p[3].valueAsText
+
+                GNATProject.addRealization(realization)
+                GNATProject.writeProjectXML(p[0].valueAsText)
 
         return
 
@@ -561,102 +651,192 @@ class SegmentationTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         reload(Segmentation)
-        
-        param0 = arcpy.Parameter(
-            displayName="Stream Network Polyline Feature Class",
-            name="InputStreamNetwork",
-            datatype="GPFeatureLayer",
+
+        paramRealization = arcpy.Parameter(
+            displayName="Realization Name",
+            name="realization",
+            datatype="GPString",
+            parameterType="Optional",
+            direction="Input")
+        paramRealization.enabled = "False"
+
+        paramAnalysisName = arcpy.Parameter(
+            displayName="Segmentation Name",
+            name="analysisName",
+            datatype="GPString",
             parameterType="Required",
             direction="Input")
-        param0.filter.list = ["Polyline"]
+        paramAnalysisName.enabled = "False"
 
-        param1 = arcpy.Parameter(
+        paramInStreamNetwork = arcpy.Parameter(
+            displayName="Stream Network Polyline Feature Class",
+            name="InputStreamNetwork",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Input")
+        paramInStreamNetwork.filter.list = ["Polyline"]
+
+        paramSegmentLength = arcpy.Parameter(
             displayName="Segment Length (Meters)",
             name="InputSegmentDistance",
             datatype="GPDouble",
             parameterType="Required",
             direction="Input")
-        param1.value = "200"
+        paramSegmentLength.value = "200"
 
-        param2 = arcpy.Parameter(
+        paramDownstreamID = arcpy.Parameter(
             displayName="Downstream Reach ID",
             name="reachID",
             datatype="GPLong",
             parameterType="Required",
             direction="Input")
 
-        param3 = arcpy.Parameter(
+        paramFieldStreamName = arcpy.Parameter(
             displayName="Stream Name Field",
             name="streamIndex",
             datatype="Field",
             parameterType="Required",
             direction="Input")
-        param3.parameterDependencies = [param0.name]
+        paramFieldStreamName.parameterDependencies = [paramInStreamNetwork.name]
 
-        param4 = arcpy.Parameter(
+        paramSegmentationMethod = arcpy.Parameter(
             displayName="Segmentation Method",
             name="strSegmentationMethod",
             datatype="GPString",
             parameterType="Required",
             direction="Input")
-        param4.filter.list = Segmentation.listStrSegMethod
+        paramSegmentationMethod.filter.list = Segmentation.listStrSegMethod
 
-        param5 = arcpy.Parameter(
+        paramBoolSplitAtConfluences = arcpy.Parameter(
             displayName="Split stream network at confluences before segmenting",
             name="boolNode",
             datatype="GPBoolean",
             parameterType="Optional",
             direction="Input")
 
-        param6 = arcpy.Parameter(
-            displayName="Merge attributes and geometry from input stream network with output",
-            name="boolMerge",
+        paramBoolRetainOrigAttributes = arcpy.Parameter(
+            displayName="Retain Original attributes and geometry from input stream network",
+            name="boolKeepOrig",
             datatype="GPBoolean",
             parameterType="Optional",
             direction="Input")
+        # TODO if project mode, this is always yes.
 
-        param7 = arcpy.Parameter(
+        paramOutputSegmentedNetwork = arcpy.Parameter(
             displayName="Output Segmented Line Network",
             name="outputStreamOrderFC",
-            datatype="GPFeatureLayer",
-            parameterType="Required",
+            datatype="DEWorkspace",
+            parameterType="Optional",
             direction="Output")
-        param7.filter.list = ["Polyline"]
+       #paramOutputSegmentedNetwork.filter.list = ["Polyline"]
 
-        return [param0,param1,param2,param3,param4,param5,param6,param7]
+        return [paramProjectXML,
+                paramRealization,
+                paramAnalysisName,
+                paramInStreamNetwork,
+                paramSegmentLength,
+                paramDownstreamID,
+                paramFieldStreamName,
+                paramSegmentationMethod,
+                paramBoolSplitAtConfluences,
+                paramBoolRetainOrigAttributes,
+                paramOutputSegmentedNetwork]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
         return True
 
-    def updateParameters(self, parameters):
+    def updateParameters(self, p):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
 
-        #populateFields(parameters[0],parameters[3],"BranchID")
+        if p[0].value:
+            if arcpy.Exists(p[0].valueAsText):
+                GNATProject = Riverscapes.Project()
+                GNATProject.loadProjectXML(p[0].valueAsText)
+
+                p[1].enabled = "True"
+                p[1].filter.list = GNATProject.Realizations.keys()
+
+                if p[1].value:
+                    currentRealization = GNATProject.Realizations.get(p[1].valueAsText)
+                    p[3].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
+                    p[3].enabled = "False"
+                    p[2].enabled = "True"
+                    if p[2].value:
+                        p[10].value = path.join(GNATProject.projectPath,"Outputs",p[1].valueAsText,"Analyses",p[2].valueAsText)
+                        p[10].enabled = "False"
+        else:
+            p[1].filter.list = []
+            p[1].value = ''
+            p[1].enabled = "False"
+            p[3].value = ""
+            p[3].enabled = "True"
+            p[10].value = ""
+            p[10].enabled = "True"
+
+        populateFields(p[3],p[6],"GNIS_Name")
 
         return
 
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
-        
-        testLayerSelection(parameters[0])
-        testProjected(parameters[0])
+
+        # todo Check if analysis name already exists
+
+        #testLayerSelection(parameters[3])
+        testProjected(parameters[3])
+
         return
 
     def execute(self, p, messages):
         """The source code of the tool."""
         reload(Segmentation)
-        Segmentation.main(p[0].valueAsText,
-                          p[1].valueAsText,
-                          p[2].valueAsText,
-                          p[3].valueAsText,
+        reload(Riverscapes)
+
+        if p[0].value:
+            GNATProject = Riverscapes.Project()
+            GNATProject.loadProjectXML(p[0].valueAsText)
+            if p[1].valueAsText:
+                makedirs(path.join(GNATProject.projectPath, "Outputs", p[1].valueAsText, "Analyses",
+                                   p[2].valueAsText))
+
+        Segmentation.main(p[3].valueAsText,
                           p[4].valueAsText,
                           p[5].valueAsText,
                           p[6].valueAsText,
-                          p[7].valueAsText)
+                          p[7].valueAsText,
+                          p[8].valueAsText,
+                          p[9].valueAsText,
+                          path.join(p[10].valueAsText,"SegmentedNetwork") + ".shp")
+
+        if p[0].value:
+            if arcpy.Exists(p[0].valueAsText):
+                GNATProject = Riverscapes.Project()
+                GNATProject.loadProjectXML(p[0].valueAsText)
+
+                outSegmentedNetwork = Riverscapes.dataset()
+                outSegmentedNetwork.create(arcpy.Describe(p[10].valueAsText).basename,
+                                           path.relpath(p[10].valueAsText,GNATProject.projectPath),
+                                           "GNAT_SegmentedNetwork")
+
+
+                realization = GNATProject.Realizations.get(p[1].valueAsText)
+                realization.newAnalysisNetworkSegmentation(p[2].valueAsText,
+                                                           p[4].valueAsText,
+                                                           "NONE", # todo make sure this happens!
+                                                           p[5].valueAsText,
+                                                           p[6].valueAsText,
+                                                           p[7].valueAsText,
+                                                           p[8].valueAsText,
+                                                           p[9].valueAsText,
+                                                           outSegmentedNetwork)
+
+                GNATProject.Realizations[p[1].valueAsText] = realization
+                GNATProject.writeProjectXML(p[0].valueAsText)
+
         return
 
 
