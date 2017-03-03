@@ -27,7 +27,6 @@ def main(inputFCPolylineNetwork,
          inputDownstreamID,
          outputFCPolylineStreamOrder,
          outputFCIntersectPoints,
-         outputFCJunctionPoints,
          scratchWorkspace= "in_memory"):
 
     # Set processing environments
@@ -131,7 +130,7 @@ def main(inputFCPolylineNetwork,
         
     arcpy.DeleteIdentical_management(fcStreamOrderTransistionPoints, "Shape")
     arcpy.CopyFeatures_management(fcNetworkNodes, outputFCIntersectPoints)
-    arcpy.CopyFeatures_management(fcNetworkIntersectPoints, outputFCJunctionPoints)
+    arcpy.CopyFeatures_management(fcNetworkIntersectPoints, outputFCIntersectPoints)
 
     ClearInMemory.main()
 

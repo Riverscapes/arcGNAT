@@ -192,6 +192,8 @@ def segOptionBC(fcDissolvedStreamBranch,
 def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boolNode, boolMerge, outputFCSegments):
     """Segment a stream network into user-defined length intervals."""
 
+    reload(StreamOrder)
+
     # Get output workspace from output feature class
     out_wspace = os.path.dirname(outputFCSegments)
     out_file = os.path.basename(outputFCSegments)
