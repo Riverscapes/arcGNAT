@@ -34,7 +34,7 @@ import CombineAttributes
 import GenerateStreamBranches
 import Segmentation
 import FindNetworkFeatures
-import Riverscapes
+from Riverscapes import Riverscapes
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
