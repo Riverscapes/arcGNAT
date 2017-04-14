@@ -34,7 +34,8 @@ import CombineAttributes
 import GenerateStreamBranches
 import Segmentation
 import FindNetworkFeatures
-from Riverscapes import Riverscapes
+
+GNAT_version = 2.1
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
@@ -148,7 +149,7 @@ class NewGNATProject(object):
 
     def execute(self, p, messages):
         """The source code of the tool."""
-        reload(Riverscapes)
+        from Riverscapes import Riverscapes
 
         arcpy.AddMessage(p[2].valueAsText)
 
@@ -159,15 +160,16 @@ class NewGNATProject(object):
             makedirs(projectFolder)
 
         GNATProject = Riverscapes.Project()
-        GNATProject.create(p[0].valueAsText,"GNAT")
+        GNATProject.create(p[0].valueAsText,"GNAT",projectPath=projectFolder)
         GNATProject.addProjectMetadata("GNAT_Project_Version","0.1")
         GNATProject.addProjectMetadata("Operator",p[3].valueAsText)
         GNATProject.addProjectMetadata("Region",p[4].valueAsText)
         GNATProject.addProjectMetadata("Watershed",p[5].valueAsText)
         GNATProject.addProjectMetadata("GIS","Arc/ESRI")
-        GNATProject.writeProjectXML(path.join(projectFolder,"GNATProject") + ".xml")
+        GNATProject.writeProjectXML()
 
         return
+
 
 class LoadNetworkToProject(object):
     def __init__(self):
@@ -212,12 +214,10 @@ class LoadNetworkToProject(object):
 
     def execute(self, p, messages):
         """The source code of the tool."""
-        reload(Riverscapes)
+        from Riverscapes import Riverscapes
 
-        GNATProject = Riverscapes.Project()
-        GNATProject.loadProjectXML(p[0].valueAsText)
-
-        pathProject = arcpy.Describe(p[0].valueAsText).path
+        GNATProject = Riverscapes.Project(p[0].valueAsText)
+        pathProject = GNATProject.projectPath
 
         # Create Project Paths if they do not exist
         pathInputs = pathProject + "\\Inputs"
@@ -257,6 +257,7 @@ class LoadNetworkToProject(object):
 
         return
 
+
 class CommitRealization(object):
 
     def __init__(self):
@@ -291,12 +292,11 @@ class CommitRealization(object):
             parameterType="Optional",
             direction="Input")
 
-        params = [paramProjectXML,
-                  paramRealization,
-                  paramStreamNetwork,
-                  paramIDField,
-                  paramNetworkTable]
-
+        params = [paramProjectXML, # 0
+                  paramRealization,  # 1
+                  paramStreamNetwork,  # 2
+                  paramIDField,  # 3
+                  paramNetworkTable]  # 4
         return params
 
     def isLicensed(self):
@@ -308,43 +308,44 @@ class CommitRealization(object):
         validation is performed.  This method is called whenever a parameter
         has been changed."""
 
-        if p[0].altered:
-            if p[0].value and arcpy.Exists(p[0].valueAsText):
+        # if p[0].altered:
+            # if p[0].value and arcpy.Exists(p[0].valueAsText):
+            #     GNATProject = Riverscapes.Project(p[0].valueAsText)
+                # GNATProject.loadProjectXML(p[0].valueAsText)
 
-                GNATProject = Riverscapes.Project()
-                GNATProject.loadProjectXML(p[0].valueAsText)
+                # if p[1].altered:
+                #     if p[1].value:
+                #         #p[2].value = path.join(GNATProject.projectPath, "Outputs", p[1].valueAsText) + "\\GNAT_StreamNetwork.shp"
+                #         pass
+        # if p[2].altered:
+            #if p[2].value and arcpy.Exists(p[2].valueAsText):
+        populateFields(p[2],p[3],"")
 
-                if p[1].altered:
-                    if p[1].value:
-                        #p[2].value = path.join(GNATProject.projectPath, "Outputs", p[1].valueAsText) + "\\GNAT_StreamNetwork.shp"
-                        pass
-            if p[2].value and arcpy.Exists(p[2].valueAsText):
-                populateFields(p[2],p[3],"Net_ID")
         return
 
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
 
+        from Riverscapes import Riverscapes
+
         if parameters[0].valueAsText:
-            GNATProject = Riverscapes.Project()
-            GNATProject.loadProjectXML(parameters[0].valueAsText)
+            GNATProject = Riverscapes.Project(parameters[0].valueAsText)
 
             for realization in GNATProject.Realizations:
                 if realization == parameters[1].valueAsText:
                     parameters[1].setErrorMessage("Realization " + parameters[1].valueAsText + " already exists.")
-                    break
+                    return
 
         return
 
     def execute(self, p, messages):
         """The source code of the tool."""
-        reload(Riverscapes)
+        from Riverscapes import Riverscapes
 
         # if in project mode, create workspaces as needed.
         if p[0].valueAsText:
-            GNATProject = Riverscapes.Project()
-            GNATProject.loadProjectXML(p[0].valueAsText)
+            GNATProject = Riverscapes.Project(p[0].valueAsText)
 
             if p[1].valueAsText:
                 outPath = path.join(GNATProject.projectPath, "Outputs",p[1].valueAsText)
@@ -359,14 +360,13 @@ class CommitRealization(object):
                 idRawStreamNetwork = GNATProject.get_dataset_id(p[2].valueAsText)
 
                 arcpy.Copy_management(p[2].valueAsText,outputGNATNetwork)
-                datasetGNATNetwork = Riverscapes.dataset()
+                datasetGNATNetwork = Riverscapes.Dataset()
                 datasetGNATNetwork.create("GNAT_StreamNetwork",
                                           path.relpath(outputGNATNetwork, GNATProject.projectPath))
+                datasetGNATNetwork.id = p[1].valueAsText + "_GNAT_StreamNetwork"
+                #datasetGNATNetwork.type = "GNAT_StreamNetwork"
 
                 # Todo Get all fields as Meta for input or realization?
-
-
-
 
                 # Network Table (Optional)
                 idRawNetworkTable = None
@@ -377,18 +377,20 @@ class CommitRealization(object):
 
                         arcpy.Copy_management(p[4].valueAsText,outputNetworkTable)
 
-                        datasetGNATNetworkTable = Riverscapes.dataset()
+                        datasetGNATNetworkTable = Riverscapes.Dataset()
                         datasetGNATNetworkTable.create("GNAT_NetworkTable",
                                                        path.relpath(outputNetworkTable, GNATProject.projectPath))
                         datasetGNATNetworkTable.type = "Table"
+                        datasetGNATNetworkTable.id = p[1].valueAsText + "GNAT_NetworkTable"
 
                 realization = Riverscapes.GNATRealization()
-                realization.create(p[1].valueAsText,
+                realization.createGNATRealization(p[1].valueAsText,
                                idRawStreamNetwork,
                                datasetGNATNetwork,
                                idRawNetworkTable,
                                datasetGNATNetworkTable)
-                realization.parameters["FieldNetworkID"] = p[3].valueAsText
+                realization.productVersion = str(GNAT_version)
+                realization.parameters["FieldOriginalReachID"] = p[3].valueAsText
 
                 GNATProject.addRealization(realization)
                 GNATProject.writeProjectXML(p[0].valueAsText)
@@ -751,10 +753,11 @@ class SegmentationTool(object):
         validation is performed.  This method is called whenever a parameter
         has been changed."""
 
+        from Riverscapes import Riverscapes
+
         if p[0].value:
             if arcpy.Exists(p[0].valueAsText):
-                GNATProject = Riverscapes.Project()
-                GNATProject.loadProjectXML(p[0].valueAsText)
+                GNATProject = Riverscapes.Project(p[0].valueAsText)
 
                 p[1].enabled = "True"
                 p[1].filter.list = GNATProject.Realizations.keys()
@@ -794,7 +797,7 @@ class SegmentationTool(object):
     def execute(self, p, messages):
         """The source code of the tool."""
         reload(Segmentation)
-        reload(Riverscapes)
+        from Riverscapes import Riverscapes
 
         if p[0].value:
             GNATProject = Riverscapes.Project()
@@ -810,18 +813,17 @@ class SegmentationTool(object):
                           p[7].valueAsText,
                           p[8].valueAsText,
                           p[9].valueAsText,
-                          path.join(p[10].valueAsText,"SegmentedNetwork") + ".shp")
+                          path.join(p[10].valueAsText,"GNAT_SegmentedNetwork") + ".shp")
 
         if p[0].value:
             if arcpy.Exists(p[0].valueAsText):
-                GNATProject = Riverscapes.Project()
-                GNATProject.loadProjectXML(p[0].valueAsText)
+                GNATProject = Riverscapes.Project(p[0].valueAsText)
 
-                outSegmentedNetwork = Riverscapes.dataset()
+                outSegmentedNetwork = Riverscapes.Dataset()
                 outSegmentedNetwork.create(arcpy.Describe(p[10].valueAsText).basename,
-                                           path.relpath(p[10].valueAsText,GNATProject.projectPath),
+                                           path.relpath(path.join(p[10].valueAsText, "GNAT_SegmentedNetwork"),GNATProject.projectPath) + ".shp",
                                            "GNAT_SegmentedNetwork")
-
+                outSegmentedNetwork.id = p[1].valueAsText + "_" + p[2].valueAsText + "GNAT_SegmentedNetwork"
 
                 realization = GNATProject.Realizations.get(p[1].valueAsText)
                 realization.newAnalysisNetworkSegmentation(p[2].valueAsText,
@@ -1025,8 +1027,8 @@ class StreamOrderTool(object):
                          p[1].valueAsText,
                          p[2].valueAsText,
                          p[3].valueAsText,
-                         p[4].valueAsText,
-                         p[5].valueAsText)
+                         p[4].valueAsText)#,
+                        # p[5].valueAsText)
         return
 
 
@@ -1464,21 +1466,23 @@ def testMValues(parameter):
             else:
                 return True
 
-def populateFields(parameterSource,parameterField,strDefaultFieldName):
+
+def populateFields(parameterSource, parameterField, strDefaultFieldName):
     if parameterSource.value:
-        if arcpy.Exists(parameterSource.value):
+        if arcpy.Exists(parameterSource.valueAsText):
             # Get fields
-            fields = arcpy.Describe(parameterSource.value).fields
-            listFields = []
-            for f in fields:
-                listFields.append(f.name)
-            parameterField.filter.list=listFields
-            if strDefaultFieldName in listFields:
-                parameterField.value=strDefaultFieldName
+
+            for field in arcpy.Describe(parameterSource.valueAsText).fields:
+            # list_fields = []
+            # for f in fields:
+            #     list_fields.append(f.name)
+                parameterField.filter.list.append(field.name)
+            if strDefaultFieldName in parameterField.filter.list:#list_fields:
+                parameterField.value = strDefaultFieldName
         else:
-            parameterField.value=""
-            parameterField.filter.list=[]
-            parameterSource.setErrorMessage(" Dataset does not exist.")
+            parameterField.value = ""
+            parameterField.filter.list = []
+            parameterSource.setErrorMessage("Dataset does not exist.")
 
     return
 
