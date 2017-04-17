@@ -1176,6 +1176,7 @@ class SinuosityTool(object):
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
+        param3.enabled = False
         
         return [param0,param1,
                 #param2,
@@ -1195,7 +1196,7 @@ class SinuosityTool(object):
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
-        testWorkspacePath(parameters[3])
+        testWorkspacePath(parameters[2])
         return
 
     def execute(self, p, messages):
@@ -1205,9 +1206,9 @@ class SinuosityTool(object):
 
         Sinuosity.main(
             p[0].valueAsText,
-            p[1].valueAsText,
+            p[1].valueAsText)
             #p[2].valueAsText,
-            getTempWorkspace(p[2].valueAsText))
+            # getTempWorkspace(p[2].valueAsText))
 
         return
 
