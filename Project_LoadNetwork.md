@@ -1,0 +1,1 @@
+This tool loads a GIS line network into the [GNAT Project](GNAT_Project).
