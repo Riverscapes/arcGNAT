@@ -22,10 +22,12 @@
 # # Import Modules # #
 import arcpy
 import os
-import time
+import sys
 import FindBraidedNetwork as braid
 import ClearInMemory as in_mem
 import gis_tools
+
+sys.setrecursionlimit(1500)
 
 # # Script Parameters # #
 listReachPairs = [] ## Reach-Pairs written to NetworkTable
@@ -126,7 +128,7 @@ def network_tree(inputID,tblNetwork,fcLines,fcNodePoint):
                 pass
             else:
                 listHeadwaterIDs.append(int(inputID))
-                listReachPairs.append([inputID, u'-99999']) # include headwater reaches in StreamNetworkTable
+                listReachPairs.append([inputID, u'-99999'])
                 arcpy.AddMessage("  Headwater, " + str(inputID))
             return # Return to Next Junction
 
@@ -136,13 +138,14 @@ def network_tree(inputID,tblNetwork,fcLines,fcNodePoint):
                 listJunctions.append(item)
             for selectedID in listSelected:
                 listReachPairs.append([inputID,selectedID])
+
                 network_tree(selectedID,tblNetwork,fcLines,fcNodePoint)
 
         return
 
 
 def checkcount():
-    #arcpy.AddMessage str(len(listReachesDone)) + " | " + str(intTotalFeatures[0]) 
+    arcpy.AddMessage(str(len(listReachesDone)) + " | " + str(intTotalFeatures[0]))
     if len(listReachesDone) > 0:
         for percent in range(1,11):
             if len(listReachesDone) == int(intTotalFeatures[0] * 0.1 * percent):
@@ -228,6 +231,7 @@ def checkSuffix(fcNetwork):
         return True
     else:
         return False
+
 
 def incrementRun(fcNetwork):
     fc_name = os.path.splitext(os.path.basename(fcNetwork))[0]
@@ -361,3 +365,9 @@ def main(fcNetwork,intOutflowReachID):
     in_mem.main()
 
     return
+
+# TEST debugging
+if __name__ == '__main__':
+    testNetwork = r'C:\JL\Testing\GNAT\Issue25\UpperSalmon_HexSim.shp'
+    testReachID = 1160
+    main(testNetwork, testReachID)
