@@ -1,10 +1,8 @@
-# Introduction
-
 The concepts here are based on the two-step process for generating a confinement Project. 
 
 ![](https://docs.google.com/drawings/d/1Y2zYp1tdWn-FWincxK55xr-zfW4yJCfg7Nw4UEpONRk/pub?w=1326&h=722)
 
-# GNAT Project
+## GNAT Project
 
 MetaData
 
@@ -12,7 +10,7 @@ MetaData
 - Watershed
 - User/Operator
 
-## Inputs
+### Inputs
 
 The only input for a GNAT project is a stream network dataset.
 
@@ -21,7 +19,7 @@ MetaData
 - Source or type (NHD+ V02, 
 - Scale?
 
-## Realization
+### Realization
 
 A GNAT realization represents steps 1 and 2 in the current GNAT workflow.
  
