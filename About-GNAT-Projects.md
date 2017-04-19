@@ -14,7 +14,7 @@ MetaData
 
 ## Inputs
 
-The only input the GNAT project is a stream network.
+The only input for a GNAT project is a stream network dataset.
 
 MetaData
 
@@ -25,10 +25,10 @@ MetaData
 
 A GNAT realization represents steps 1 and 2 in the current GNAT workflow.
  
-1. Initial Network Topology Table is Generated 
-2. Network Attributes and Errors are identified
-3. Network Errors are Cleaned up
-4. Regenerate Topology table, if needed.
+1. Initial Network Topology table is generated 
+2. Network features and errors are identified
+3. Network topology errors are fixed (manually in GIS software).
+4. Return to step 1 and repeat as needed.
 
 Params
 
@@ -40,18 +40,18 @@ Metadata
 
 Outputs
 
-- GNAT Network
-- GNAT Network Table
+- GNAT network polyline feature class
+- GNAT network topology table
 
 ### Analyses
 
-An "Analysis" represents a Segmented or Stream Branch processed network. These can be fed into other Geomorphic Attribute Projects as inputs. Several Analyses can be associated with a realization, but if the realization changes or is updated, new analyses must be generated from this.
+An "Analysis" represents a segmented or stream branch processed network. These can be input into other geomorphic attribute projects as inputs. Several Analyses can be associated with a Realization, but if the Realization changes or is updated, new analyses must be generated for that Realization.
 
 #### Segmented Network
 
-Network split by segments with original attributes retained. Segmentation is identified by a SegmentID Field.
+Network polyline feature class split by segments with original attributes retained. Segmentation is identified by a `SegmentID` Field.
 
-Params
+Parameters
 
 - SegID Field
 - Pre-Segmentation Dissolve Options (None, Stream Branches)
@@ -61,15 +61,15 @@ Params
 
 Outputs
 
-- Segmented GNAT Network
-- Gnat network table
+- Segmented GNAT network polyline feature class
+- GNAT network table
 
 #### Stream Branch
 
-Network with a Stream Branch ID field applied. Original attributes are retained.
+Network polyline feature class with a stream branch ID field applied. Original attributes are retained.
 
-- GNAT Network with Stream Branch ID's
-- Gnat network table
+- GNAT network polyline feature class with stream branch identifiers
+- GNAT network table
 
 #### Other Analysis types?
 
