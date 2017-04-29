@@ -189,7 +189,8 @@ def segOptionBC(fcDissolvedStreamBranch,
 
 
 # # Main Function # #
-def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boolNode, boolMerge, outputFCSegments):
+def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boolNode, boolMerge, outputFCSegments,
+         braidField=""):
     """Segment a stream network into user-defined length intervals."""
 
     reload(StreamOrder)
@@ -214,8 +215,17 @@ def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boo
     spatial_join_fc_lyr = "spatial_join_fc_lyr"
 
     gis_tools.checkReq(inputFCStreamNetwork) # process terminates if input requirements not met
-    
-    strm_order_fc, nodes_fc = StreamOrder.main(inputFCStreamNetwork, reachID, strm_order_fc_out, strm_node_fc_out)
+
+    if braidField:
+        fcNetworkBraidFilter = gis_tools.newGISDataset("in_memory","NetworkNoBraids")
+        lyr_in_network = gis_tools.newGISDataset("LAYER","lyrInNetwork")
+        arcpy.MakeFeatureLayer_management(inputFCStreamNetwork,lyr_in_network,
+                                          arcpy.AddFieldDelimiters(inputFCStreamNetwork,braidField) + " = 0")
+        arcpy.CopyFeatures_management(lyr_in_network, fcNetworkBraidFilter)
+    else:
+        fcNetworkBraidFilter = inputFCStreamNetwork
+
+    strm_order_fc, nodes_fc = StreamOrder.main(fcNetworkBraidFilter, reachID, strm_order_fc_out, strm_node_fc_out)
     strm_branch_fc = GenerateStreamBranches.main(strm_order_fc, nodes_fc, strmIndex,
                                  "strm_order", strm_branch_fc_out, "true", "in_memory")
     arcpy.MakeFeatureLayer_management(strm_order_fc, strm_order_fc_lyr)

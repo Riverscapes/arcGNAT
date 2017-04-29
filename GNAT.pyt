@@ -35,7 +35,7 @@ import GenerateStreamBranches
 import Segmentation
 import FindNetworkFeatures
 
-GNAT_version = 2.1
+GNAT_version = "2.1.01"
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
@@ -730,7 +730,7 @@ class SegmentationTool(object):
             datatype="DEWorkspace",
             parameterType="Optional",
             direction="Output")
-       #paramOutputSegmentedNetwork.filter.list = ["Polyline"]
+
 
         return [paramProjectXML,
                 paramRealization,
@@ -788,8 +788,6 @@ class SegmentationTool(object):
         parameter.  This method is called after internal validation."""
 
         # todo Check if analysis name already exists
-
-        #testLayerSelection(parameters[3])
         testProjected(parameters[3])
 
         return
@@ -1438,18 +1436,17 @@ class FindNetworkFeaturesTool(object):
 def setEnvironmentSettings():
     arcpy.env.OutputMFlag = "Disabled"
     arcpy.env.OutputZFlag = "Disabled"
-
     return
 
-def getTempWorkspace(strWorkspaceParameter):
 
+def getTempWorkspace(strWorkspaceParameter):
     if strWorkspaceParameter == None or strWorkspaceParameter == "":
         return "in_memory"
     else:
        return strWorkspaceParameter
 
-def testProjected(parameter):
 
+def testProjected(parameter):
     if parameter.value:
         if arcpy.Exists(parameter.value):
             if arcpy.Describe(parameter.value).spatialReference.type <> u"Projected":
@@ -1457,6 +1454,7 @@ def testProjected(parameter):
                 return False
             else:
                 return True
+
 
 def testMValues(parameter):
     if parameter.value:
@@ -1487,6 +1485,7 @@ def populateFields(parameterSource, parameterField, strDefaultFieldName):
 
     return
 
+
 def testLayerSelection(parameter):
     if parameter.value:
         if arcpy.Exists(parameter.value):
@@ -1496,6 +1495,7 @@ def testLayerSelection(parameter):
                     parameter.setWarningMessage("Input layer " + parameter.name + " contains a selection. Clear the selection in order to run this tool on all features in the layer.")
 
     return
+
 
 def testWorkspacePath(parameterWorkspace):
 
