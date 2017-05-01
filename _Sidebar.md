@@ -1,6 +1,6 @@
 [Home](https://github.com/SouthForkResearch/gnat/wiki)
 
-[Download and Installation](https://github.com/SouthForkResearch/gnat/wiki/Download-and-Installation)
+[Download and Installation](releases)
 
 [About GNAT Projects](GNAT_Project)
 
