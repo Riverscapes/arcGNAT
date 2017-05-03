@@ -2,6 +2,12 @@
 
 ## Version 2.1
 
+**[Version 2.1.02](Downloads/arcGNAT_2.1.02.zip)** 2017-MAY-03
+
+```markdown
+* Revised Transfer Line Attributes to better handle networks with differing spatial extents.
+```
+
 **[Version 2.1.01](Downloads/arcGNAT_2.1.01.zip)** 2017-APR-28 
 
 ```markdown
