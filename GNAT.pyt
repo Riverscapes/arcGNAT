@@ -35,7 +35,7 @@ import GenerateStreamBranches
 import Segmentation
 import FindNetworkFeatures
 
-GNAT_version = "2.1.02"
+GNAT_version = "2.1.03"
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
@@ -666,7 +666,7 @@ class SegmentationTool(object):
             displayName="Segmentation Name",
             name="analysisName",
             datatype="GPString",
-            parameterType="Required",
+            parameterType="Optional",
             direction="Input")
         paramAnalysisName.enabled = "False"
 
@@ -730,7 +730,6 @@ class SegmentationTool(object):
             datatype="DEWorkspace",
             parameterType="Optional",
             direction="Output")
-
 
         return [paramProjectXML,
                 paramRealization,
