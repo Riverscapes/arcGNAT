@@ -22,6 +22,25 @@ import gis_tools
 import DividePolygonBySegment
 
 
+def empty_attributes(fc):
+    transfer_fields = [f for f in arcpy.ListFields(fc) if f.type not in ["OID", "Geometry"]]
+    for field in transfer_fields:
+        with arcpy.da.UpdateCursor(fc, [field.name]) as cursor:
+            for row in cursor:
+                if field.type == "String":
+                    row[0] = "-99999"
+                    cursor.updateRow(row)
+                if field.type == "Double":
+                    row[0] = -99999
+                    cursor.updateRow(row)
+                if field.type == "Integer":
+                    row[0] = -99999
+                    cursor.updateRow(row)
+                if field.type == "SmallInteger":
+                    row[0] = -99999
+                    cursor.updateRow(row)
+
+
 def main(fcFromLine,
          fcToLine,
          fcOutputLineNetwork,
@@ -72,16 +91,24 @@ def main(fcFromLine,
     arcpy.JoinField_management(fcOutputLineNetwork, "JOIN_FID", fcFromLineTemp, str(arcpy.Describe(fcFromLineTemp).OIDFieldName))
 
     # Append the "To" lines that were outside of the "From" line buffer, which will have NULL or zero values
-    arcpy.env.extent = fcToLine # this was changed earlier in the process by  Divide Polygon by Segment script
+    arcpy.env.extent = fcToLine # this was changed earlier in the workflow in Divide Polygon by Segment module
     arcpy.Append_management([fcToLineOutsideFromBuffer], fcOutputLineNetwork, "NO_TEST")
+
+    # Change values of appended features to -99999 where possible
+    arcpy.MakeFeatureLayer_management(fcOutputLineNetwork, "lyrOutputLineNetwork")
+    arcpy.SelectLayerByAttribute_management("lyrOutputLineNetwork", "NEW_SELECTION", """"Join_Count" = 0""")
+    empty_attributes("lyrOutputLineNetwork")
+    arcpy.SelectLayerByAttribute_management("lyrOutputLineNetwork", "CLEAR_SELECTION")
+
     arcpy.AddMessage("GNAT TLA: Tool complete")
 
     return
 
 
 # if __name__ == "__main__":
-#     fcToLine = r"C:\JL\Testing\GNAT\Issue29\data2\To.shp"
-#     fcFromLine = r"C:\JL\Testing\GNAT\Issue29\data2\From.shp"
-#     fcOutputLineNetwork = r"C:\JL\Testing\GNAT\Issue29\data2\Output.shp"
-#     tempWorkspace = r"C:\JL\Testing\GNAT\Issue29\data2\scratch.gdb"
+#     fcToLine = r"C:\JL\Testing\GNAT\Issue31\To_sel.shp"
+#     fcFromLine = r"C:\JL\Testing\GNAT\Issue31\From_sel.shp"
+#     fcOutputLineNetwork = r"C:\JL\Testing\GNAT\Issue31\Output.shp"
+#     tempWorkspace = r"C:\JL\Testing\GNAT\Issue31\scratch.gdb"
+#
 #     main(fcFromLine, fcToLine, fcOutputLineNetwork, tempWorkspace)
