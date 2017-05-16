@@ -727,8 +727,8 @@ class SegmentationTool(object):
         paramOutputSegmentedNetwork = arcpy.Parameter(
             displayName="Output Segmented Line Network",
             name="outputStreamOrderFC",
-            datatype="DEWorkspace",
-            parameterType="Optional",
+            datatype="DEFeatureClass",
+            parameterType="Required",
             direction="Output")
 
         return [paramProjectXML,
@@ -760,22 +760,24 @@ class SegmentationTool(object):
 
                 p[1].enabled = "True"
                 p[1].filter.list = GNATProject.Realizations.keys()
+                p[10].enabled = "False"
+                p[10].value = ""
+                p[3].enabled = "False"
 
                 if p[1].value:
                     currentRealization = GNATProject.Realizations.get(p[1].valueAsText)
                     p[3].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
-                    p[3].enabled = "False"
                     p[2].enabled = "True"
                     if p[2].value:
-                        p[10].value = path.join(GNATProject.projectPath,"Outputs",p[1].valueAsText,"Analyses",p[2].valueAsText)
-                        p[10].enabled = "False"
+                        p[10].value = path.join(GNATProject.projectPath, "Outputs", p[1].valueAsText, "Analyses",
+                                                p[2].valueAsText, "GNAT_SegmentedNetwork") + ".shp"
+
         else:
             p[1].filter.list = []
             p[1].value = ''
             p[1].enabled = "False"
-            p[3].value = ""
+            p[2].value = ""
             p[3].enabled = "True"
-            p[10].value = ""
             p[10].enabled = "True"
 
         populateFields(p[3],p[6],"GNIS_Name")
@@ -796,12 +798,17 @@ class SegmentationTool(object):
         reload(Segmentation)
         from Riverscapes import Riverscapes
 
+        output = p[10].valueAsText
+
         if p[0].value:
             GNATProject = Riverscapes.Project()
             GNATProject.loadProjectXML(p[0].valueAsText)
             if p[1].valueAsText:
                 makedirs(path.join(GNATProject.projectPath, "Outputs", p[1].valueAsText, "Analyses",
                                    p[2].valueAsText))
+                output = path.join(GNATProject.projectPath, "Outputs", p[1].valueAsText, "Analyses",
+                                                p[2].valueAsText, "GNAT_SegmentedNetwork") + ".shp"
+
 
         Segmentation.main(p[3].valueAsText,
                           p[4].valueAsText,
@@ -810,22 +817,23 @@ class SegmentationTool(object):
                           p[7].valueAsText,
                           p[8].valueAsText,
                           p[9].valueAsText,
-                          path.join(p[10].valueAsText,"GNAT_SegmentedNetwork") + ".shp")
+                          output)
 
         if p[0].value:
             if arcpy.Exists(p[0].valueAsText):
                 GNATProject = Riverscapes.Project(p[0].valueAsText)
 
                 outSegmentedNetwork = Riverscapes.Dataset()
-                outSegmentedNetwork.create(arcpy.Describe(p[10].valueAsText).basename,
-                                           path.relpath(path.join(p[10].valueAsText, "GNAT_SegmentedNetwork"),GNATProject.projectPath) + ".shp",
+                outSegmentedNetwork.create(arcpy.Describe(output).basename,
+                                           path.relpath(path.join(output, "GNAT_SegmentedNetwork"),
+                                                        GNATProject.projectPath) + ".shp",
                                            "GNAT_SegmentedNetwork")
                 outSegmentedNetwork.id = p[1].valueAsText + "_" + p[2].valueAsText + "GNAT_SegmentedNetwork"
 
                 realization = GNATProject.Realizations.get(p[1].valueAsText)
                 realization.newAnalysisNetworkSegmentation(p[2].valueAsText,
                                                            p[4].valueAsText,
-                                                           "NONE", # todo make sure this happens!
+                                                           "NONE",
                                                            p[5].valueAsText,
                                                            p[6].valueAsText,
                                                            p[7].valueAsText,
@@ -834,7 +842,7 @@ class SegmentationTool(object):
                                                            outSegmentedNetwork)
 
                 GNATProject.Realizations[p[1].valueAsText] = realization
-                GNATProject.writeProjectXML(p[0].valueAsText)
+                GNATProject.writeProjectXML()
 
         return
 
