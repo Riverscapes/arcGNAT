@@ -12,10 +12,12 @@ GNAT was originally developed to support the geomorphic attribute analysis and m
 
 # Downloads
 
-**[Version 2.1.01](Downloads/arcGNAT_2.1.01.zip)** 2017-APR-28 
+[Version 2.1.04](Downloads/arcGNAT_2.1.04.zip) 2017-MAY-16
 
-```markdown
-* Updated Riverscapes Project (integrated with Riverscapes Project Python module)
+```
+* Fixed Issue with Segmentation UI
+* Updated to better Handle TO lines with no attributes
+* Refactored Transfer Attribute Tool to better handle differing Spatial Extents
 ```
 
 [Previous Releases](releases)
