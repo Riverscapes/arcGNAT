@@ -11,7 +11,7 @@
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
 # Version:     2.0 Beta                                                       #
-# Revised:     2017-May-03                                                    #
+# Revised:     2017-May-25                                                    #
 # Released:                                                                   #
 #                                                                             #
 # License:     MIT License                                                    #
@@ -35,7 +35,7 @@ import GenerateStreamBranches
 import Segmentation
 import FindNetworkFeatures
 
-GNAT_version = "2.1.04"
+GNAT_version = "2.1.05"
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
