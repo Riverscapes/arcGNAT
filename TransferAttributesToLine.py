@@ -56,10 +56,12 @@ def main(fcFromLine,
     arcpy.AddMessage("GNAT TLA: Create buffer polygon around 'From' network")
     fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FromLineBuffer")
     arcpy.Buffer_analysis(fcFromLineTemp,fcFromLineBuffer,"10 Meters","FULL","ROUND","ALL")
+    fcFromLineBufDslv = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBUfDslv")
+    arcpy.Dissolve_management(fcFromLineBuffer, fcFromLineBufDslv)
 
     # Select features from "To" line feature class that are inside "From" line buffer
     lyrFromLineBuffer = gis_tools.newGISDataset("Layer", "lyrFromLineBuffer")
-    arcpy.MakeFeatureLayer_management(fcFromLineBuffer, lyrFromLineBuffer)
+    arcpy.MakeFeatureLayer_management(fcFromLineBufDslv, lyrFromLineBuffer)
     lyrToLine = gis_tools.newGISDataset("Layer", "lyrToLine")
     arcpy.MakeFeatureLayer_management(fcToLine, lyrToLine)
     arcpy.SelectLayerByLocation_management(lyrToLine, "WITHIN", lyrFromLineBuffer, "#", "NEW_SELECTION")
@@ -103,12 +105,3 @@ def main(fcFromLine,
     arcpy.AddMessage("GNAT TLA: Tool complete")
 
     return
-
-
-# if __name__ == "__main__":
-#     fcToLine = r"C:\JL\Testing\GNAT\Issue31\To_sel.shp"
-#     fcFromLine = r"C:\JL\Testing\GNAT\Issue31\From_sel.shp"
-#     fcOutputLineNetwork = r"C:\JL\Testing\GNAT\Issue31\Output.shp"
-#     tempWorkspace = r"C:\JL\Testing\GNAT\Issue31\scratch.gdb"
-#
-#     main(fcFromLine, fcToLine, fcOutputLineNetwork, tempWorkspace)
