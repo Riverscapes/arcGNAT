@@ -318,8 +318,13 @@ def main(fcNetwork,intOutflowReachID):
         arcpy.Delete_management("lyrBraidedReachStartPoints")
     arcpy.MakeFeatureLayer_management("in_memory\\BraidedReachStartPoints","lyrBraidedReachStartPoints")
 
+    # Write node points feature class to disk
+    fcNodePoint = calcNodes(fcStreamNetworkTemp)  # build node point feature class
+    outPath = os.path.dirname(fcNetwork)
+    arcpy.MakeFeatureLayer_management(fcNodePoint, "fcNodePoint_lyr")
+    arcpy.CopyFeatures_management("fcNodepoint_lyr", outPath + "\\NetworkVrtx")
+
     # Process
-    fcNodePoint = calcNodes(fcStreamNetworkTemp) # build node point feature class
     network_tree(downstream_oid,tableNetwork,fcStreamNetworkTemp_lyr,fcNodePoint)
     checkcount()
 
@@ -368,6 +373,6 @@ def main(fcNetwork,intOutflowReachID):
 
 # TEST debugging
 if __name__ == '__main__':
-    testNetwork = r'C:\JL\Testing\GNAT\Issue25\UpperSalmon_HexSim.shp'
-    testReachID = 1160
+    testNetwork = r'C:\JL\Testing\arcGNAT\Issue33\FROM.shp'
+    testReachID = 16
     main(testNetwork, testReachID)

@@ -35,7 +35,7 @@ import GenerateStreamBranches
 import Segmentation
 import FindNetworkFeatures
 
-GNAT_version = "2.1.05"
+GNAT_version = "2.1.06"
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
