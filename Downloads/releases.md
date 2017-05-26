@@ -5,24 +5,29 @@
 **[Version 2.1.06](Downloads/arcGNAT_2.1.06.zip)** 2017-MAY-26
 
 ```markdown
-* Fixed error with stream network inputs for Segmentation tool.
 * Fixed issue with Transfer Line Attributes tool and buffering tiles.
 * Build Network Topology tool now write nodes as a point feature class.
 ```
 
-**[Version 2.1.02](Downloads/arcGNAT_2.1.02.zip)** 2017-MAY-03
+[Version 2.1.04](Downloads/arcGNAT_2.1.04.zip) 2017-MAY-16
+
+```markdown
+* Fixed Issue with Segmentation UI
+* Updated to better Handle TO lines with no attributes
+```
+
+[Version 2.1.02](Downloads/arcGNAT_2.1.02.zip) 2017-MAY-03
 
 ```markdown
 * Revised Transfer Line Attributes to better handle networks with differing spatial extents.
 ```
 
-**[Version 2.1.01](Downloads/arcGNAT_2.1.01.zip)** 2017-APR-28 
-
+[Version 2.1.01](Downloads/arcGNAT_2.1.01.zip) 2017-APR-28 
 ```markdown
 * Updated Riverscapes Project (integrated with Riverscapes Project Python module)
 ```
 
-**[Version 2.1](Downloads/GNAT_2.1_20170303.zip)** 2017-March-03
+[Version 2.1](Downloads/GNAT_2.1_20170303.zip) 2017-March-03
 
 # Installation
 
