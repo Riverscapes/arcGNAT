@@ -2,6 +2,14 @@
 
 ## Version 2.1
 
+**[Version 2.1.06](Downloads/arcGNAT_2.1.06.zip)** 2017-MAY-26
+
+```markdown
+* Fixed error with stream network inputs for Segmentation tool.
+* Fixed issue with Transfer Line Attributes tool and buffering tiles.
+* Build Network Topology tool now write nodes as a point feature class.
+```
+
 **[Version 2.1.02](Downloads/arcGNAT_2.1.02.zip)** 2017-MAY-03
 
 ```markdown
