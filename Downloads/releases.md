@@ -2,6 +2,13 @@
 
 ## Version 2.1
 
+**[Version 2.1.07](Downloads/arcGNAT_2.1.07.zip)**
+2017-JUNE-22
+
+```markdown
+* Changed buffer distance used in the Build Network Topology tool when selecting upstream stream reaches.
+```
+
 **[Version 2.1.06](Downloads/arcGNAT_2.1.06.zip)** 2017-MAY-26
 
 ```markdown
