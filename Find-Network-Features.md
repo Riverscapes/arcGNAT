@@ -70,7 +70,7 @@ network polyline feature class or the network topology table.
 * `feature_code = 2` - Braids: calls the **Find Braids in Stream Network** tool.
 * `feature_code = 3` - Duplicate reaches: stream reaches with identical lengths.
 * `feature_code = 4` - Overlapping reaches: each stream reach is compared to neighboring upstream reach. They are considered overlapping if they share nodes other than their beginning/ending nodes.
-* `feature_code = 5` - Crossed reaches: each stream reach is compared to neighboring upstream reach. They are considered crossed if no they cross, but do not share beginning/ending nodes.
+* `feature_code = 5` - Crossed reaches: each stream reach is compared to neighboring upstream reach. They are considered crossed if they cross, but do not share beginning/ending nodes.
 * `feature_code = 6` - Disconnected reaches: reaches that are present in the stream network polyline feature class, without associated records in the network topology table are considered disconnected.
 * `feature_code = 7` - Upstream flow direction: reaches with identical FROM nodes indicate an error in flow direction (see Troubleshooting and Potential Issues section below for known limitations).
 * `feature_code = 8` - Other potential errors: based on reach records in the network topology table where UpstreamID = -11111.
