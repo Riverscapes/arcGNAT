@@ -30,8 +30,6 @@ def main(fcInputCenterline,
 
     workspaceTemp = "in_memory"
 
-    arcpy.AddMessage("GNAT DPS: Saving polygon results to: " + fcSegmentedPolygons)
-
     arcpy.env.OutputMFlag = "Disabled"
     arcpy.env.OutputZFlag = "Disabled"
 
@@ -55,7 +53,8 @@ def main(fcInputCenterline,
     arcpy.SelectLayerByLocation_management(lyrThiessanPoints,"INTERSECT",fcTribJunctionPoints,str(dblJunctionBuffer)+ " METERS","NEW_SELECTION")
 
     fcThiessanPoly = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_ThiessanPoly")
-    arcpy.CreateThiessenPolygons_analysis(lyrThiessanPoints,fcThiessanPoly,"ONLY_FID")
+    #arcpy.CreateThiessenPolygons_analysis(lyrThiessanPoints,fcThiessanPoly,"ONLY_FID")
+    arcpy.CreateThiessenPolygons_analysis(lyrThiessanPoints, fcThiessanPoly, "ALL")
 
     fcThiessanPolyClip = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_TheissanPolyClip")
     arcpy.Clip_analysis(fcThiessanPoly,fcInputPolygon,fcThiessanPolyClip)
@@ -117,12 +116,12 @@ def main(fcInputCenterline,
     fcPolygonsDissolved = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_PolygonsDissolved")
     arcpy.Dissolve_management(fcPolygonsJoinCenterline,
                               fcPolygonsDissolved,
-                              "JOIN_FID",
+                              "FromID",
                               multi_part="SINGLE_PART")
 
     lyrPolygonsDissolved = gis_tools.newGISDataset("Layer","lyrPolygonsDissolved")
     arcpy.MakeFeatureLayer_management(fcPolygonsDissolved,lyrPolygonsDissolved)
-    arcpy.SelectLayerByAttribute_management(lyrPolygonsDissolved,"NEW_SELECTION",""" "JOIN_FID" = -1 """)
+    arcpy.SelectLayerByAttribute_management(lyrPolygonsDissolved,"NEW_SELECTION",""" "FromID" IS NULL """)
 
     arcpy.Eliminate_management(lyrPolygonsDissolved,fcSegmentedPolygons,"LENGTH")
 

@@ -37,20 +37,25 @@ def empty_attributes(fc):
                     row[0] = -99999
                     cursor.updateRow(row)
                 if field.type == "SmallInteger":
-                    row[0] = -99999
+                    row[0] = -999
                     cursor.updateRow(row)
 
 
 def main(fcFromLine,
          fcToLine,
          fcOutputLineNetwork,
-         tempWorkspace=''):
+         tempWorkspace):
 
     gis_tools.resetData(fcOutputLineNetwork)
 
     fcFromLineTemp = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineTemp")
     arcpy.MakeFeatureLayer_management(fcFromLine, "lyrFromLine")
     arcpy.CopyFeatures_management("lyrFromLine", fcFromLineTemp)
+
+    # Add a unique ID for the "From" line feature class
+    from_oid = arcpy.Describe(fcFromLineTemp).OIDFieldName
+    arcpy.AddField_management(fcFromLineTemp, "FromID", "LONG")
+    arcpy.CalculateField_management(fcFromLineTemp, "FromID", "!{0}!".format(from_oid), "PYTHON_9.3")
 
     # Make bounding polygon for "From" line feature class
     arcpy.AddMessage("GNAT TLA: Create buffer polygon around 'From' network")
@@ -81,19 +86,19 @@ def main(fcFromLine,
     fcSplitLines = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_SplitLines")
     arcpy.SplitLineAtPoint_management(fcToLineWithinFromBuffer,fcIntersectSplitPoints,fcSplitLines,"0.1 METERS")
 
-    # Spatial join lines based on a common OID, as transferred by segmented polygon
+    # Spatial join lines based on a common field, as transferred by segmented polygon
     arcpy.AddMessage("GNAT TLA: Joining polygon segments")
-    gis_tools.resetData(fcOutputLineNetwork)
     arcpy.SpatialJoin_analysis(fcSplitLines,
                                fcSegmentedBoundingPolygons,
                                fcOutputLineNetwork,
                                "JOIN_ONE_TO_ONE",
                                "KEEP_ALL",
                                match_option="WITHIN")
-    arcpy.JoinField_management(fcOutputLineNetwork, "JOIN_FID", fcFromLineTemp, str(arcpy.Describe(fcFromLineTemp).OIDFieldName))
+    #arcpy.JoinField_management(fcOutputLineNetwork, "JOIN_FID", fcFromLineTemp, str(arcpy.Describe(fcFromLineTemp).OIDFieldName))
+    arcpy.JoinField_management(fcOutputLineNetwork, "FromID", fcFromLineTemp, "FromID")
 
     # Append the "To" lines that were outside of the "From" line buffer, which will have NULL or zero values
-    arcpy.env.extent = fcToLine # this was changed earlier in the workflow in Divide Polygon by Segment module
+    arcpy.env.extent = fcToLine # changed earlier in the workflow in DividePolygonBySegment module
     arcpy.Append_management([fcToLineOutsideFromBuffer], fcOutputLineNetwork, "NO_TEST")
 
     # Change values of appended features to -99999 where possible
