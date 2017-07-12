@@ -10,16 +10,5 @@ GNAT was originally developed to support the geomorphic attribute analysis and m
 * Segmentation of stream networks
 * Model geomorphic attributes
 
-# Downloads
-
-[Version 2.1.04](Downloads/arcGNAT_2.1.04.zip) 2017-MAY-16
-
-```
-* Fixed Issue with Segmentation UI
-* Updated to better Handle TO lines with no attributes
-* Refactored Transfer Attribute Tool to better handle differing Spatial Extents
-```
-
-[Previous Releases](releases)
 
 GNAT is developed and maintained by [South Fork Research, Inc](http://southforkresearch.org).
