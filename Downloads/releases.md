@@ -2,8 +2,13 @@
 
 ## Version 2.1
 
-**[Version 2.1.07](Downloads/arcGNAT_2.1.07.zip)**
-2017-JUNE-22
+**[Version 2.1.08](Downloads/arcGNAT_2.1.08.zip)** 2017-JULY-12
+
+```markdown
+* Fixed several issues with the Transfer Line Attributes tool.
+```
+
+**[Version 2.1.07](Downloads/arcGNAT_2.1.07.zip)** 2017-JUNE-22
 
 ```markdown
 * Changed buffer distance used in the Build Network Topology tool when selecting upstream stream reaches.
@@ -19,7 +24,7 @@
 [Version 2.1.04](Downloads/arcGNAT_2.1.04.zip) 2017-MAY-16
 
 ```markdown
-* Fixed Issue with Segmentation UI
+* Fixed issue with Segmentation UI
 * Updated to better Handle TO lines with no attributes
 ```
 
