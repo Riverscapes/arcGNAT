@@ -34,8 +34,9 @@ import CombineAttributes
 import GenerateStreamBranches
 import Segmentation
 import FindNetworkFeatures
+import CalculateGradient
 
-GNAT_version = "2.1.08"
+GNAT_version = "2.1.09"
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
@@ -66,7 +67,8 @@ class Toolbox(object):
                       FindNetworkFeaturesTool,
                       NewGNATProject,
                       LoadNetworkToProject,
-                      CommitRealization]
+                      CommitRealization,
+                      CalculateGradientTool]
 
 
 # GNAT Project Management
@@ -1434,6 +1436,66 @@ class FindNetworkFeaturesTool(object):
         """The source code of the tool."""
         reload(FindNetworkFeatures)
         FindNetworkFeatures.main(p[0].valueAsText,
+                        p[1].valueAsText,
+                        p[2].valueAsText)
+
+        return
+
+
+class CalculateGradientTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Calculate Gradient"
+        self.description = "Calculates gradient (percent rise/run) per stream reach feature."
+        self.canRunInBackground = False
+        self.category = strCatagoryUtilities
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input Stream Network",
+            name="InputStreamNetwork",
+            datatype="DEShapefile",
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Elevation (DEM) Raster Dataset",
+            name="InputDEM",
+            datatype="DERasterDataset",
+            parameterType="Required",
+            direction="Input")
+
+        param2 = arcpy.Parameter(
+            displayName="Output Shapefile",
+            name="OutputStreamNetwork",
+            datatype="DEShapefile",  # Integer
+            parameterType="Required",
+            direction="Output")
+
+        return [param0, param1, param2]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(CalculateGradient)
+        CalculateGradient.main(p[0].valueAsText,
                         p[1].valueAsText,
                         p[2].valueAsText)
 
