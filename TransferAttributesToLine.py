@@ -22,9 +22,9 @@ import gis_tools
 import DividePolygonBySegment
 
 
-def empty_attributes(fc):
-    transfer_fields = [f for f in arcpy.ListFields(fc) if f.type not in ["OID", "Geometry"]]
-    for field in transfer_fields:
+def empty_attributes(fc, to_fields):
+    from_fields = [f for f in arcpy.ListFields(fc) if f.name not in to_fields]
+    for field in from_fields:
         with arcpy.da.UpdateCursor(fc, [field.name]) as cursor:
             for row in cursor:
                 if field.type == "String":
@@ -101,10 +101,11 @@ def main(fcFromLine,
     arcpy.env.extent = fcToLine # changed earlier in the workflow in DividePolygonBySegment module
     arcpy.Append_management([fcToLineOutsideFromBuffer], fcOutputLineNetwork, "NO_TEST")
 
-    # Change values of appended features to -99999 where possible
+    # Change values of "From" features to -99999 if no "To" features to transfer to.
     arcpy.MakeFeatureLayer_management(fcOutputLineNetwork, "lyrOutputLineNetwork")
     arcpy.SelectLayerByAttribute_management("lyrOutputLineNetwork", "NEW_SELECTION", """"Join_Count" = 0""")
-    empty_attributes("lyrOutputLineNetwork")
+    to_fields = [f.name for f in arcpy.ListFields(fcToLine)]
+    empty_attributes("lyrOutputLineNetwork", to_fields)
     arcpy.SelectLayerByAttribute_management("lyrOutputLineNetwork", "CLEAR_SELECTION")
 
     arcpy.AddMessage("GNAT TLA: Tool complete")
