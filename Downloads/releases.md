@@ -2,6 +2,12 @@
 
 ## Version 2.1
 
+**[Version 2.1.09](Downloads/arcGNAT_2.1.09.zip)** 2017-JULY-13
+
+```markdown
+* Added the Calculate Gradient tool.
+```
+
 **[Version 2.1.08](Downloads/arcGNAT_2.1.08.zip)** 2017-JULY-12
 
 ```markdown
