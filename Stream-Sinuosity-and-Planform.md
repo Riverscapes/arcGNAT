@@ -56,6 +56,6 @@ _______________________________________________________________
 1. Use [Sinuosity By Segment Tool](https://github.com/SouthForkResearch/gnat/wiki/Sinuosity-by-Segment) for stream and valley centerlines
   * Convert segment ends to points
   * Find straight-line distance
-  * Calculate sinuosity (straight-line distance/segment distance)
+  * Calculate sinuosity (segment distance/straight-line distance)
 2. Transfer valley bottom sinuosity to stream centerline using the [Transfer Line Attributes](https://github.com/SouthForkResearch/gnat/wiki/Transfer-Line-Attributes) tool
 3. Calculate the planform metric for each divided segment
