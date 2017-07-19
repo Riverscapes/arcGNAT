@@ -37,10 +37,20 @@ _______________________________________________________________
 
 1. Go through process of stream segmentation (1000m and/or 500m).
 2. Find braids in a separate stream network feature class (after topology clean-up, removal of canals, etc.).
-3. Select braids segments that share a centroid with stream features in segmented stream network.
-4. Switch selected braids.
+3. Select braids segments using IsBraided attribute field
+4. Remove from selection the currently selected braid features that share a centroid with stream features in segmented stream network.
 5. Dissolve selected braids (using "single part" parameter)
 6. Self-intersect dissolved braids to get "braid-to-braid" nodes.
-7. Intersect selected braids with segmented stream network - produces "braid-to-mainstem" nodes.
-8. Calculate count of braid nodes per stream segment
-9. Calculate count of tributary confluence nodes per stream segment
+7. Intersect selected braids with segmented stream network - produces "braid-to-mainstem" nodes. (results in "Multipoints")
+8. Convert braid nodes from multipart to single part
+9. Add new attribute field ("node_type" = 'braid')
+10. Dissolve segmented stream network (single-part)
+11. Self-intersect dissolved stream network to get "tributary confluence" nodes
+12. Add new attribute field ("node_type" = 'confluence')
+13. Merge node datasets into new feature class
+14. Spatial one-to-many join between stream segment features and braid node features.
+15. Summarize by LineOID
+16. Calculate count of braid nodes per stream segment
+17. Spatial one-to-many spatial join between stream segment features and confluence node features
+18. Summarize by LineOID
+19. Calculate count of tributary confluence nodes per stream segment
