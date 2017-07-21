@@ -2,6 +2,12 @@
 
 ## Version 2.1
 
+**[Version 2.1.10](Downloads/arcGNAT_2.1.10.zip)** 2017-JULY-21
+
+```markdown
+* Added the Calculate Braidedness tool.
+```
+
 **[Version 2.1.09](Downloads/arcGNAT_2.1.09.zip)** 2017-JULY-13
 
 ```markdown
