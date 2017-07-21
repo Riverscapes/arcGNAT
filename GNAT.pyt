@@ -10,8 +10,8 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.0 Beta                                                       #
-# Revised:     2017-May-25                                                    #
+# Version:     2.1.10                                                         #
+# Revised:     2017-July-21                                                   #
 # Released:                                                                   #
 #                                                                             #
 # License:     MIT License                                                    #
@@ -35,8 +35,9 @@ import GenerateStreamBranches
 import Segmentation
 import FindNetworkFeatures
 import CalculateGradient
+import CalculateThreadedness
 
-GNAT_version = "2.1.09"
+GNAT_version = "2.1.10"
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
@@ -68,7 +69,8 @@ class Toolbox(object):
                       NewGNATProject,
                       LoadNetworkToProject,
                       CommitRealization,
-                      CalculateGradientTool]
+                      CalculateGradientTool,
+                      CalculateThreadednessTool]
 
 
 # GNAT Project Management
@@ -1499,6 +1501,82 @@ class CalculateGradientTool(object):
                         p[1].valueAsText,
                         p[2].valueAsText)
 
+        return
+
+
+class CalculateThreadednessTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Calculate Threadedness"
+        self.description = "Calculates multi-threaded nodes per stream segment in a network."
+        self.canRunInBackground = False
+        self.category = strCatagoryUtilities
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input segmented stream network feature class",
+            name="InputSegmentNetwork",
+            datatype="DEShapefile",
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Input multi-threaded stream network feature class",
+            name="InputFullNetwork",
+            datatype="DEShapefile",
+            parameterType="Required",
+            direction="Input")
+        param1.filter.list = ["Polyline"]
+
+        param2 = arcpy.Parameter(
+            displayName="Output node feature class",
+            name="OutputNodes",
+            datatype="DEShapefile",
+            parameterType="Required",
+            direction="Output")
+
+        param3 = arcpy.Parameter(
+            displayName="Output stream network feature class",
+            name="OutputStreamNetwork",
+            datatype="DEShapefile",
+            parameterType="Required",
+            direction="Output")
+
+        param4 = arcpy.Parameter(
+            displayName="Scratch workspace",
+            name="scratchWorkspace",
+            datatype="DEWorkspace",
+            parameterType="Required", # FIXME temporary fix;
+            direction="Input")
+
+        return [param0, param1, param2, param3, param4]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(CalculateThreadedness)
+        CalculateThreadedness.main(p[0].valueAsText,
+                               p[1].valueAsText,
+                               p[2].valueAsText,
+                               p[3].valueAsText,
+                               p[4].valueAsText)
         return
 
 # Other Functions #
