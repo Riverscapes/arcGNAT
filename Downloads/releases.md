@@ -2,6 +2,11 @@
 
 ## Version 2.1
 
+**[Version 2.1.11](Downloads/arcGNAT_2.1.11.zip)** 2017-AUGUST-4
+```markdown
+* Removed the junciont points output, which was causing an exception.
+```
+
 **[Version 2.1.10](Downloads/arcGNAT_2.1.10.zip)** 2017-JULY-21
 
 ```markdown
