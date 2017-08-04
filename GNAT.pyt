@@ -994,21 +994,13 @@ class StreamOrderTool(object):
         param3.filter.list = ["Point"]
 
         param4 = arcpy.Parameter(
-            displayName="Output junction points",
-            name="outputJunctionPointsFC",
-            datatype="DEFeatureClass",
-            parameterType="Required",
-            direction="Output")
-        param4.filter.list = ["Point"]
-
-        param5 = arcpy.Parameter(
             displayName="Scratch workspace",
             name="InputTempWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
 
-        return [param0,param1,param2,param3,param4,param5]# + listControlParams
+        return [param0,param1,param2,param3,param4]# + listControlParams
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -1036,8 +1028,7 @@ class StreamOrderTool(object):
                          p[1].valueAsText,
                          p[2].valueAsText,
                          p[3].valueAsText,
-                         p[4].valueAsText)#,
-                        # p[5].valueAsText)
+                         p[4].valueAsText)
         return
 
 

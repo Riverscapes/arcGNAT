@@ -130,7 +130,7 @@ def main(inputFCPolylineNetwork,
         
     arcpy.DeleteIdentical_management(fcStreamOrderTransistionPoints, "Shape")
     arcpy.CopyFeatures_management(fcNetworkNodes, outputFCIntersectPoints)
-    arcpy.CopyFeatures_management(fcNetworkIntersectPoints, outputFCIntersectPoints)
+    # arcpy.CopyFeatures_management(fcNetworkIntersectPoints, outputFCIntersectPoints)
 
     ClearInMemory.main()
 
