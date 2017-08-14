@@ -1,0 +1,3 @@
+[submodule "Riverscapes"]
+	path = Riverscapes
+	url = git@github.com:SouthForkResearch/PythonRiverscapesProject.git
