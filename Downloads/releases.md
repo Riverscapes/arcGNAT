@@ -1,10 +1,25 @@
+# Installation
+
+## Zipfile
+
+The Confinement Toolbox is provided as a zip file containing a .pyt file and supporting script files. 
+
+1. Download the zipfile and unzip the contents to your computer (keep all files together).
+2. Open ArcGIS.
+3. Add the .pyt file to Arctoolbox as you would any other Geoprocessing Toolbox.
+
 # Downloads
 
 ## Version 2.1
 
+**[Version 2.1.12](Downloads/arcGNAT_2.1.12.zip)** 2017-AUGUST-14
+```markdown
+* Fixed minor issue with how a field was populated in the Commit Stream Network tool.
+```
+
 **[Version 2.1.11](Downloads/arcGNAT_2.1.11.zip)** 2017-AUGUST-4
 ```markdown
-* Removed the junciont points output, which was causing an exception.
+* Removed the junction points output, which was causing an exception.
 ```
 
 **[Version 2.1.10](Downloads/arcGNAT_2.1.10.zip)** 2017-JULY-21
@@ -57,13 +72,3 @@
 ```
 
 [Version 2.1](Downloads/GNAT_2.1_20170303.zip) 2017-March-03
-
-# Installation
-
-## Zipfile
-
-The Confinement Toolbox is provided as a zip file containing a .pyt file and supporting script files. 
-
-1. Download the zipfile and unzip the contents to your computer (keep all files together).
-2. Open ArcGIS.
-3. Add the .pyt file to Arctoolbox as you would any other Geoprocessing Toolbox.
