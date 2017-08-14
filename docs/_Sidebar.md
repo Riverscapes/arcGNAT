@@ -1,4 +1,4 @@
-[Home](https://github.com/SouthForkResearch/gnat/wiki)
+[Home](index)
 
 [Download and Installation](releases)
 
@@ -6,24 +6,24 @@
 
 Tools
 * Project Management
-	* [Create New GNAT Project](Project_NewGNATProject)
-	* [Load Network to Project](Project_LoadNetwork)
-	* [Commit Network to Realization](Project_CommitRealization)
+  * [Create New GNAT Project](Project_NewGNATProject)
+  * [Load Network to Project](Project_LoadNetwork)
+  * [Commit Network to Realization](Project_CommitRealization)
 
 * Main
-  * Step 1 - [Stream Network Preparation](https://github.com/SouthForkResearch/gnat/wiki/Stream-Network-Prep)
-    * [Build Network Topology Table](https://github.com/SouthForkResearch/gnat/wiki/Build-Network-Topology-Table)
-    * [Find Network Features](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Features)
+  * Step 1 - [Stream Network Preparation](Stream-Network-Prep)
+    * [Build Network Topology Table](Build-Network-Topology-Table)
+    * [Find Network Features](Find-Network-Features)
   * Step 2 - Stream Network Segmentation
-    * [Segment Stream Network](https://github.com/SouthForkResearch/gnat/wiki/Segment-Stream-Network)
+    * [Segment Stream Network](Segment-Stream-Network)
   * Step 3 - Geomorphic Attributes
-    * [Stream Sinuosity and Planform](https://github.com/SouthForkResearch/gnat/wiki/Stream-Sinuosity-and-Planform)
+    * [Stream Sinuosity and Planform](Stream-Sinuosity-and-Planform)
 * Utilities
-    * [Calculate Stream Order](https://github.com/SouthForkResearch/gnat/wiki/Calculate-Stream-Order)
-    * [Centerline Tool](https://github.com/SouthForkResearch/gnat/wiki/Centerline-Tool)
-    * [Combine Attributes](https://github.com/SouthForkResearch/gnat/wiki/CombineAttributes)
-    * [Divide Polygon by Segments](https://github.com/SouthForkResearch/gnat/wiki/Divide-Polygon-by-Segments)
-    * [Find Braids in Stream Network](https://github.com/SouthForkResearch/gnat/wiki/Find-Braids-in-Stream-Network)
-    * [Generate Stream Branches](https://github.com/SouthForkResearch/gnat/wiki/Generate-Stream-Branches)
-    * [Sinousity by Stream Segment](https://github.com/SouthForkResearch/gnat/wiki/Sinuosity-by-Segment)
-    * [Transfer Line Attributes](https://github.com/SouthForkResearch/gnat/wiki/Transfer-Line-Attributes)
+    * [Calculate Stream Order](Calculate-Stream-Order)
+    * [Centerline Tool](Centerline-Tool)
+    * [Combine Attributes](CombineAttributes)
+    * [Divide Polygon by Segments](Divide-Polygon-by-Segments)
+    * [Find Braids in Stream Network](Find-Braids-in-Stream-Network)
+    * [Generate Stream Branches](Generate-Stream-Branches)
+    * [Sinousity by Stream Segment](Sinuosity-by-Segment)
+    * [Transfer Line Attributes](Transfer-Line-Attributes)
