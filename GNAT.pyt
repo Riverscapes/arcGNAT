@@ -10,8 +10,8 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.1.10                                                         #
-# Revised:     2017-July-21                                                   #
+# Version:     2.1.12                                                         #
+# Revised:     2017-August-14                                                 #
 # Released:                                                                   #
 #                                                                             #
 # License:     MIT License                                                    #
@@ -37,7 +37,7 @@ import FindNetworkFeatures
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.1.11"
+GNAT_version = "2.1.12"
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
@@ -267,7 +267,7 @@ class CommitRealization(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
         self.label = "Commit Stream Network"
-        self.description = "Commit Changes to the Stream Network as a new Realization in the GNAT Project."
+        self.description = "Commit changes to the stream network as a new realization in a GNAT project."
         self.canRunInBackground = False
         self.category = strCatagoryProjectManagement
         return
@@ -288,6 +288,7 @@ class CommitRealization(object):
             datatype="Field",
             parameterType="Optional",
             direction="Input")
+        paramIDField.parameterDependencies = [paramStreamNetwork.name]
 
         paramNetworkTable = arcpy.Parameter(
             displayName="Network Table",
@@ -307,24 +308,10 @@ class CommitRealization(object):
         """Set whether tool is licensed to execute."""
         return True
 
-    def updateParameters(self, p):
+    def updateParameters(self, parameters):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
-
-        # if p[0].altered:
-            # if p[0].value and arcpy.Exists(p[0].valueAsText):
-            #     GNATProject = Riverscapes.Project(p[0].valueAsText)
-                # GNATProject.loadProjectXML(p[0].valueAsText)
-
-                # if p[1].altered:
-                #     if p[1].value:
-                #         #p[2].value = path.join(GNATProject.projectPath, "Outputs", p[1].valueAsText) + "\\GNAT_StreamNetwork.shp"
-                #         pass
-        # if p[2].altered:
-            #if p[2].value and arcpy.Exists(p[2].valueAsText):
-        populateFields(p[2],p[3],"")
-
         return
 
     def updateMessages(self, parameters):
