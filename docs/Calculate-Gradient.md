@@ -40,7 +40,7 @@ _______________________________________________________________
 
 ### Calculation Method
 
-1. Plot the start (i.e. 'From') and end (i.e. 'To') nodes of each stream feature.
+1. Plot the start (i.e. 'From') and end (i.e. 'To') points of each stream feature.
 2. Add new attribute fields to the node feature class, to store X and Y coordinates, as well as elevation values.
 3. Calculate X and Y coordinates (in the native coordinate system of the input stream network)
 4. Extract elevation values from raster dataset for each node point.

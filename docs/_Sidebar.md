@@ -19,7 +19,9 @@ Tools
   * Step 3 - Geomorphic Attributes
     * [Stream Sinuosity and Planform](Stream-Sinuosity-and-Planform)
 * Utilities
+    * [Calculate Gradient](Calculate-Gradient)
     * [Calculate Stream Order](Calculate-Stream-Order)
+    * [Calculate Threadedness](Calculate-Threadedness)
     * [Centerline Tool](Centerline-Tool)
     * [Combine Attributes](CombineAttributes)
     * [Divide Polygon by Segments](Divide-Polygon-by-Segments)

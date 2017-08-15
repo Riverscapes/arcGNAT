@@ -32,7 +32,7 @@ Stream network feature class which includes multi-threaded streams ((i.e. braid 
 **Output stream network with threadedness metrics**
 
 Polyline feature class with calculated threadedness values, including:
-* all nodes per segment
+* node types per segment
 * braid nodes per segment
 
 **Output network nodes**
