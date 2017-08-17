@@ -8,52 +8,6 @@ arcGNAT was originally developed to support the geomorphic attribute analysis an
 * Model geomorphic attributes
 
 
-## Download
-
-**[Version 2.1.12](Downloads/arcGNAT_2.1.12.zip")** 2017 AUG 14
-
-``` * Fixed minor issue with how a field was populated in the Commit Stream Network tool.```
-
-[Previous Versions and Release Notes](releases)
-
-### Installation
-
-The arcGNAT Toolbox is provided as a zip file containing a .pyt file and supporting script files. 
-
-1. Unzip the contents to your computer (keep all files together).
-2. Open ArcGIS.
-3. Add the .pyt file to Arc toolbox as you would any other Geoprocesssing Toolbox.
-
-# Usage
-
-[About GNAT Projects](GNAT_Project)
-
-Tools
-* Project Management
-  * [Create New GNAT Project](Project_NewGNATProject)
-  * [Load Network to Project](Project_LoadNetwork)
-  * [Commit Network to Realization](Project_CommitRealization)
-
-* Main
-  * Step 1 - [Stream Network Preparation](Stream-Network-Prep)
-    * [Build Network Topology Table](Build-Network-Topology-Table)
-    * [Find Network Features](Find-Network-Features)
-  * Step 2 - Stream Network Segmentation
-    * [Segment Stream Network](Segment-Stream-Network)
-  * Step 3 - Geomorphic Attributes
-    * [Stream Sinuosity and Planform](Stream-Sinuosity-and-Planform)
-* Utilities
-    * [Calculate Gradient](Calculate-Gradient)
-    * [Calculate Stream Order](Calculate-Stream-Order)
-    * [Calculate Threadedness](Calculate-Threadedness)
-    * [Centerline Tool](Centerline-Tool)
-    * [Combine Attributes](CombineAttributes)
-    * [Divide Polygon by Segments](Divide-Polygon-by-Segments)
-    * [Find Braids in Stream Network](Find-Braids-in-Stream-Network)
-    * [Generate Stream Branches](Generate-Stream-Branches)
-    * [Sinousity by Stream Segment](Sinuosity-by-Segment)
-    * [Transfer Line Attributes](Transfer-Line-Attributes)
-
 ##  Support
 
 GNAT is developed and maintained by [South Fork Research, Inc](http://southforkresearch.org).
