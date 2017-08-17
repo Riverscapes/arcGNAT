@@ -1,1 +1,27 @@
-theme: jekyll-theme-slate
+# Site settings
+title: GNAT
+description: > # this means to ignore newlines until "baseurl:"
+  Online help and documentation site for the Geomorphic Network Analysis Toolbox (GNAT)
+url: https://riverscapes.github.io
+baseurl: "/arcGNAT"
+port: 4001
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+defaults:
+  -
+    scope:
+      path: "" # an empty string here means all files in the project
+    values:
+      layout: "default"
+
+
+layouts_dir:  src/_layouts
+includes_dir: src/_includes
+
+exclude:
+  - src
+  - LICENSE
+  - README.md
+  - _config.yml
