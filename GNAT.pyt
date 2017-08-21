@@ -21,6 +21,7 @@
 
 # # Import Modules # #
 import arcpy
+import os
 from os import path, makedirs
 import BuildNetworkTopology
 import FindBraidedNetwork
@@ -877,25 +878,22 @@ class PlanformTool(object):
             displayName="Output Stream Network with Sinuosity Attribute",
             name="OutputFCCenterline",
             datatype="DEFeatureClass", 
-            parameterType="Required",
+            parameterType="Optional",
             direction="Output")
-        param3.filter.list = ["Polyline"]
 
         param4 = arcpy.Parameter(
             displayName="Output Valley Centerline with Sinuosity Attribute",
             name="OutputFCValleyCenterline",
             datatype="DEFeatureClass",
-            parameterType="Required",
+            parameterType="Optional",
             direction="Output")
-        param4.filter.list = ["Polyline"]
 
         param5 = arcpy.Parameter(
             displayName="Output Stream Network with Planform Attribute",
             name="OutputFCPlanformCenterline",
             datatype="DEFeatureClass",
-            parameterType="Required",
+            parameterType="Optional",
             direction="Output")
-        param5.filter.list = ["Polyline"]
 
         param6 = arcpy.Parameter(
             displayName="Scratch Workspace",
@@ -903,7 +901,7 @@ class PlanformTool(object):
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
-        param3.filter.list = ["Local Database"]
+        param6.filter.list = ["Local Database"]
         
         return [param0,param1,param2,param3,param4,param5,param6]
 
@@ -915,13 +913,21 @@ class PlanformTool(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
-
+        if  parameters[0].altered and not parameters[0].hasBeenValidated:
+            desc = arcpy.Describe(parameters[0].value)
+            out_path = desc.path
+            out_name3 = "SegNetwork_Sinousity.shp"
+            out_name4 = "Valley_Centerline_Sinousity.shp"
+            out_name5 = "SegNetwork_Planform.shp"
+            parameters[3].value = os.path.join(out_path, out_name3)
+            parameters[4].value = os.path.join(out_path, out_name4)
+            parameters[5].value = os.path.join(out_path, out_name5)
         return
 
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
-        testWorkspacePath(parameters[6])
+        # testWorkspacePath(parameters[6])
         return
 
     def execute(self, p, messages):
@@ -936,6 +942,14 @@ class PlanformTool(object):
                             p[4].valueAsText,
                             p[5].valueAsText,
                             getTempWorkspace(p[6].valueAsText))
+
+        # inStreamNetwork = r"C:\JL\Testing\arcGNAT\Issue43"
+        # inValleyCline = r"C:\JL\Testing\arcGNAT\Issue43"
+        # inValleyPoly = r"C:\JL\Testing\arcGNAT\Issue43"
+        # outSinStream = ""
+        # outSinValley = ""
+        # outPlanStream = ""
+        # wspace = ""
         return
 
 
@@ -1655,3 +1669,13 @@ paramStreamNetwork = arcpy.Parameter(
     parameterType="Required",
     direction="Input")
 paramStreamNetwork.filter.list = ["Polyline"]
+
+
+# DEBUG
+# def main():
+#     tbx = Toolbox()
+#     tool = PlanformTool()
+#     tool.execute(tool.getParameterInfo(), None)
+#
+# if __name__ == '__main__':
+#     main()
