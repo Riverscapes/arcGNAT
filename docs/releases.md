@@ -11,6 +11,10 @@ The Confinement Toolbox is provided as a zip file containing a .pyt file and sup
 # Downloads
 
 ## Version 2.1
+**[Version 2.1.13](Downloads/arcGNAT_2.1.13.zip)** 2017-AUGUST-21
+```markdown
+* Minor change to Sinuosity and Planform tool, adding default output parameters.
+```
 
 **[Version 2.1.12](Downloads/arcGNAT_2.1.12.zip)** 2017-AUGUST-14
 ```markdown
