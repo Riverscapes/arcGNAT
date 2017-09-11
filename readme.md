@@ -5,4 +5,4 @@ developed by [South Fork Research, Inc.](http://www.southforkresearch.org) to as
 processing and analysis of geospatial stream network data.
 
 Detailed download and installation instructions, as well as help files for each of the GNAT tools 
-is available at [gnat.riverscapes.xyz](https://gnat.riverscapes.xyz).
+is available at [gnat.riverscapes.xyz](http://gnat.riverscapes.xyz).
