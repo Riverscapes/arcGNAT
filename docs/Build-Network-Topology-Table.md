@@ -4,7 +4,7 @@ The resulting output table, which will be named *StreamNetwork*, can serve as an
 
 If stream networks are not connected, stream reaches within the disconnected networks will not be included in the resulting network table. The [Find Network Features](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Features) tool can explicitly identify these disconnected networks.
 
-[[{{url}}/images/buildNetworkTable_example.PNG]]
+[alt text]()images/buildNetworkTable_example.PNG)
 
 _______________________________________________________________
 ## Usage
