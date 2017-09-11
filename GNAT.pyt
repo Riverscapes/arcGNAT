@@ -646,22 +646,6 @@ class SegmentationTool(object):
         """Define parameter definitions"""
         reload(Segmentation)
 
-        paramRealization = arcpy.Parameter(
-            displayName="Realization Name",
-            name="realization",
-            datatype="GPString",
-            parameterType="Optional",
-            direction="Input")
-        paramRealization.enabled = "False"
-
-        paramAnalysisName = arcpy.Parameter(
-            displayName="Segmentation Name",
-            name="analysisName",
-            datatype="GPString",
-            parameterType="Optional",
-            direction="Input")
-        paramAnalysisName.enabled = "False"
-
         paramInStreamNetwork = arcpy.Parameter(
             displayName="Stream Network Polyline Feature Class",
             name="InputStreamNetwork",
@@ -903,25 +887,57 @@ class PlanformTool(object):
             direction="Input")
         param6.filter.list = ["Local Database"]
         
-        return [param0,param1,param2,param3,param4,param5,param6]
+        return [param0,param1,param2,param3,param4,param5,param6,paramProjectXML,paramRealization,paramAnalysisName]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
         return True
 
-    def updateParameters(self, parameters):
+    def updateParameters(self, p):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
-        if  parameters[0].altered and not parameters[0].hasBeenValidated:
-            desc = arcpy.Describe(parameters[0].value)
+        if  p[0].altered and not p[0].hasBeenValidated:
+            desc = arcpy.Describe(p[0].value)
             out_path = desc.path
             out_name3 = "SegNetwork_Sinousity.shp"
             out_name4 = "Valley_Centerline_Sinousity.shp"
             out_name5 = "SegNetwork_Planform.shp"
-            parameters[3].value = os.path.join(out_path, out_name3)
-            parameters[4].value = os.path.join(out_path, out_name4)
-            parameters[5].value = os.path.join(out_path, out_name5)
+            p[3].value = os.path.join(out_path, out_name3)
+            p[4].value = os.path.join(out_path, out_name4)
+            p[5].value = os.path.join(out_path, out_name5)
+
+        #TODO add Riverscape
+        from Riverscapes import Riverscapes
+
+        if p[7].value:
+            if arcpy.Exists(p[7].valueAsText):
+                GNATProject = Riverscapes.Project(p[7].valueAsText)
+
+                p[8].enabled = "True"
+                p[8].filter.list = GNATProject.Realizations.keys()
+                p[9].enabled = "False"
+                p[9].value = ""
+                p[0].enabled = "False"
+
+                if p[8].value:
+                    currentRealization = GNATProject.Realizations.get(p[8].valueAsText)
+                    p[9].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
+                    p[9].enabled = "True"
+                    if p[9].value:
+                        # TODO should this write to the Riverscape project folders by default?
+                        p[5].value = path.join(GNATProject.projectPath, "Outputs", p[1].valueAsText, "Analyses",
+                                                p[2].valueAsText, "GNAT_SegmentedNetwork") + ".shp"
+
+        else:
+            p[8].filter.list = []
+            p[8].value = ""
+            p[8].enabled = "False"
+            p[9].value = ""
+
+        # NOT SURE WHAT THIS DOES
+        populateFields(p[3],p[6],"GNIS_Name")
+
         return
 
     def updateMessages(self, parameters):
@@ -943,13 +959,9 @@ class PlanformTool(object):
                             p[5].valueAsText,
                             getTempWorkspace(p[6].valueAsText))
 
-        # inStreamNetwork = r"C:\JL\Testing\arcGNAT\Issue43"
-        # inValleyCline = r"C:\JL\Testing\arcGNAT\Issue43"
-        # inValleyPoly = r"C:\JL\Testing\arcGNAT\Issue43"
-        # outSinStream = ""
-        # outSinValley = ""
-        # outPlanStream = ""
-        # wspace = ""
+        #TODO add Riverscape
+        #TODO add valley bottom input parameters to ProjectXML
+
         return
 
 
@@ -1659,8 +1671,27 @@ paramProjectXML = arcpy.Parameter(
     name="projectXML",
     datatype="DEFile",
     parameterType="Optional",
-    direction="Input")
+    direction="Input",
+    category='Riverscapes Project Management')
 paramProjectXML.filter.list = ["xml"]
+
+paramRealization = arcpy.Parameter(
+    displayName="Realization Name",
+    name="realization",
+    datatype="GPString",
+    parameterType="Optional",
+    direction="Input",
+    category='Riverscapes Project Management')
+paramRealization.enabled = "False"
+
+paramAnalysisName = arcpy.Parameter(
+    displayName="Segmentation Name",
+    name="analysisName",
+    datatype="GPString",
+    parameterType="Optional",
+    direction="Input",
+    category='Riverscapes Project Management')
+paramAnalysisName.enabled = "False"
 
 paramStreamNetwork = arcpy.Parameter(
     displayName="Input Stream Network",
@@ -1669,13 +1700,3 @@ paramStreamNetwork = arcpy.Parameter(
     parameterType="Required",
     direction="Input")
 paramStreamNetwork.filter.list = ["Polyline"]
-
-
-# DEBUG
-# def main():
-#     tbx = Toolbox()
-#     tool = PlanformTool()
-#     tool.execute(tool.getParameterInfo(), None)
-#
-# if __name__ == '__main__':
-#     main()
