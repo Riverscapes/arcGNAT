@@ -3,7 +3,7 @@ The **Calculate Gradient** tool calculates stream gradient per feature in a stre
 by measuring the difference in elevation between the start and end nodes of each stream feature (i.e. reach or segment) 
 within the network.
 
-[images/gradient_example.png] 
+![gradient_example]({{site.baseurl}}/images/gradient_example.png)
 
 _______________________________________________________________
 ##Usage

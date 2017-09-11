@@ -20,16 +20,16 @@ for each feature or error type. This table can then be joined back to the input 
 
 **Illustrated examples**
 
-| Feature Type            | Example                                   |
-| ----------------------- | ----------------------------------------- |
-| Braids                  | [[images/findNetworkError_braid.png]]     |
-| Duplicate Reaches       | [[images/findNetworkError_dup.png]]       |
-| Overlapping Reaches     | [[images/findNetworkError_overlap.png]]   |  
-| Crossed Reaches         | [[images/findNetworkError_crossed.png]]   |
-| Disconnected Reaches    | [[images/findNetworkError_disconnect.png]]|
-| Upstream flow direction | [[images/findNetworkError_flow.png]]      |
+| Feature Type            | Example                                                                      |
+| ----------------------- | -----------------------------------------------------------------------------|
+| Braids                  | ![error_braid]({{site.baseurl}}/images/findNetworkError_braid.png)            |
+| Duplicate Reaches       | ![error_duplicate]({{site.baseurl}}/images/findNetworkError_dup.png)          |
+| Overlapping Reaches     | ![error_overlap]({{site.baseurl}}/images/findNetworkError_overlap.png)        |  
+| Crossed Reaches         | ![error_crossed]({{site.baseurl}}/images/findNetworkError_crossed.png)        |
+| Disconnected Reaches    | ![error_disconnected]({{site.baseurl}}/images/findNetworkError_disconnect.png)|
+| Upstream flow direction | ![error_flowdirection]({{site.baseurl}}/images/findNetworkError_flow.png)     |
 
-_______________________________________________________________________
+__________________________________________________________________________________________________________
 ## Usage
 
 ### Geoprocessing Environment
@@ -39,7 +39,7 @@ _______________________________________________________________________
 
 ### Input Parameters
 
-[[images/find_errors_form.PNG]]
+![find_errors_form]({{site.baseurl}}/images/find_errors_form.PNG)
 
 **Processed Input Stream Network**
 

@@ -1,6 +1,6 @@
 The **Divide Polygons by Segments** utility tool splits a polygon (i.e. channel buffers, valley bottoms) using the segments from a stream flow or center line. This can be useful for confinement calculations.
 
-[[images/divide_polygon_by_segments_example.PNG]]
+![tool_example]({{site.baseurl}}/images/divide_polygon_by_segments_example.PNG)
 
 _______________________________________________________________
 ## Usage 
@@ -10,7 +10,7 @@ _______________________________________________________________
 * We recommended running this tool with 64-bit python geoprocessing.
 * Disable Z and M geometry in the Shape field if topology errors are encountered.
 * Input data should be in a projected spatial reference system, not geographic.
-* Segment the flowline (i.e. centerline) as desired using the [Segment Stream Network](https://github.com/SouthForkResearch/gnat/wiki/Segment-Stream-Network) tool.
+* Segment the flowline (i.e. centerline) as desired using the [Segment Stream Network](http://gnat.riverscapes.xyz/Segment-Stream-Network) tool.
 
 ### Input Parameters
 

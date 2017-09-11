@@ -9,7 +9,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-[[images/combine_attributes_frm.png]]
+[combine_attributes_form]({{site.baseurl}}/images/combine_attributes_frm.png)
 
 **Input polyline feature classes**
 
@@ -21,7 +21,7 @@ Polygon feature class that provides a spatial boundary for processing, which sho
 
 **Is polygon segmented?** (optional)
 
-`Checked`: the bounding polygon is divided based on the “From” line network (i.e. using the [Divide Polygon by Segments](https://github.com/SouthForkResearch/gnat/wiki/Divide-Polygon-by-Segments) tool). This will reduce the amount of processing needed to run the tool.
+`Checked`: the bounding polygon is divided based on the “From” line network (i.e. using the [Divide Polygon by Segments](http://gnat.riverscapes.xyz/Divide-Polygon-by-Segments) tool). This will reduce the amount of processing needed to run the tool.
 
 `Unchecked`: divide the bounding polygon into segments as part of the processing.
 
@@ -34,4 +34,4 @@ _______________________________________________________________
 
 ### Calculation Method
 
-The **Combine Attributes** tool sends all input polyline feature classes in sequence to the [Transfer Line Attributes](https://github.com/SouthForkResearch/gnat/wiki/Transfer-Line-Attributes) tool.  The first polyline feature class in the list will have attributes transferred to it from all remaining feature classes in the list.
+The **Combine Attributes** tool sends all input polyline feature classes in sequence to the [Transfer Line Attributes](http://gnat.riverscapes.xyz/Transfer-Line-Attributes) tool.  The first polyline feature class in the list will have attributes transferred to it from all remaining feature classes in the list.

@@ -1,4 +1,4 @@
-The **Transfer Line Attributes** tool transfers attributes between stream network polyline feature classes, using a segmented polygon approach. The segmented polygons are generated using Thiessen polygons in the [Divide Polygons by Segments](https://github.com/SouthForkResearch/gnat/wiki/Divide-Polygon-by-Segments) tool. Alternatively, this tool can use Branch IDs from both networks datasets to better manage tributary junctions. 
+The **Transfer Line Attributes** tool transfers attributes between stream network polyline feature classes, using a segmented polygon approach. The segmented polygons are generated using Thiessen polygons in the [Divide Polygons by Segments](http://gnat.riverscapes.xyz/Divide-Polygon-by-Segments) tool. Alternatively, this tool can use Branch IDs from both networks datasets to better manage tributary junctions. 
 
 _______________________________________________________________
 ## Usage
@@ -12,7 +12,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-[[images/transfer_form.PNG]]
+![form]({{site.baseurl}}/images/seg_form.PNG)images/transfer_form.PNG)
 
 **Input “From” Line Network**
 
@@ -39,7 +39,7 @@ _______________________________________________________________
 
 ### Calculation Method
 
-1. Divide polygon into segments based on segmentation/junctions in the “From” line network, using the [Divide Polygons by Segments](https://github.com/SouthForkResearch/gnat/wiki/Divide-Polygon-by-Segments) tool.
+1. Divide polygon into segments based on segmentation/junctions in the “From” line network, using the [Divide Polygons by Segments](http://gnat.riverscapes.xyz/Divide-Polygon-by-Segments) tool.
 2. Split “To” line network based on the intersection of the divided polygons.
 3. Transfer “From” network OID’s to polygon segments, then to the “To” line network
 4. Join table of “From” network to the “To” network based on Object ID values.

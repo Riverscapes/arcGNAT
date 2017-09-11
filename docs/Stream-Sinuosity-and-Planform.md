@@ -20,7 +20,7 @@ Segmented valley bottom centerline polyline feature class. Valley sinuosity valu
 
 **Input Valley Bottom Polygon**
 
-Valley bottom polygon feature class of the stream network. This can also serve as input to the [Transfer Line Attribute](https://github.com/SouthForkResearch/gnat/wiki/Transfer-Line-Attributes) tool.
+Valley bottom polygon feature class of the stream network. This can also serve as input to the [Transfer Line Attribute](http://gnat.riverscapes.xyz/Transfer-Line-Attributes) tool.
 
 > This required input will be deprecated in future versions of this tool.
 
@@ -53,9 +53,9 @@ _______________________________________________________________
 
 ### Calculation Method
 
-1. Use [Sinuosity By Segment Tool](https://github.com/SouthForkResearch/gnat/wiki/Sinuosity-by-Segment) for stream and valley centerlines
+1. Use [Sinuosity By Segment Tool](http://gnat.riverscapes.xyz/Sinuosity-by-Segment) for stream and valley centerlines
   * Convert segment ends to points
   * Find straight-line distance
   * Calculate sinuosity (segment distance/straight-line distance)
-2. Transfer valley bottom sinuosity to stream centerline using the [Transfer Line Attributes](https://github.com/SouthForkResearch/gnat/wiki/Transfer-Line-Attributes) tool
+2. Transfer valley bottom sinuosity to stream centerline using the [Transfer Line Attributes](http://gnat.riverscapes.xyz/Transfer-Line-Attributes) tool
 3. Calculate the planform metric for each divided segment

@@ -1,7 +1,7 @@
 The **Calculate Threadedness** tool calculates the degree of threadedness for a stream network. 
 Values are calculated per stream segment.
 
-[images/threadedness_example.png] 
+[threadedness_example]({{site.baseurl}}/images/threadedness_example.png)
 _______________________________________________________________
 
 ## Usage

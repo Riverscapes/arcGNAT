@@ -5,7 +5,7 @@ and junction points representing confluences for stream reaches with the same
 stream order value. 
 
 The tool offers three segmentation methods for handling the 'leftover' or 'slivers' of stream length that occur when a stream reach is not equally divisible by the user-provided segmentation length.  (see Segmentation Method section below).
-[[images/seg_methods.png]]
+![methods]({{site.baseurl}}/images/seg_methods.png)
 
 _______________________________________________________________
 ## Tool Usage
@@ -44,7 +44,7 @@ The segmentation tool can be used in either a GNAT Project or as a stand-alone t
 
 9. Click OK to run the tool.
 
-[[images/seg_form.PNG]]
+![form]({{site.baseurl}}/images/seg_form.PNG)
 
 ### Non-Project Mode
 
@@ -53,7 +53,7 @@ The segmentation tool can be used in either a GNAT Project or as a stand-alone t
 
 - Requirements: 
   - Projected coordinate system, not geographic.
-  - (Optional) All appropriate lines are connected as a network. The user can find unconnected stream reaches by building a network topology table with the [Build Network Topology Table](https://github.com/SouthForkResearch/gnat/wiki/Build-Network-Topology-Table) tool, finding errors using the [Find Network Features](https://github.com/SouthForkResearch/gnat/wiki/Find-Network-Features) tool, then manually correcting topology errors using editing tools in ArcMap.
+  - (Optional) All appropriate lines are connected as a network. The user can find unconnected stream reaches by building a network topology table with the [Build Network Topology Table](http://gnat.riverscapes.xyz/Build-Network-Topology-Table) tool, finding errors using the [Find Network Features](http://gnat.riverscapes.xyz/Find-Network-Features) tool, then manually correcting topology errors using editing tools in ArcMap.
   - The network consists of single-part features only.
 
 3. **Segment Length (Meters)** The desired length of each stream segment, using the input stream network feature class linear unit. 
@@ -76,7 +76,6 @@ The segmentation tool can be used in either a GNAT Project or as a stand-alone t
 
 8. **Output Segmented Line Network** Name of the feature class which will store the resulting segmented stream network. In addition, stream order, junction point, and stream node feature classes are also output into the same workspace.
 
-[[images/seg_form.PNG]]
 
 ------
 
