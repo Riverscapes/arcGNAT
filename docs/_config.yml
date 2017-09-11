@@ -2,8 +2,8 @@
 title: GNAT
 description: > # this means to ignore newlines until "baseurl:"
   Online help and documentation site for the Geomorphic Network Analysis Toolbox (GNAT)
-url: https://riverscapes.github.io
-baseurl: "/arcGNAT"
+url: https://gnat.riverscapes.xyz
+baseurl: ""
 port: 4001
 # Build settings
 markdown: kramdown
