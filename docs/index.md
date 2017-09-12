@@ -8,6 +8,6 @@ arcGNAT was originally developed to support the geomorphic attribute analysis an
 * Model geomorphic attributes
 
 
-##  Support
+###  Support
 
 GNAT is developed and maintained by [South Fork Research, Inc](http://southforkresearch.org).
