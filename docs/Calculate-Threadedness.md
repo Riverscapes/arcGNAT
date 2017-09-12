@@ -1,3 +1,8 @@
+---
+title: Calculate Threadedness
+---
+
+
 The **Calculate Threadedness** tool calculates the degree of threadedness for a stream network. 
 Values are calculated per stream segment.
 

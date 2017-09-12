@@ -1,4 +1,10 @@
-The concepts here are based on the two-step process for generating a confinement Project. 
+---
+title: About Riverscapes Projects
+---
+
+
+The concepts here are based on the two-step process for generating a confinement project which will conform
+with the [Riverscapes](https://github.com/riverscapes) Project data schema. 
 
 ![](https://docs.google.com/drawings/d/1Y2zYp1tdWn-FWincxK55xr-zfW4yJCfg7Nw4UEpONRk/pub?w=1326&h=722)
 

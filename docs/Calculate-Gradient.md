@@ -1,3 +1,8 @@
+---
+title: Calculate Gradient
+---
+
+
 Stream gradient is the grade in elevation measured by the ratio of drop in elevation of a stream, per unit of horizontal distance. 
 The **Calculate Gradient** tool calculates stream gradient per feature in a stream network. Specifically, the tool calculates gradient
 by measuring the difference in elevation between the start and end nodes of each stream feature (i.e. reach or segment) 

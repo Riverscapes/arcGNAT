@@ -1,3 +1,8 @@
+---
+title: Stream Network Preparation
+---
+
+
 ## Step 1 - Stream Network Preparation
 
 Generally, the primary reason a user will want to use GNAT will be to produce a stream network dataset that is segmented using the **Segment Stream Network** tool.  In order for a segmentation process to be successful, that tool requires a stream network that is free from topological errors. For GNAT, we define a topological clean network based on the following criteria:

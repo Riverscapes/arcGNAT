@@ -1,3 +1,8 @@
+---
+title: Divide Polygons by Segments
+---
+
+
 The **Divide Polygons by Segments** utility tool splits a polygon (i.e. channel buffers, valley bottoms) using the segments from a stream flow or center line. This can be useful for confinement calculations.
 
 ![tool_example]({{site.baseurl}}/images/divide_polygon_by_segments_example.PNG)

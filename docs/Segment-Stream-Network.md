@@ -1,3 +1,8 @@
+---
+title: Segment Stream Network
+---
+
+
 The **Segment Stream Network** tool splits a stream network into 
 segments of equal, user-defined lengths. The tool produces a segmented stream 
 network polyline feature class, a network feature class with stream order, 

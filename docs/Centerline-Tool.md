@@ -1,3 +1,8 @@
+---
+title: Centerline Tool
+---
+
+
 The **Centerline** tool from the FluvialCorridor Toolbox has been modified and imported inside the Stream Network and RiverStyles toolbox. The modifications fix 1) missing centerlines in sections of the valley bottom polygon and 2) extra centerline segments.
 
 Please reference the [FluvialCorridor Toolbox](http://www.sciencedirect.com/science/article/pii/S0169555X14002219) for additional information on the **Centerline** tool.

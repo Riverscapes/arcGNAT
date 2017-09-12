@@ -1,3 +1,8 @@
+---
+title: Sinousity by Segment
+---
+
+
 The **Sinousity by Segment** tool calculates a sinuosity value for each segment feature in a polyline feature class.
 
 _______________________________________________________________

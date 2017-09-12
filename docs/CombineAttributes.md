@@ -1,3 +1,8 @@
+---
+title: Combine Attributes
+---
+
+
 The **Combine Attributes** tool merges feature attributes from two or more polyline feature classes into a single feature class.  
 
 _______________________________________________________________

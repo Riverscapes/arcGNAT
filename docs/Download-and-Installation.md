@@ -1,3 +1,7 @@
+---
+title: Download and Installation
+---
+
 The **Geomorphic Network and Analysis Toolbox (GNAT)** is an ArcGIS Python toolbox, and is relatively simple to download and install.
 
 ## GNAT Requirements
