@@ -2,14 +2,6 @@
 
 [Download and Installation](releases)
 
-[About GNAT Projects](GNAT_Project)
-
-Tools
-* Project Management
-  * [Create New GNAT Project](Project_NewGNATProject)
-  * [Load Network to Project](Project_LoadNetwork)
-  * [Commit Network to Realization](Project_CommitRealization)
-
 * Main
   * Step 1 - [Stream Network Preparation](Stream-Network-Prep)
     * [Build Network Topology Table](Build-Network-Topology-Table)
@@ -18,6 +10,13 @@ Tools
     * [Segment Stream Network](Segment-Stream-Network)
   * Step 3 - Geomorphic Attributes
     * [Stream Sinuosity and Planform](Stream-Sinuosity-and-Planform)
+    
+* Project Management
+  * [About GNAT Projects](About-GNAT-Projects.md)
+    * [Create New GNAT Project](Project_NewGNATProject)
+    * [Load Network to Project](Project_LoadNetwork)
+    * [Commit Network to Realization](Project_CommitRealization)
+    
 * Utilities
     * [Calculate Gradient](Calculate-Gradient)
     * [Calculate Stream Order](Calculate-Stream-Order)
