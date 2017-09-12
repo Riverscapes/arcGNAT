@@ -14,7 +14,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-[[images/divide_polygon_by_segments_form.PNG]]
+![form]({{site.baseurl}}/images/divide_polygon_by_segments_form.PNG)
 
 **Segmented Polyline Feature Class** 
 

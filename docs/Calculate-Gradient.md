@@ -6,7 +6,9 @@ within the network.
 ![gradient_example]({{site.baseurl}}/images/gradient_example.png)
 
 _______________________________________________________________
+
 ##Usage
+
 
 ### Geoprocessing Environment
 

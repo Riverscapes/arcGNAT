@@ -2,13 +2,13 @@ The **Find Braids in Stream Network** tool determines if stream reaches are part
 
 ![braids_example]({{site.baseurl}}/images/braids_example.png)
 _______________________________________________________________
-##Usage##
+## Usage
 
 ### Geoprocessing Environments
 * We recommend running this tool with 64-bit python geoprocessing.
 * Disable Z and M geometry in the Shape field if topology errors are encountered.
 
-###Input Parameters
+### Input Parameters
 
 ![braids_form]({{site.baseurl}}/images/braids_form.PNG)
 

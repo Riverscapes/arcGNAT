@@ -1,4 +1,4 @@
-The **Generate Stream Branches** tool dissolves the line network based on GNIS name and stream order attributes, to create stream branches in the stream network polyline feature class. The resulting stream branches can then by used by the [Segment Stream Network]https://github.com/SouthForkResearch/gnat/wiki/Segment-Stream-Network) tool for splitting the stream network by the longest, continuous stretches of stream.
+The **Generate Stream Branches** tool dissolves the line network based on GNIS name and stream order attributes, to create stream branches in the stream network polyline feature class. The resulting stream branches can then by used by the [Segment Stream Network](http://gnat.riverscapes.xyz/Segment-Stream-Network) tool for splitting the stream network by the longest, continuous stretches of stream.
 
 ![example]({{site.baseurl}}/images/branchID_example.png)
 

@@ -1,7 +1,7 @@
 The **Calculate Threadedness** tool calculates the degree of threadedness for a stream network. 
 Values are calculated per stream segment.
 
-[threadedness_example]({{site.baseurl}}/images/threadedness_example.png)
+![threadedness_example]({{site.baseurl}}/images/threadedness_example.png)
 _______________________________________________________________
 
 ## Usage
@@ -48,11 +48,11 @@ _______________________________________________________________
 
 ### Calculation Method
 
-####Manual Preprocessing
+#### Manual Preprocessing
 1. Process stream segmentation (1000m and/or 500m).
 2. Find braids in a separate stream network feature class (after topology clean-up, removal of canals, etc.).
 
-####Automated Processing
+#### Automated Processing
 3. Select braids segments using IsBraided attribute field
 4. Remove from selection the currently selected braid features that share a centroid with stream features in segmented stream network.
 5. Dissolve selected braids (using "single part" parameter)

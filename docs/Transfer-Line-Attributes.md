@@ -12,7 +12,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-![form]({{site.baseurl}}/images/seg_form.PNG)images/transfer_form.PNG)
+![form]({{site.baseurl}}images/transfer_form.PNG)
 
 **Input “From” Line Network**
 
