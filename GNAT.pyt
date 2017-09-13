@@ -974,23 +974,15 @@ class CalculateGradientTool(object):
 
     def getParameterInfo(self):
         """Define parameter definitions"""
-        param1 = arcpy.Parameter(
+        paramElevationRaster = arcpy.Parameter(
             displayName="Elevation (DEM) Raster Dataset",
             name="InputDEM",
             datatype="DERasterDataset",
             parameterType="Required",
             direction="Input")
 
-        param2 = arcpy.Parameter(
-            displayName="Output Shapefile",
-            name="OutputStreamNetwork",
-            datatype="DEShapefile",  # Integer
-            parameterType="Required",
-            direction="Output")
-
         return [paramStreamNetwork,
-                param1,
-                param2,
+                paramElevationRaster,
                 paramProjectXML,
                 paramRealization,
                 paramSegmentAnalysisName]
@@ -1006,32 +998,30 @@ class CalculateGradientTool(object):
 
         from Riverscapes import Riverscapes
 
-        if p[3].value:
-            if arcpy.Exists(p[3].valueAsText):
-                GNATProject = Riverscapes.Project(p[3].valueAsText)
+        if p[2].value:
+            if arcpy.Exists(p[2].valueAsText):
+                GNATProject = Riverscapes.Project(p[2].valueAsText)
 
-                p[4].enabled = "True"
-                p[4].filter.list = GNATProject.Realizations.keys()
-                p[3].enabled = "False"
-                # p[0].value = ""
-                # p[0].enabled = "False"
+                p[3].enabled = "True"
+                p[3].filter.list = GNATProject.Realizations.keys()
 
-                if p[4].value:
+                if p[3].value:
                     currentRealization = GNATProject.Realizations.get(p[4].valueAsText)
                     p[0].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
-                    p[5].enabled = "True"
+                    p[4].enabled = "True"
+                    # TODO This needs just add a new field to the input network that stores calculated values
+                    '''
                     if p[5].value:
-                        # TODO This needs just add a new field to the input network that stores calculated values
                         p[2].value = path.join(GNATProject.projectPath, "Outputs", p[4].valueAsText, "Analyses",
                                                p[5].valueAsText, "GNAT_SegmentedNetwork") + ".shp"
+                    '''
 
         else:
-            p[4].filter.list = []
-            p[4].value = ''
-            p[4].enabled = "False"
-            p[5].value = ""
+            p[2].filter.list = []
+            p[2].value = ''
+            p[3].enabled = "False"
+            p[4].value = ""
             p[0].enabled = "True"
-            p[2].enabled = "True"
 
         # populateFields(p[0], p[3], "GNIS_Name")
 
@@ -1055,8 +1045,7 @@ class CalculateGradientTool(object):
 
         # TODO Revise to add attributes to input network, instead of a new output shapefile
         CalculateGradient.main(p[0].valueAsText,
-                               p[1].valueAsText,
-                               p[2].valueAsText)
+                               p[1].valueAsText)
 
         return
 
