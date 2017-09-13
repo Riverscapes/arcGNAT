@@ -41,7 +41,6 @@ def nodeFieldMap(fcList):
 def main(fcInputSegments,
          fcInputFullNetwork,
          fcOutputNodes,
-         fcOutputNetwork,
          tempWorkspace):
 
     #tempWorkspace = "in_memory"
@@ -55,9 +54,6 @@ def main(fcInputSegments,
 
     # Prep temporary files and layers
     arcpy.MakeFeatureLayer_management(fcInputSegments, "lyrInputSegments")
-    fcInputSegmentsTemp = gis_tools.newGISDataset(tempWorkspace, "fcInputSegmentsTemp")
-    arcpy.CopyFeatures_management("lyrInputSegments", fcInputSegmentsTemp)
-    arcpy.MakeFeatureLayer_management(fcInputSegmentsTemp, "lyrInputSegmentsTemp")
     arcpy.MakeFeatureLayer_management(fcInputFullNetwork, "lyrInputFullNetwork")
     fcInputFullNetworkTemp = gis_tools.newGISDataset(tempWorkspace, "fcInputFullNetworkTemp")
     arcpy.CopyFeatures_management("lyrInputFullNetwork", fcInputFullNetworkTemp)
@@ -148,16 +144,15 @@ def main(fcInputSegments,
     arcpy.Statistics_analysis("lyrNodesToSegments", tblNodeTCSummary, [["NODE_TYPE", "COUNT"]], "LineOID")
     arcpy.SelectLayerByAttribute_management("lyrNodesToSegments", "CLEAR_SELECTION")
     # Spatial join each summary table as a new field to final segment network
-    arcpy.AddField_management("lyrInputSegmentsTemp", "NODES_BM", "TEXT")
-    arcpy.AddField_management("lyrInputSegmentsTemp", "NODES_TC", "TEXT")
+    arcpy.AddField_management("lyrInputSegments", "NODES_BM", "TEXT")
+    arcpy.AddField_management("lyrInputSegments", "NODES_TC", "TEXT")
     arcpy.MakeTableView_management(tblNodeBMSummary, "viewNodeBMSummary")
     arcpy.MakeTableView_management(tblNodeTCSummary, "viewNodeTCSummary")
-    arcpy.AddJoin_management("lyrInputSegmentsTemp", "LineOID", "viewNodeBMSummary", "LineOID", "KEEP_COMMON")
-    arcpy.CalculateField_management("lyrInputSegmentsTemp", "NODES_BM", '"!COUNT_NODE_TYPE!"', "PYTHON_9.3")
-    arcpy.RemoveJoin_management("lyrInputSegmentsTemp")
-    arcpy.AddJoin_management("lyrInputSegmentsTemp", "LineOID", "viewNodeTCSummary", "LineOID", "KEEP_COMMON")
-    arcpy.CalculateField_management("lyrInputSegmentsTemp", "NODES_TC", '"!COUNT_NODE_TYPE!"', "PYTHON_9.3")
-    arcpy.RemoveJoin_management("lyrInputSegmentsTemp")
-    # Save temporary segment network to disk
-    arcpy.CopyFeatures_management("lyrInputSegmentsTemp", fcOutputNetwork)
+    arcpy.AddJoin_management("lyrInputSegments", "LineOID", "viewNodeBMSummary", "LineOID", "KEEP_COMMON")
+    arcpy.CalculateField_management("lyrInputSegments", "NODES_BM", '"!COUNT_NODE_TYPE!"', "PYTHON_9.3")
+    arcpy.RemoveJoin_management("lyrInputSegments")
+    arcpy.AddJoin_management("lyrInputSegments", "LineOID", "viewNodeTCSummary", "LineOID", "KEEP_COMMON")
+    arcpy.CalculateField_management("lyrInputSegments", "NODES_TC", '"!COUNT_NODE_TYPE!"', "PYTHON_9.3")
+    arcpy.RemoveJoin_management("lyrInputSegments")
+
     arcpy.AddMessage("CBT: Processing complete.")

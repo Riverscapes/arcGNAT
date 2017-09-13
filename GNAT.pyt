@@ -1084,13 +1084,6 @@ class CalculateThreadednessTool(object):
                 direction="Output")
 
             param3 = arcpy.Parameter(
-                displayName="Output stream network feature class",
-                name="OutputStreamNetwork",
-                datatype="DEShapefile",
-                parameterType="Required",
-                direction="Output")
-
-            param4 = arcpy.Parameter(
                 displayName="Scratch workspace",
                 name="scratchWorkspace",
                 datatype="DEWorkspace",
@@ -1101,7 +1094,6 @@ class CalculateThreadednessTool(object):
                     param1,
                     param2,
                     param3,
-                    param4,
                     paramProjectXML,
                     paramRealization,
                     paramSegmentAnalysisName]
@@ -1117,24 +1109,26 @@ class CalculateThreadednessTool(object):
 
             from Riverscapes import Riverscapes
 
-            if p[5].value:
-                if arcpy.Exists(p[5].valueAsText):
-                    GNATProject = Riverscapes.Project(p[5].valueAsText)
+            if p[4].value:
+                if arcpy.Exists(p[4].valueAsText):
+                    GNATProject = Riverscapes.Project(p[4].valueAsText)
 
-                    p[6].enabled = "True"
-                    p[6].filter.list = GNATProject.Realizations.keys()
+                    p[5].enabled = "True"
+                    p[5].filter.list = GNATProject.Realizations.keys()
                     # p[3].enabled = "False"
                     # p[0].value = ""
                     # p[0].enabled = "False"
 
-                    if p[6].value:
-                        currentRealization = GNATProject.Realizations.get(p[4].valueAsText)
+                    if p[5].value:
+                        currentRealization = GNATProject.Realizations.get(p[5].valueAsText)
                         p[0].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
-                        p[7].enabled = "True"
-                        if p[7].value:
-                            # TODO This needs just add a new field to the input network that stores calculated values
+                        p[6].enabled = "True"
+                        # TODO This needs just add a new field to the input network that stores calculated values
+                        '''
+                        if p[6].value:
                             p[3].value = path.join(GNATProject.projectPath, "Outputs", p[6].valueAsText, "Analyses",
                                                    p[7].valueAsText, "GNAT_SegmentedNetwork") + ".shp"
+                        '''
 
             else:
                 p[5].filter.list = []
@@ -1142,7 +1136,7 @@ class CalculateThreadednessTool(object):
                 p[5].enabled = "False"
                 p[6].value = ""
                 p[0].enabled = "True"
-                p[3].enabled = "True"
+                p[2].enabled = "True"
 
             return
 
@@ -1158,16 +1152,15 @@ class CalculateThreadednessTool(object):
             reload(CalculateThreadedness)
             from Riverscapes import Riverscapes
 
-            if p[5].value:
+            if p[4].value:
                 GNATProject = Riverscapes.Project()
-                GNATProject.loadProjectXML(p[5].valueAsText)
+                GNATProject.loadProjectXML(p[4].valueAsText)
 
             # TODO Revise to add attributes to input network, instead of a new output shapefile
             CalculateThreadedness.main(p[0].valueAsText,
                                        p[1].valueAsText,
                                        p[2].valueAsText,
-                                       p[3].valueAsText,
-                                       p[4].valueAsText)
+                                       p[3].valueAsText)
             return
 
 
