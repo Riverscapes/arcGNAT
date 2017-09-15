@@ -60,7 +60,7 @@ def main(fcFromLine,
     # Make bounding polygon for "From" line feature class
     arcpy.AddMessage("GNAT TLA: Create buffer polygon around 'From' network")
     fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FromLineBuffer")
-    arcpy.Buffer_analysis(fcFromLineTemp,fcFromLineBuffer,"10 Meters","FULL","ROUND","ALL")
+    arcpy.Buffer_analysis(fcFromLineTemp,fcFromLineBuffer,"20 Meters","FULL","ROUND","ALL")
     fcFromLineBufDslv = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBUfDslv")
     arcpy.Dissolve_management(fcFromLineBuffer, fcFromLineBufDslv)
 
