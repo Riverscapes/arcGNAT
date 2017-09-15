@@ -1,22 +1,20 @@
 ﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Name:        Transfer Attributes Tool                                       #
-# Purpose:     Transfer attributes from one line layer to another             #
+# Purpose:     Transfer attributes from one polyline feature class to another #
 #                                                                             #
 # Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              Jesse Langdon (jesse@southforkresearch.org)                    #
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
-# Created:     2015-01-08                                                     #
-# Modified:    2017-05-03                                                     #
+# Created:     2015-Jan-08                                                     #
+# Modified:    2017-Sep-15                                                     #
 #                                                                             #
-# Copyright:   (c) Kelly Whitehead, Jesse Langdon                             #
+# Copyright:   (c) South Fork Research, Inc. 2017                              #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
 
-
-# Import modules
 import arcpy
 import gis_tools
 import DividePolygonBySegment
@@ -94,7 +92,6 @@ def main(fcFromLine,
                                "JOIN_ONE_TO_ONE",
                                "KEEP_ALL",
                                match_option="WITHIN")
-    #arcpy.JoinField_management(fcOutputLineNetwork, "JOIN_FID", fcFromLineTemp, str(arcpy.Describe(fcFromLineTemp).OIDFieldName))
     arcpy.JoinField_management(fcOutputLineNetwork, "FromID", fcFromLineTemp, "FromID")
 
     # Append the "To" lines that were outside of the "From" line buffer, which will have NULL or zero values
