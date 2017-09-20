@@ -858,35 +858,21 @@ class PlanformTool(object):
         param2.filter.list = ["Polygon"]
 
         param3 = arcpy.Parameter(
-            displayName="Output Stream Network with Sinuosity Attribute",
-            name="OutputFCCenterline",
-            datatype="DEFeatureClass", 
-            parameterType="Optional",
-            direction="Output")
-
-        param4 = arcpy.Parameter(
             displayName="Output Valley Centerline with Sinuosity Attribute",
             name="OutputFCValleyCenterline",
             datatype="DEFeatureClass",
             parameterType="Optional",
             direction="Output")
 
-        param5 = arcpy.Parameter(
-            displayName="Output Stream Network with Planform Attribute",
-            name="OutputFCPlanformCenterline",
-            datatype="DEFeatureClass",
-            parameterType="Optional",
-            direction="Output")
-
-        param6 = arcpy.Parameter(
+        param4 = arcpy.Parameter(
             displayName="Scratch Workspace",
             name="scratchWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
-        param6.filter.list = ["Local Database"]
+        param4.filter.list = ["Local Database"]
         
-        return [param0,param1,param2,param3,param4,param5,param6,paramProjectXML,paramRealization,paramSegmentAnalysisName]
+        return [param0,param1,param2,param3,param4,paramProjectXML,paramRealization,paramSegmentAnalysisName]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -954,12 +940,7 @@ class PlanformTool(object):
                             p[1].valueAsText,
                             p[2].valueAsText,
                             p[3].valueAsText,
-                            p[4].valueAsText,
-                            p[5].valueAsText,
-                            getTempWorkspace(p[6].valueAsText))
-
-        #TODO add Riverscape
-        #TODO add valley bottom input parameters to ProjectXML
+                            getTempWorkspace(p[4].valueAsText))
 
         return
 
