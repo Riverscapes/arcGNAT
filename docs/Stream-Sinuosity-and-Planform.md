@@ -1,4 +1,12 @@
-The **Stream Sinuosity and Planform** tool calculates sinuosity (per polyline feature) for valley centerline and stream network features. The tool also transfers the valley sinuosity to the stream network and calculates river planform attribute.
+The **Stream Sinuosity and Planform** tool calculates sinuosity (per polyline feature) for valley centerline
+ and stream network features. The tool also transfers the valley sinuosity to the stream network and 
+ calculates river planform values as an attribute.
+ 
+ Sinuosity is a measure of the tendency of linear water features to meander in an S-shaped pattern.
+ 
+ **Equations**
+   * `sinuosity = length of channel reach / straight-line distance between reach endpoints`
+   * `planform = channel sinuosity/valley sinuosity`
 
 _______________________________________________________________
 ## Usage
