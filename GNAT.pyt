@@ -38,7 +38,7 @@ import FindNetworkFeatures
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.1.13"
+GNAT_version = "2.2.0"
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
@@ -390,7 +390,7 @@ class CommitRealization(object):
         return
 
 
-# Stream Network Prep Tools #
+# Stream Network Prep Tools
 class FindBraidedNetworkTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
@@ -646,22 +646,6 @@ class SegmentationTool(object):
         """Define parameter definitions"""
         reload(Segmentation)
 
-        paramRealization = arcpy.Parameter(
-            displayName="Realization Name",
-            name="realization",
-            datatype="GPString",
-            parameterType="Optional",
-            direction="Input")
-        paramRealization.enabled = "False"
-
-        paramAnalysisName = arcpy.Parameter(
-            displayName="Segmentation Name",
-            name="analysisName",
-            datatype="GPString",
-            parameterType="Optional",
-            direction="Input")
-        paramAnalysisName.enabled = "False"
-
         paramInStreamNetwork = arcpy.Parameter(
             displayName="Stream Network Polyline Feature Class",
             name="InputStreamNetwork",
@@ -723,17 +707,17 @@ class SegmentationTool(object):
             parameterType="Required",
             direction="Output")
 
-        return [paramProjectXML,
-                paramRealization,
-                paramAnalysisName,
-                paramInStreamNetwork,
+        return [paramInStreamNetwork,
                 paramSegmentLength,
                 paramDownstreamID,
                 paramFieldStreamName,
                 paramSegmentationMethod,
                 paramBoolSplitAtConfluences,
                 paramBoolRetainOrigAttributes,
-                paramOutputSegmentedNetwork]
+                paramOutputSegmentedNetwork,
+                paramProjectXML,
+                paramRealization,
+                paramSegmentAnalysisName]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -746,33 +730,30 @@ class SegmentationTool(object):
 
         from Riverscapes import Riverscapes
 
-        if p[0].value:
-            if arcpy.Exists(p[0].valueAsText):
-                GNATProject = Riverscapes.Project(p[0].valueAsText)
+        if p[8].value:
+            if arcpy.Exists(p[8].valueAsText):
+                GNATProject = Riverscapes.Project(p[8].valueAsText)
 
-                p[1].enabled = "True"
-                p[1].filter.list = GNATProject.Realizations.keys()
-                p[10].enabled = "False"
-                p[10].value = ""
-                p[3].enabled = "False"
+                p[9].enabled = "True"
+                p[9].filter.list = GNATProject.Realizations.keys()
+                p[7].enabled = "False"
 
-                if p[1].value:
-                    currentRealization = GNATProject.Realizations.get(p[1].valueAsText)
-                    p[3].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
-                    p[2].enabled = "True"
-                    if p[2].value:
-                        p[10].value = path.join(GNATProject.projectPath, "Outputs", p[1].valueAsText, "Analyses",
-                                                p[2].valueAsText, "GNAT_SegmentedNetwork") + ".shp"
+                if p[9].value:
+                    currentRealization = GNATProject.Realizations.get(p[9].valueAsText)
+                    p[0].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
+                    p[10].enabled = "True"
+                    if p[10].value:
+                        p[7].value = path.join(GNATProject.projectPath, "Outputs", p[9].valueAsText, "Analyses",
+                                                p[10].valueAsText, "GNAT_SegmentedNetwork") + ".shp"
 
         else:
-            p[1].filter.list = []
-            p[1].value = ''
-            p[1].enabled = "False"
-            p[2].value = ""
-            p[3].enabled = "True"
-            p[10].enabled = "True"
+            p[9].filter.list = []
+            p[9].value = ''
+            p[9].enabled = "False"
+            p[10].value = ""
+            p[7].enabled = "True"
 
-        populateFields(p[3],p[6],"GNIS_Name")
+        populateFields(p[0],p[3],"GNIS_Name")
 
         return
 
@@ -781,7 +762,7 @@ class SegmentationTool(object):
         parameter.  This method is called after internal validation."""
 
         # todo Check if analysis name already exists
-        testProjected(parameters[3])
+        testProjected(parameters[0])
 
         return
 
@@ -790,50 +771,49 @@ class SegmentationTool(object):
         reload(Segmentation)
         from Riverscapes import Riverscapes
 
-        output = p[10].valueAsText
+        output = p[7].valueAsText
 
-        if p[0].value:
+        if p[8].value:
             GNATProject = Riverscapes.Project()
-            GNATProject.loadProjectXML(p[0].valueAsText)
-            if p[1].valueAsText:
-                makedirs(path.join(GNATProject.projectPath, "Outputs", p[1].valueAsText, "Analyses",
-                                   p[2].valueAsText))
-                output = path.join(GNATProject.projectPath, "Outputs", p[1].valueAsText, "Analyses",
-                                                p[2].valueAsText, "GNAT_SegmentedNetwork") + ".shp"
+            GNATProject.loadProjectXML(p[8].valueAsText)
+            if p[9].valueAsText:
+                makedirs(path.join(GNATProject.projectPath, "Outputs", p[9].valueAsText, "Analyses",
+                                   p[10].valueAsText))
+                output = path.join(GNATProject.projectPath, "Outputs", p[9].valueAsText, "Analyses",
+                                                p[10].valueAsText, "GNAT_SegmentedNetwork") + ".shp"
 
-
-        Segmentation.main(p[3].valueAsText,
+        Segmentation.main(p[0].valueAsText,
+                          p[1].valueAsText,
+                          p[2].valueAsText,
+                          p[3].valueAsText,
                           p[4].valueAsText,
                           p[5].valueAsText,
                           p[6].valueAsText,
-                          p[7].valueAsText,
-                          p[8].valueAsText,
-                          p[9].valueAsText,
                           output)
 
-        if p[0].value:
-            if arcpy.Exists(p[0].valueAsText):
-                GNATProject = Riverscapes.Project(p[0].valueAsText)
+        if p[8].value:
+            if arcpy.Exists(p[8].valueAsText):
+                GNATProject = Riverscapes.Project(p[8].valueAsText)
 
                 outSegmentedNetwork = Riverscapes.Dataset()
                 outSegmentedNetwork.create(arcpy.Describe(output).basename,
                                            path.relpath(path.join(output, "GNAT_SegmentedNetwork"),
                                                         GNATProject.projectPath) + ".shp",
                                            "GNAT_SegmentedNetwork")
-                outSegmentedNetwork.id = p[1].valueAsText + "_" + p[2].valueAsText + "GNAT_SegmentedNetwork"
+                outSegmentedNetwork.id = p[9].valueAsText + "_" + p[10].valueAsText + "GNAT_SegmentedNetwork"
 
-                realization = GNATProject.Realizations.get(p[1].valueAsText)
-                realization.newAnalysisNetworkSegmentation(p[2].valueAsText,
-                                                           p[4].valueAsText,
+                realization = GNATProject.Realizations.get(p[9].valueAsText)
+                realization.newAnalysisNetworkSegmentation(p[10].valueAsText,
+                                                           p[1].valueAsText,
                                                            "NONE",
+                                                           p[2].valueAsText,
+                                                           p[3].valueAsText,
+                                                           p[4].valueAsText,
                                                            p[5].valueAsText,
                                                            p[6].valueAsText,
-                                                           p[7].valueAsText,
-                                                           p[8].valueAsText,
-                                                           p[9].valueAsText,
                                                            outSegmentedNetwork)
 
-                GNATProject.Realizations[p[1].valueAsText] = realization
+                GNATProject.Realizations[p[9].valueAsText] = realization
                 GNATProject.writeProjectXML()
 
         return
@@ -875,53 +855,63 @@ class PlanformTool(object):
         param2.filter.list = ["Polygon"]
 
         param3 = arcpy.Parameter(
-            displayName="Output Stream Network with Sinuosity Attribute",
-            name="OutputFCCenterline",
-            datatype="DEFeatureClass", 
-            parameterType="Optional",
-            direction="Output")
-
-        param4 = arcpy.Parameter(
             displayName="Output Valley Centerline with Sinuosity Attribute",
             name="OutputFCValleyCenterline",
             datatype="DEFeatureClass",
             parameterType="Optional",
             direction="Output")
 
-        param5 = arcpy.Parameter(
-            displayName="Output Stream Network with Planform Attribute",
-            name="OutputFCPlanformCenterline",
-            datatype="DEFeatureClass",
-            parameterType="Optional",
-            direction="Output")
-
-        param6 = arcpy.Parameter(
+        param4 = arcpy.Parameter(
             displayName="Scratch Workspace",
             name="scratchWorkspace",
             datatype="DEWorkspace", 
             parameterType="Optional",
             direction="Input")
-        param6.filter.list = ["Local Database"]
+        param4.filter.list = ["Local Database"]
         
-        return [param0,param1,param2,param3,param4,param5,param6]
+        return [param0,param1,param2,param3,param4,paramProjectXML,paramRealization,paramSegmentAnalysisName]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
         return True
 
-    def updateParameters(self, parameters):
+    def updateParameters(self, p):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
-        if  parameters[0].altered and not parameters[0].hasBeenValidated:
-            desc = arcpy.Describe(parameters[0].value)
+        if  p[0].altered and not p[0].hasBeenValidated:
+            desc = arcpy.Describe(p[0].value)
             out_path = desc.path
-            out_name3 = "SegNetwork_Sinousity.shp"
-            out_name4 = "Valley_Centerline_Sinousity.shp"
-            out_name5 = "SegNetwork_Planform.shp"
-            parameters[3].value = os.path.join(out_path, out_name3)
-            parameters[4].value = os.path.join(out_path, out_name4)
-            parameters[5].value = os.path.join(out_path, out_name5)
+            out_name = "Valley_Centerline_Sinousity.shp"
+            p[4].value = os.path.join(out_path, out_name)
+
+        # Temporarily disable fields related to Riverscape project management
+        p[5].enabled="False"
+        p[6].enabled="False"
+        p[7].enabled="False"
+
+        # TODO fix Riverscapes project management functionality
+        # from Riverscapes import Riverscapes
+        #
+        # if p[5].value:
+        #     if arcpy.Exists(p[5].valueAsText):
+        #         GNATProject = Riverscapes.Project(p[5].valueAsText)
+        #
+        #         p[6].enabled = "True"
+        #         p[6].filter.list = GNATProject.Realizations.keys()
+        #
+        #         if p[6].value:
+        #             currentRealization = GNATProject.Realizations.get(p[8].valueAsText)
+        #             p[6].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
+        #             p[7].enabled = "True"
+        #
+        # else:
+        #     p[5].filter.list = []
+        #     p[6].value = ""
+        #     p[6].enabled = "False"
+        #     p[7].value = ""
+        #     p[7].enabled = "False"
+
         return
 
     def updateMessages(self, parameters):
@@ -939,18 +929,205 @@ class PlanformTool(object):
                             p[1].valueAsText,
                             p[2].valueAsText,
                             p[3].valueAsText,
-                            p[4].valueAsText,
-                            p[5].valueAsText,
-                            getTempWorkspace(p[6].valueAsText))
+                            getTempWorkspace(p[4].valueAsText))
 
-        # inStreamNetwork = r"C:\JL\Testing\arcGNAT\Issue43"
-        # inValleyCline = r"C:\JL\Testing\arcGNAT\Issue43"
-        # inValleyPoly = r"C:\JL\Testing\arcGNAT\Issue43"
-        # outSinStream = ""
-        # outSinValley = ""
-        # outPlanStream = ""
-        # wspace = ""
         return
+
+
+class CalculateGradientTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Calculate Gradient"
+        self.description = "Calculates gradient (percent rise/run) per stream reach feature."
+        self.canRunInBackground = False
+        self.category = strCatagoryGeomorphicAnalysis
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        paramElevationRaster = arcpy.Parameter(
+            displayName="Elevation (DEM) Raster Dataset",
+            name="InputDEM",
+            datatype="DERasterDataset",
+            parameterType="Required",
+            direction="Input")
+
+        return [paramStreamNetwork,
+                paramElevationRaster,
+                paramProjectXML,
+                paramRealization,
+                paramSegmentAnalysisName]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, p):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+
+        # Temporarily disable fields related to Riverscape project management
+        p[2].enabled="False"
+        p[3].enabled="False"
+        p[4].enabled="False"
+
+        # TODO fix Riverscape project management functionality
+        '''
+        from Riverscapes import Riverscapes
+
+        if p[2].value:
+            if arcpy.Exists(p[2].valueAsText):
+                GNATProject = Riverscapes.Project(p[2].valueAsText)
+
+                p[3].enabled = "True"
+                p[3].filter.list = GNATProject.Realizations.keys()
+
+                if p[3].value:
+                    currentRealization = GNATProject.Realizations.get(p[4].valueAsText)
+                    p[0].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
+                    p[4].enabled = "True"
+
+        else:
+            p[2].filter.list = []
+            p[2].value = ''
+            p[3].enabled = "False"
+            p[4].value = ""
+            p[0].enabled = "True"
+        '''
+
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        # todo Check if analysis name already exists
+        testProjected(parameters[0])
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(CalculateGradient)
+
+        # TODO fix Riverscape project management functionality
+
+        CalculateGradient.main(p[0].valueAsText,
+                               p[1].valueAsText)
+
+        return
+
+
+class CalculateThreadednessTool(object):
+        def __init__(self):
+            """Define the tool (tool name is the name of the class)."""
+            self.label = "Calculate Threadedness"
+            self.description = "Calculates multi-threaded nodes per stream segment in a network."
+            self.canRunInBackground = False
+            self.category = strCatagoryGeomorphicAnalysis
+
+        def getParameterInfo(self):
+            """Define parameter definitions"""
+            param0 = arcpy.Parameter(
+                displayName="Input segmented stream network feature class",
+                name="InputSegmentNetwork",
+                datatype="DEShapefile",
+                parameterType="Required",
+                direction="Input")
+            param0.filter.list = ["Polyline"]
+
+            param1= arcpy.Parameter(
+                displayName="Input multi-threaded stream network feature class",
+                name="InputFullNetwork",
+                datatype="DEShapefile",
+                parameterType="Required",
+                direction="Input")
+            param1.filter.list = ["Polyline"]
+
+            param2 = arcpy.Parameter(
+                displayName="Output node feature class",
+                name="OutputNodes",
+                datatype="DEShapefile",
+                parameterType="Required",
+                direction="Output")
+
+            param3 = arcpy.Parameter(
+                displayName="Scratch workspace",
+                name="scratchWorkspace",
+                datatype="DEWorkspace",
+                parameterType="Required",  # FIXME temporary fix;
+                direction="Input")
+
+            return [param0,
+                    param1,
+                    param2,
+                    param3,
+                    paramProjectXML,
+                    paramRealization,
+                    paramSegmentAnalysisName]
+
+        def isLicensed(self):
+            """Set whether tool is licensed to execute."""
+            return True
+
+        def updateParameters(self, p):
+            """Modify the values and properties of parameters before internal
+            validation is performed.  This method is called whenever a parameter
+            has been changed."""
+
+            # Temporarily disable fields related to Riverscape project management
+            p[4].enabled = "False"
+            p[5].enabled = "False"
+            p[6].enabled = "False"
+
+            # TODO fix Riverscape project management functionality
+            '''
+            from Riverscapes import Riverscapes
+
+            if p[4].value:
+                if arcpy.Exists(p[4].valueAsText):
+                    GNATProject = Riverscapes.Project(p[4].valueAsText)
+
+                    p[5].enabled = "True"
+                    p[5].filter.list = GNATProject.Realizations.keys()
+
+                    if p[5].value:
+                        currentRealization = GNATProject.Realizations.get(p[5].valueAsText)
+                        p[0].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
+                        p[6].enabled = "True"
+
+            else:
+                p[5].filter.list = []
+                p[5].value = ''
+                p[5].enabled = "False"
+                p[6].value = ""
+            '''
+
+            return
+
+        def updateMessages(self, parameters):
+            """Modify the messages created by internal validation for each tool
+            parameter. This method is called after internal validation."""
+            # todo Check if analysis name already exists
+            testProjected(parameters[0])
+            return
+
+        def execute(self, p, messages):
+            """The source code of the tool."""
+            reload(CalculateThreadedness)
+
+            # TODO add Riverscapes project management functionality
+            '''
+            from Riverscapes import Riverscapes
+
+            if p[4].value:
+                GNATProject = Riverscapes.Project()
+                GNATProject.loadProjectXML(p[4].valueAsText)
+            '''
+
+            CalculateThreadedness.main(p[0].valueAsText,
+                                       p[1].valueAsText,
+                                       p[2].valueAsText,
+                                       p[3].valueAsText)
+            return
 
 
 # Utilities
@@ -1436,141 +1613,6 @@ class FindNetworkFeaturesTool(object):
         return
 
 
-class CalculateGradientTool(object):
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "Calculate Gradient"
-        self.description = "Calculates gradient (percent rise/run) per stream reach feature."
-        self.canRunInBackground = False
-        self.category = strCatagoryUtilities
-
-    def getParameterInfo(self):
-        """Define parameter definitions"""
-        param0 = arcpy.Parameter(
-            displayName="Input Stream Network",
-            name="InputStreamNetwork",
-            datatype="DEShapefile",
-            parameterType="Required",
-            direction="Input")
-        param0.filter.list = ["Polyline"]
-
-        param1 = arcpy.Parameter(
-            displayName="Elevation (DEM) Raster Dataset",
-            name="InputDEM",
-            datatype="DERasterDataset",
-            parameterType="Required",
-            direction="Input")
-
-        param2 = arcpy.Parameter(
-            displayName="Output Shapefile",
-            name="OutputStreamNetwork",
-            datatype="DEShapefile",  # Integer
-            parameterType="Required",
-            direction="Output")
-
-        return [param0, param1, param2]
-
-    def isLicensed(self):
-        """Set whether tool is licensed to execute."""
-        return True
-
-    def updateParameters(self, parameters):
-        """Modify the values and properties of parameters before internal
-        validation is performed.  This method is called whenever a parameter
-        has been changed."""
-
-        return
-
-    def updateMessages(self, parameters):
-        """Modify the messages created by internal validation for each tool
-        parameter.  This method is called after internal validation."""
-        return
-
-    def execute(self, p, messages):
-        """The source code of the tool."""
-        reload(CalculateGradient)
-        CalculateGradient.main(p[0].valueAsText,
-                        p[1].valueAsText,
-                        p[2].valueAsText)
-
-        return
-
-
-class CalculateThreadednessTool(object):
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "Calculate Threadedness"
-        self.description = "Calculates multi-threaded nodes per stream segment in a network."
-        self.canRunInBackground = False
-        self.category = strCatagoryUtilities
-
-    def getParameterInfo(self):
-        """Define parameter definitions"""
-        param0 = arcpy.Parameter(
-            displayName="Input segmented stream network feature class",
-            name="InputSegmentNetwork",
-            datatype="DEShapefile",
-            parameterType="Required",
-            direction="Input")
-        param0.filter.list = ["Polyline"]
-
-        param1 = arcpy.Parameter(
-            displayName="Input multi-threaded stream network feature class",
-            name="InputFullNetwork",
-            datatype="DEShapefile",
-            parameterType="Required",
-            direction="Input")
-        param1.filter.list = ["Polyline"]
-
-        param2 = arcpy.Parameter(
-            displayName="Output node feature class",
-            name="OutputNodes",
-            datatype="DEShapefile",
-            parameterType="Required",
-            direction="Output")
-
-        param3 = arcpy.Parameter(
-            displayName="Output stream network feature class",
-            name="OutputStreamNetwork",
-            datatype="DEShapefile",
-            parameterType="Required",
-            direction="Output")
-
-        param4 = arcpy.Parameter(
-            displayName="Scratch workspace",
-            name="scratchWorkspace",
-            datatype="DEWorkspace",
-            parameterType="Required", # FIXME temporary fix;
-            direction="Input")
-
-        return [param0, param1, param2, param3, param4]
-
-    def isLicensed(self):
-        """Set whether tool is licensed to execute."""
-        return True
-
-    def updateParameters(self, parameters):
-        """Modify the values and properties of parameters before internal
-        validation is performed.  This method is called whenever a parameter
-        has been changed."""
-
-        return
-
-    def updateMessages(self, parameters):
-        """Modify the messages created by internal validation for each tool
-        parameter.  This method is called after internal validation."""
-        return
-
-    def execute(self, p, messages):
-        """The source code of the tool."""
-        reload(CalculateThreadedness)
-        CalculateThreadedness.main(p[0].valueAsText,
-                               p[1].valueAsText,
-                               p[2].valueAsText,
-                               p[3].valueAsText,
-                               p[4].valueAsText)
-        return
-
 # Other Functions #
 def setEnvironmentSettings():
     arcpy.env.OutputMFlag = "Disabled"
@@ -1659,8 +1701,27 @@ paramProjectXML = arcpy.Parameter(
     name="projectXML",
     datatype="DEFile",
     parameterType="Optional",
-    direction="Input")
+    direction="Input",
+    category='Riverscapes Project Management')
 paramProjectXML.filter.list = ["xml"]
+
+paramRealization = arcpy.Parameter(
+    displayName="Realization Name",
+    name="realization",
+    datatype="GPString",
+    parameterType="Optional",
+    direction="Input",
+    category='Riverscapes Project Management')
+paramRealization.enabled = "False"
+
+paramSegmentAnalysisName = arcpy.Parameter(
+    displayName="Segmentation Name",
+    name="analysisName",
+    datatype="GPString",
+    parameterType="Optional",
+    direction="Input",
+    category='Riverscapes Project Management')
+paramSegmentAnalysisName.enabled = "False"
 
 paramStreamNetwork = arcpy.Parameter(
     displayName="Input Stream Network",
@@ -1669,13 +1730,3 @@ paramStreamNetwork = arcpy.Parameter(
     parameterType="Required",
     direction="Input")
 paramStreamNetwork.filter.list = ["Polyline"]
-
-
-# DEBUG
-# def main():
-#     tbx = Toolbox()
-#     tool = PlanformTool()
-#     tool.execute(tool.getParameterInfo(), None)
-#
-# if __name__ == '__main__':
-#     main()

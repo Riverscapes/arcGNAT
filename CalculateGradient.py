@@ -34,7 +34,7 @@ except arcpy.ExecuteError:
 workspace = "in_memory"
 
 
-def main(in_shp, in_dem, out_shp):
+def main(in_shp, in_dem):
     """
     The main function for calculating the stream gradient per feature within a polyline
     shapefile.
@@ -45,10 +45,8 @@ def main(in_shp, in_dem, out_shp):
     """
 
     # Create layers for processing
-    in_shp_tmp = workspace + "\\in_shp"
-    arcpy.CopyFeatures_management(in_shp, in_shp_tmp)
     input_line = "lyr_in_shp"
-    arcpy.MakeFeatureLayer_management(in_shp_tmp, input_line)
+    arcpy.MakeFeatureLayer_management(in_shp, input_line)
 
     # Plot start/end points for each stream reach feature
     pnt_start = arcpy.FeatureVerticesToPoints_management(input_line, workspace + "\\pnt_start", "START")
@@ -65,14 +63,14 @@ def main(in_shp, in_dem, out_shp):
     ExtractValuesToPoints(pnt_end, in_dem, pnt_end_dem, "INTERPOLATE", "VALUE_ONLY")
 
     # Join elevation points to stream reach features
-    arcpy.JoinField_management(input_line, "FID", pnt_start_dem, "ORIG_FID", "RASTERVALU")
     arcpy.AddField_management(input_line, "ELEV_START", "DOUBLE")
+    arcpy.AddJoin_management(input_line, "FID", pnt_start_dem, "ORIG_FID", "KEEP_ALL")
     arcpy.CalculateField_management(input_line, "ELEV_START", "!RASTERVALU!", "PYTHON_9.3")
-    arcpy.DeleteField_management(input_line, "RASTERVALU")
-    arcpy.JoinField_management(input_line, "FID", pnt_end_dem, "ORIG_FID", "RASTERVALU")
+    arcpy.RemoveJoin_management(input_line)
     arcpy.AddField_management(input_line, "ELEV_END", "DOUBLE")
+    arcpy.AddJoin_management(input_line, "FID", pnt_end_dem, "ORIG_FID")
     arcpy.CalculateField_management(input_line, "ELEV_END", "!RASTERVALU!", "PYTHON_9.3")
-    arcpy.DeleteField_management(input_line, "RASTERVALU")
+    arcpy.RemoveJoin_management(input_line)
 
     # Add new fields to store calculations
     arcpy.AddField_management(input_line, "DIFF", "DOUBLE")
@@ -86,7 +84,8 @@ def main(in_shp, in_dem, out_shp):
 
     # Write to disk
     arcpy.DeleteField_management(input_line, "DIFF")
-    arcpy.CopyFeatures_management(input_line, out_shp)
-    arcpy.Delete_management(input_line)
+    arcpy.DeleteField_management(input_line, "LENGTH_M")
+    arcpy.DeleteField_management(input_line, "ELEV_START")
+    arcpy.DeleteField_management(input_line, "ELEV_END")
 
     return

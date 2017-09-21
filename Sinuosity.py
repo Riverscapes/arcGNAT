@@ -1,6 +1,6 @@
 ﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Name:        Sinuosity Tool                                                 #
-# Purpose:     Calculate Sinuosity Along Segments in a Stream                 #
+# Purpose:     Calculate sinuosity along segments in a stream network         #
 #                                                                             #
 # Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              Jesse Langdon (jesse@southforkresearch.org                     #
@@ -8,10 +8,9 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.0 beta                                                       #
-# Modified:    2017-Feb-17                                                    #
+# Modified:    2017-Sep-14                                                    #
 #                                                                             #
-# Copyright:   (c) Kelly Whitehead, Jesse Langdon 2017                        #
+# Copyright:   (c) South Fork Research, Inc. 2017                             #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
@@ -26,9 +25,11 @@ arcpy.env.overwriteOutput = True
 def main(fcInput, fcOutput, fieldName = "Sinuosity", workspaceTmp = "in_memory"):
 
     # Get list of fields from input feature class
-
     keepFields = [keepField.name for keepField in arcpy.ListFields(fcInput)]
     keepFields.append(fieldName)
+    if workspaceTmp != "in_memory":
+        keepFields.append("OBJECTID")
+        keepFields.append("Shape_Length")
 
     # Prepare inputs
     fcInputTmp = gis_tools.newGISDataset(workspaceTmp, "fcIn")
