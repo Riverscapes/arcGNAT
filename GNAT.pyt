@@ -38,7 +38,7 @@ import FindNetworkFeatures
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.1.13"
+GNAT_version = "2.2.0"
 
 strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
@@ -737,8 +737,6 @@ class SegmentationTool(object):
                 p[9].enabled = "True"
                 p[9].filter.list = GNATProject.Realizations.keys()
                 p[7].enabled = "False"
-                #p[0].value = ""
-                #p[0].enabled = "False"
 
                 if p[9].value:
                     currentRealization = GNATProject.Realizations.get(p[9].valueAsText)
@@ -753,7 +751,6 @@ class SegmentationTool(object):
             p[9].value = ''
             p[9].enabled = "False"
             p[10].value = ""
-            p[0].enabled = "True"
             p[7].enabled = "True"
 
         populateFields(p[0],p[3],"GNIS_Name")
@@ -885,43 +882,35 @@ class PlanformTool(object):
         if  p[0].altered and not p[0].hasBeenValidated:
             desc = arcpy.Describe(p[0].value)
             out_path = desc.path
-            out_name3 = "SegNetwork_Sinousity.shp"
-            out_name4 = "Valley_Centerline_Sinousity.shp"
-            out_name5 = "SegNetwork_Planform.shp"
-            p[3].value = os.path.join(out_path, out_name3)
-            p[4].value = os.path.join(out_path, out_name4)
-            p[5].value = os.path.join(out_path, out_name5)
+            out_name = "Valley_Centerline_Sinousity.shp"
+            p[4].value = os.path.join(out_path, out_name)
 
-        #TODO add Riverscape
-        from Riverscapes import Riverscapes
+        # Temporarily disable fields related to Riverscape project management
+        p[5].enabled="False"
+        p[6].enabled="False"
+        p[7].enabled="False"
 
-        if p[7].value:
-            if arcpy.Exists(p[7].valueAsText):
-                GNATProject = Riverscapes.Project(p[7].valueAsText)
-
-                p[8].enabled = "True"
-                p[8].filter.list = GNATProject.Realizations.keys()
-                p[9].enabled = "False"
-                p[9].value = ""
-                p[0].enabled = "False"
-
-                if p[8].value:
-                    currentRealization = GNATProject.Realizations.get(p[8].valueAsText)
-                    p[9].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
-                    p[9].enabled = "True"
-                    if p[9].value:
-                        # TODO should this write to the Riverscape project folders by default?
-                        p[5].value = path.join(GNATProject.projectPath, "Outputs", p[1].valueAsText, "Analyses",
-                                                p[2].valueAsText, "GNAT_SegmentedNetwork") + ".shp"
-
-        else:
-            p[8].filter.list = []
-            p[8].value = ""
-            p[8].enabled = "False"
-            p[9].value = ""
-
-        # NOT SURE WHAT THIS DOES
-        populateFields(p[3],p[6],"GNIS_Name")
+        # TODO fix Riverscapes project management functionality
+        # from Riverscapes import Riverscapes
+        #
+        # if p[5].value:
+        #     if arcpy.Exists(p[5].valueAsText):
+        #         GNATProject = Riverscapes.Project(p[5].valueAsText)
+        #
+        #         p[6].enabled = "True"
+        #         p[6].filter.list = GNATProject.Realizations.keys()
+        #
+        #         if p[6].value:
+        #             currentRealization = GNATProject.Realizations.get(p[8].valueAsText)
+        #             p[6].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
+        #             p[7].enabled = "True"
+        #
+        # else:
+        #     p[5].filter.list = []
+        #     p[6].value = ""
+        #     p[6].enabled = "False"
+        #     p[7].value = ""
+        #     p[7].enabled = "False"
 
         return
 
@@ -977,6 +966,13 @@ class CalculateGradientTool(object):
         validation is performed.  This method is called whenever a parameter
         has been changed."""
 
+        # Temporarily disable fields related to Riverscape project management
+        p[2].enabled="False"
+        p[3].enabled="False"
+        p[4].enabled="False"
+
+        # TODO fix Riverscape project management functionality
+        '''
         from Riverscapes import Riverscapes
 
         if p[2].value:
@@ -990,12 +986,6 @@ class CalculateGradientTool(object):
                     currentRealization = GNATProject.Realizations.get(p[4].valueAsText)
                     p[0].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
                     p[4].enabled = "True"
-                    # TODO This needs just add a new field to the input network that stores calculated values
-                    '''
-                    if p[5].value:
-                        p[2].value = path.join(GNATProject.projectPath, "Outputs", p[4].valueAsText, "Analyses",
-                                               p[5].valueAsText, "GNAT_SegmentedNetwork") + ".shp"
-                    '''
 
         else:
             p[2].filter.list = []
@@ -1003,8 +993,7 @@ class CalculateGradientTool(object):
             p[3].enabled = "False"
             p[4].value = ""
             p[0].enabled = "True"
-
-        # populateFields(p[0], p[3], "GNIS_Name")
+        '''
 
         return
 
@@ -1018,13 +1007,9 @@ class CalculateGradientTool(object):
     def execute(self, p, messages):
         """The source code of the tool."""
         reload(CalculateGradient)
-        from Riverscapes import Riverscapes
 
-        if p[3].value:
-            GNATProject = Riverscapes.Project()
-            GNATProject.loadProjectXML(p[3].valueAsText)
+        # TODO fix Riverscape project management functionality
 
-        # TODO Revise to add attributes to input network, instead of a new output shapefile
         CalculateGradient.main(p[0].valueAsText,
                                p[1].valueAsText)
 
@@ -1088,6 +1073,13 @@ class CalculateThreadednessTool(object):
             validation is performed.  This method is called whenever a parameter
             has been changed."""
 
+            # Temporarily disable fields related to Riverscape project management
+            p[4].enabled = "False"
+            p[5].enabled = "False"
+            p[6].enabled = "False"
+
+            # TODO fix Riverscape project management functionality
+            '''
             from Riverscapes import Riverscapes
 
             if p[4].value:
@@ -1096,28 +1088,18 @@ class CalculateThreadednessTool(object):
 
                     p[5].enabled = "True"
                     p[5].filter.list = GNATProject.Realizations.keys()
-                    # p[3].enabled = "False"
-                    # p[0].value = ""
-                    # p[0].enabled = "False"
 
                     if p[5].value:
                         currentRealization = GNATProject.Realizations.get(p[5].valueAsText)
                         p[0].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
                         p[6].enabled = "True"
-                        # TODO This needs just add a new field to the input network that stores calculated values
-                        '''
-                        if p[6].value:
-                            p[3].value = path.join(GNATProject.projectPath, "Outputs", p[6].valueAsText, "Analyses",
-                                                   p[7].valueAsText, "GNAT_SegmentedNetwork") + ".shp"
-                        '''
 
             else:
                 p[5].filter.list = []
                 p[5].value = ''
                 p[5].enabled = "False"
                 p[6].value = ""
-                p[0].enabled = "True"
-                p[2].enabled = "True"
+            '''
 
             return
 
@@ -1131,13 +1113,16 @@ class CalculateThreadednessTool(object):
         def execute(self, p, messages):
             """The source code of the tool."""
             reload(CalculateThreadedness)
+
+            # TODO add Riverscapes project management functionality
+            '''
             from Riverscapes import Riverscapes
 
             if p[4].value:
                 GNATProject = Riverscapes.Project()
                 GNATProject.loadProjectXML(p[4].valueAsText)
+            '''
 
-            # TODO Revise to add attributes to input network, instead of a new output shapefile
             CalculateThreadedness.main(p[0].valueAsText,
                                        p[1].valueAsText,
                                        p[2].valueAsText,
