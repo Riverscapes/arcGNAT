@@ -10,6 +10,14 @@ The Confinement Toolbox is provided as a zip file containing a .pyt file and sup
 
 # Downloads
 
+## Version 2.2
+**[Version 2.2.0](Downloads/arcGNAT_2.2.0.zip)** 2017-SEPTEMBER-21
+```markdown
+* Geomorphic attribute tools (i.e. Calculate Gradient, Calculate Threadedness) moved to the
+the **Geomorphic Attributes** group. All **Geomorphic Attribute** tools now save calculated attributes
+as new fields in the input stream network polylie feature class.
+```
+
 ## Version 2.1
 **[Version 2.1.13](Downloads/arcGNAT_2.1.13.zip)** 2017-AUGUST-21
 ```markdown
