@@ -370,9 +370,3 @@ def main(fcNetwork,intOutflowReachID):
     in_mem.main()
 
     return
-
-# TEST debugging
-if __name__ == '__main__':
-    testNetwork = r'C:\JL\Testing\arcGNAT\Issue33\FROM.shp'
-    testReachID = 16
-    main(testNetwork, testReachID)
