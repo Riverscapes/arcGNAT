@@ -19,6 +19,8 @@ _______________________________________________________________
 
 ### Input Parameters
 
+![sinuosityplanform_form]({{site.baseurl}}/images/sinuosityplanform_form.png)
+
 **Input Segmented Stream Network**
 
 Segmented stream network polyline feature class (i.e. flowline, centerline, etc). Stream sinuosity values will be calculated for each segment.
