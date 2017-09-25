@@ -8,6 +8,7 @@ centerline and stream network features. The tool also transfers the valley sinuo
 network and calculates river planform attribute.
 
 ![sinuosity_example]({{site.baseurl}}/images/sinuosity_example.png)
+
 _______________________________________________________________
 ## Usage
 
