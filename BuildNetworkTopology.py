@@ -7,8 +7,8 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2014-Sept-08                                                   #
-# Version:     1.1                                                            #
-# Modified:    2014-Sept-08                                                   #
+# Version:     1.2                                                         #
+# Modified:    2017-Oct-02                                                   #
 #                                                                             #
 # Copyright:   (c) Kelly Whitehead, Jesse Langdon 2016                        #
 #                                                                             #
@@ -320,9 +320,15 @@ def main(fcNetwork,intOutflowReachID):
 
     # Write node points feature class to disk
     fcNodePoint = calcNodes(fcStreamNetworkTemp)  # build node point feature class
-    outPath = os.path.dirname(fcNetwork)
     arcpy.MakeFeatureLayer_management(fcNodePoint, "fcNodePoint_lyr")
-    arcpy.CopyFeatures_management("fcNodepoint_lyr", outPath + "\\NetworkVrtx")
+    outPath = os.path.dirname(fcNetwork)
+    outPathType = (arcpy.Describe(outPath)).workspaceType
+    if outPathType == "FileSystem":
+        arcpy.CopyFeatures_management("fcNodepoint_lyr", outPath + "\\NetworkVrtx.shp")
+    elif outPathType == "LocalDatabase":
+        arcpy.CopyFeatures_management("fcNodepoint_lyr", outPath + "\\NetworkVrtx")
+    else:
+        arcpy.AddError("GNAT is not compatible with enterprise geodatabase sources!")
 
     # Process
     network_tree(downstream_oid,tableNetwork,fcStreamNetworkTemp_lyr,fcNodePoint)
@@ -370,3 +376,12 @@ def main(fcNetwork,intOutflowReachID):
     in_mem.main()
 
     return
+
+# TEST DEBUGGIN'!
+if __name__ == "__main__":
+    # Input variables
+    fcNetwork = r"C:\JL\Testing\arcGNAT\Issue46\FROM.shp"
+    intOutflowReachID = 16
+
+    main(fcNetwork, intOutflowReachID)
+
