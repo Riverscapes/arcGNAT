@@ -10,7 +10,7 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Modified:    2017-Sep-15                                                    #
+# Modified:    2017-Sep-28                                                    #
 #                                                                             #
 # Copyright:   (c) South Fork Research, Inc. 2017                             #
 #                                                                             #
@@ -104,23 +104,3 @@ def main(fcStreamNetwork,
                                ["C_Sin", "Planform", "V_Sin"])
 
     return
-
-if __name__ == "__main__":
-
-    # main(sys.argv[1],
-    #      sys.argv[2],
-    #      sys.argv[3],
-    #      sys.argv[4],
-    #      sys.argv[5])
-
-    fcStreamNetwork_temp = r'C:\JL\Testing\arcGNAT\GeomAttrbRefactor\SinuosityPlanform\DataSource\SegNetwork_1000m_test.shp'
-    fcValleyCenterline_temp = r'C:\JL\Testing\arcGNAT\GeomAttrbRefactor\SinuosityPlanform\DataSource\Valley_Bottom_Cline_test.shp'
-    fcValleyBottomPolygon_temp = r'C:\JL\Testing\arcGNAT\GeomAttrbRefactor\SinuosityPlanform\DataSource\Valley_Bottom_test.shp'
-    outputFCSinuosityValley_temp = r'C:\JL\Testing\arcGNAT\GeomAttrbRefactor\SinuosityPlanform\Output\Valley_Cline_Sin.shp'
-    workspaceTemp = r'C:\JL\Testing\arcGNAT\GeomAttrbRefactor\SinuosityPlanform\scratch.gdb'
-
-
-    main(fcStreamNetwork_temp,
-         fcValleyCenterline_temp,
-         fcValleyBottomPolygon_temp,
-         outputFCSinuosityValley_temp)
