@@ -47,8 +47,8 @@ def main(fcStreamNetwork,
     outputFCPlanform = gis_tools.newGISDataset(workspaceTemp, "outputFCPlanform")
 
     # Calculate valley sinuosity for each channel network segment
-    if arcpy.Exists(outputFCSinuosityChannel):
-        arcpy.Delete_management(outputFCSinuosityChannel)
+    # if arcpy.Exists(outputFCSinuosityChannel):
+    #     arcpy.Delete_management(outputFCSinuosityChannel)
     Sinuosity.main(fcStreamNetwork, outputFCSinuosityChannel, "C_Sin", workspaceTemp)
     
     # Calculate centerline sinuosity for each valley centerline segment
@@ -79,6 +79,7 @@ def main(fcStreamNetwork,
 
     keepFields = [arcpy.Describe(outputFCPlanform).OIDFieldName,
                   arcpy.Describe(outputFCPlanform).shapeFieldName,
+                  "Shape_Length",
                   "InputID",
                   "Planform",
                   "C_Sin",

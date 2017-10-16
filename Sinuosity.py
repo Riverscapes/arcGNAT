@@ -100,8 +100,3 @@ if __name__ == "__main__":
     main(sys.argv[1],
          sys.argv[2],
          sys.argv[3])
-
-    # TEST
-    # fcInput = r"C:\JL\Testing\GNAT\Issue14\_5sinuosity\shapefile\seg200m.shp"
-    # fcOutput = r"C:\JL\Testing\GNAT\Issue14\_5sinuosity\shapefile\test_output.shp"
-    # main(fcInput, fcOutput, "Sinuosity", r"C:\JL\Testing\GNAT\Issue14\_5sinuosity\scratch.gdb")

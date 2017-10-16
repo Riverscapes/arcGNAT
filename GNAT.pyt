@@ -11,7 +11,7 @@
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
 # Version:     2.1.12                                                         #
-# Revised:     2017-August-14                                                 #
+# Revised:     2017-October-16                                                #
 # Released:                                                                   #
 #                                                                             #
 # License:     MIT License                                                    #
@@ -864,20 +864,12 @@ class PlanformTool(object):
             datatype="DEFeatureClass",
             parameterType="Optional",
             direction="Output")
-
-        param4 = arcpy.Parameter(
-            displayName="Scratch Workspace",
-            name="scratchWorkspace",
-            datatype="DEWorkspace", 
-            parameterType="Optional",
-            direction="Input")
-        param4.filter.list = ["Local Database"]
         
         return [param0,
                 param1,
                 param2,
                 param3,
-                param4,
+                paramRiverscapesBool, #4
                 paramProjectXML, #5
                 paramRealization, #6
                 paramSegmentAnalysisName, #7
@@ -897,42 +889,41 @@ class PlanformTool(object):
         inValleyCenterline = p[1]
         inValleyBottomPolygon = p[2]
         outValleyCenterlineSinuosity = p[3]
-        scratchWorkspace = p[4]
-
-        if  inSegmentedStreamNetwork.altered and not inSegmentedStreamNetwork.hasBeenValidated:
-            desc = arcpy.Describe(inSegmentedStreamNetwork.value)
-            out_path = desc.path
-            out_name = "Valley_Centerline_Sinousity.shp"
-            outValleyCenterlineSinuosity.value = os.path.join(out_path, out_name)
 
         # Riverscape project parameters
-        from Riverscapes import Riverscapes
 
+        paramRiverscapesBool = p[4]
         paramProjectXML = p[5]
         paramRealization = p[6]
         paramSegmentAnalysis = p[7]
         paramAttributeAnalysis = p[8]
 
-        if paramProjectXML.value:
-            if arcpy.Exists(paramProjectXML.valueAsText):
-                GNATProject = Riverscapes.Project(str(paramProjectXML.value))
+        if paramRiverscapesBool.value == True:
+            paramProjectXML.enabled = True
+            if paramProjectXML.value:
+                from Riverscapes import Riverscapes
+                if arcpy.Exists(paramProjectXML.valueAsText):
+                    GNATProject = Riverscapes.Project(str(paramProjectXML.value))
 
-                paramRealization.enabled = "True"
-                paramRealization.filter.list = GNATProject.Realizations.keys()
+                    paramRealization.enabled = True
+                    paramRealization.filter.list = GNATProject.Realizations.keys()
 
-                if paramRealization.value:
-                    currentRealization = GNATProject.Realizations.get(str(paramRealization.value))
-                    inSegmentedStreamNetwork.value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
-                    paramSegmentAnalysis.enabled = "True"
-                    paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
-                    paramAttributeAnalysis.enabled = "True"
+                    if paramRealization.value:
+                        currentRealization = GNATProject.Realizations.get(str(paramRealization.value))
+                        # Switches input stream network feature class to realization output network feature class.
+                        inSegmentedStreamNetwork.value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
+                        paramSegmentAnalysis.enabled = True
+                        paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
+                        paramAttributeAnalysis.enabled = True
         else:
-            paramRealization = ""
-            paramRealization.enabled = "False"
+            paramProjectXML.value = ""
+            paramProjectXML.enabled = False
+            paramRealization.value = ""
+            paramRealization.enabled = False
             paramSegmentAnalysis.value = ""
-            paramSegmentAnalysis.enabled = "False"
+            paramSegmentAnalysis.enabled = False
             paramAttributeAnalysis.value = ""
-            paramAttributeAnalysis.enabled = "False"
+            paramAttributeAnalysis.enabled = False
 
         return
 
@@ -946,89 +937,108 @@ class PlanformTool(object):
         """The source code of the tool."""
         reload(ValleyPlanform)
         setEnvironmentSettings()
-        from Riverscapes import Riverscapes
 
-        # # Tool input variables
-        inSegmentedStreamNetwork = str(p[0].value)
-        inValleyCenterline = str(p[1].value)
-        inValleyBottomPolygon = str(p[2].value)
-        outValleyCenterlineSinuosity = str(p[3].value)
-        scratchWorkspace = str(p[4].value)
+        # Tool input variables
+        inSegmentedStreamNetwork = p[0].valueAsText
+        inValleyCenterline = p[1].valueAsText
+        inValleyBottomPolygon = p[2].valueAsText
+        outValleyCenterlineSinuosity = p[3].valueAsText
 
         # Riverscapes project variables
-        paramProjectXML = str(p[5].value)
-        paramRealization = str(p[6].value)
-        paramSegmentAnalysis = str(p[7].value)
-        paramAttributeAnalysis = str(p[8].value)
 
-        # # TEST DEBUGGIN'!
-        # inSegmentedStreamNetwork = r"C:\JL\Testing\arcGNAT\Riverscapes\Lochsa\Model\Input\Lochsa_EP_20170808.shp"
-        # inValleyCenterline = r"C:\JL\Testing\arcGNAT\Riverscapes\Lochsa\Model\Input\ValleyCenterline.shp"
-        # inValleyBottomPolygon = r"C:\JL\Testing\arcGNAT\Riverscapes\Lochsa\Model\Input\ValleyBottom.shp"
-        # outValleyCenterlineSinuosity = r"C:\JL\Testing\arcGNAT\Riverscapes\Lochsa\Model\Output\ValleyCenterline_Sin.shp"
-        # scratchWorkspace = r"C:\JL\Testing\arcGNAT\Riverscapes\Lochsa\scratch.gdb"
-        #
-        # paramProjectXML = r"C:\JL\Testing\arcGNAT\Riverscapes\Lochsa\rsp\project.rs.xml"
-        # paramRealization = "Run01"
-        # paramSegmentAnalysis = "1000mSegmentation"
-        # paramAttributeAnalysis = "SinuosityPlanformAttributeAnalysis01"
+        paramRiverscapesBool = p[4]
+        paramProjectXML = p[5].valueAsText
+        paramRealization = p[6].valueAsText
+        paramSegmentAnalysis = p[7].valueAsText
+        paramAttributeAnalysis = p[8].valueAsText
 
-        # Where the tool output data will be stored
+        scratchWorkspace = "in_memory"
         outputFileName = os.path.basename(outValleyCenterlineSinuosity)
-        if paramProjectXML:
-            GNATProject = Riverscapes.Project()
-            GNATProject.loadProjectXML(paramProjectXML)
 
-            # Where to store attribute analyses input/output datasets
-            if paramSegmentAnalysis:
-                attributesDir = path.join(GNATProject.projectPath, "Outputs",
-                                   paramRealization,"Analyses",
-                                   paramSegmentAnalysis,
-                                   "GeomorphicAttributes", paramAttributeAnalysis)
-                if not os.path.exists(attributesDir):
-                    makedirs(os.path.join(attributesDir, "Outputs"))
-                outputFileName = path.join(attributesDir, outputFileName) + ".shp"
+        # Where the tool output data will be stored in Riverscapes Project directory
+        if paramRiverscapesBool.value == True:
+            if paramProjectXML:
+                from Riverscapes import Riverscapes
+                GNATProject = Riverscapes.Project()
+                GNATProject.loadProjectXML(paramProjectXML)
+
+                # Where to store attribute analyses input/output datasets
+                if paramSegmentAnalysis:
+                    attributesDir = path.join(GNATProject.projectPath, "Outputs",
+                                              paramRealization, "Analyses",
+                                              paramSegmentAnalysis,
+                                              "GeomorphicAttributes", paramAttributeAnalysis)
+                    if not os.path.exists(attributesDir):
+                        makedirs(attributesDir)
+                    if not os.path.exists(os.path.join(attributesDir, "Inputs")):
+                        makedirs(os.path.join(attributesDir, "Inputs"))
+                    if not os.path.exists(os.path.join(attributesDir, "Outputs")):
+                        makedirs(os.path.join(attributesDir, "Outputs"))
 
         # Main tool module
         ValleyPlanform.main(inSegmentedStreamNetwork,
                             inValleyCenterline,
                             inValleyBottomPolygon,
-                            outputFileName,
+                            outValleyCenterlineSinuosity,
                             getTempWorkspace(scratchWorkspace))
 
-        # Add tool run to the Riverscapes project XML
-        if paramProjectXML:
-            if arcpy.Exists(paramProjectXML):
+        if paramRiverscapesBool.value == True:
+            # Add tool run to the Riverscapes project XML
+            if paramProjectXML:
+                from Riverscapes import Riverscapes
+                if arcpy.Exists(paramProjectXML):
 
-                inValleyCenterlineDS = Riverscapes.Dataset()
-                inValleyCenterlineDS.create(os.path.basename(inValleyCenterline),
-                                            os.path.dirname(inValleyCenterline))
-                inValleyCenterlineDS.id = "InputValleyCenterline"
+                    inValleyCenterlineDS = Riverscapes.Dataset()
+                    inValleyCenterlineDS.create(os.path.basename(inValleyCenterline),
+                                                os.path.join(attributesDir, "Inputs",
+                                                os.path.basename(inValleyCenterline)))
+                    inValleyCenterlineDS.id = "InputValleyCenterline"
 
-                inValleyBottomDS = Riverscapes.Dataset()
-                inValleyBottomDS.create(os.path.basename(inValleyBottomPolygon),
-                                        os.path.dirname(inValleyBottomPolygon))
-                inValleyBottomDS.id = "InputValleyBottom"
+                    inValleyBottomDS = Riverscapes.Dataset()
+                    inValleyBottomDS.create(os.path.basename(inValleyBottomPolygon),
+                                            os.path.join(attributesDir, "Inputs",
+                                            os.path.basename(inValleyBottomPolygon)))
+                    inValleyBottomDS.id = "InputValleyBottom"
 
-                outValleyCenterlineSinuosityDS = Riverscapes.Dataset()
-                outValleyCenterlineSinuosityDS.create(outputFileName, os.path.join(attributesDir, "Outputs", outputFileName))
-                outValleyCenterlineSinuosityDS.id = "ValleyCenterlineSinuosity"
+                    outValleyCenterlineSinuosityDS = Riverscapes.Dataset()
+                    outValleyCenterlineSinuosityDS.create(outputFileName, os.path.join(attributesDir, "Outputs", outputFileName))
+                    outValleyCenterlineSinuosityDS.id = "ValleyCenterlineSinuosity"
 
-                GNATProject = Riverscapes.Project(paramProjectXML)
+                    GNATProject = Riverscapes.Project(paramProjectXML)
 
-                realization = GNATProject.Realizations.get(paramRealization)
-                analysis = realization.analyses.get(paramSegmentAnalysis)
-                analysis.newAnalysisSinuosityPlanform(paramAttributeAnalysis,
-                                                      "C_Sin",
-                                                      "Planform",
-                                                      inValleyCenterlineDS,
-                                                      inValleyBottomDS,
-                                                      "SegmentedNetwork",
-                                                      outValleyCenterlineSinuosityDS)
+                    realization = GNATProject.Realizations.get(paramRealization)
+                    analysis = realization.analyses.get(paramSegmentAnalysis)
+                    analysis.newAnalysisSinuosityPlanform(paramAttributeAnalysis,
+                                                          "C_Sin",
+                                                          "Planform",
+                                                          inValleyCenterlineDS,
+                                                          inValleyBottomDS,
+                                                          "SegmentedNetwork",
+                                                          outValleyCenterlineSinuosityDS)
 
-                realization.analyses[paramSegmentAnalysis] = analysis
-                GNATProject.Realizations[paramRealization] = realization
-                GNATProject.writeProjectXML()
+                    realization.analyses[paramSegmentAnalysis] = analysis
+                    GNATProject.Realizations[paramRealization] = realization
+                    GNATProject.writeProjectXML()
+
+                    # Send message to user about where sinuosity/planform attributes were added
+                    currentRealization = GNATProject.Realizations.get(str(paramRealization))
+                    GNAT_StreamNetwork_path = currentRealization.GNAT_StreamNetwork.absolutePath(
+                        GNATProject.projectPath)
+                    arcpy.AddMessage("{0} {1}".format("Sinuosity and planform attributes added to",
+                                                      GNAT_StreamNetwork_path))
+
+            # Where the tool output data will be stored in Riverscapes Project directory
+            if paramProjectXML:
+                from Riverscapes import Riverscapes
+                GNATProject = Riverscapes.Project()
+                GNATProject.loadProjectXML(paramProjectXML)
+
+                # Where to store attribute analyses input/output datasets
+                if paramSegmentAnalysis:
+                    # Copy the tool output to the attribute analysis output folder
+                    if os.path.isfile(outValleyCenterlineSinuosity):
+                        arcpy.CopyFeatures_management(outValleyCenterlineSinuosity,
+                                                      os.path.join(attributesDir, "Outputs", outputFileName))
 
         return
 
@@ -1890,7 +1900,16 @@ def testWorkspacePath(parameterWorkspace):
                     parameterWorkspace.setWarningMessage(parameterWorkspace.name + " contains a space in the file path name and could cause Geoprocessing issues. Please use a different workspace that does not contain a space in the path name.")
     return
 
-# Common Params
+# Common params
+
+paramRiverscapesBool = arcpy.Parameter(
+    displayName="Is this a Riverscapes Project?",
+    name="RiverscapesBool",
+    datatype="GPBoolean",
+    parameterType="Optional",
+    direction="Input",
+    category='Riverscapes Project Management')
+
 paramProjectXML = arcpy.Parameter(
     displayName="GNAT Project XML",
     name="projectXML",
@@ -1934,14 +1953,3 @@ paramStreamNetwork = arcpy.Parameter(
     parameterType="Required",
     direction="Input")
 paramStreamNetwork.filter.list = ["Polyline"]
-
-
-
-# # DEBUGGIN'!
-#
-# def main():
-#     tool = PlanformTool()
-#     tool.execute(tool.getParameterInfo(), None)
-#
-# if __name__ == "__main__":
-#     main()
