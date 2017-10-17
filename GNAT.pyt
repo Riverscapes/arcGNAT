@@ -1020,9 +1020,8 @@ class PlanformTool(object):
                     GNATProject.Realizations[paramRealization] = realization
                     GNATProject.writeProjectXML()
 
-                    # Send message to user about where sinuosity/planform attributes were added
-                    currentRealization = GNATProject.Realizations.get(str(paramRealization))
-                    GNAT_StreamNetwork_path = currentRealization.GNAT_StreamNetwork.absolutePath(
+                    # Inform user about where sinuosity/planform attributes were added
+                    GNAT_StreamNetwork_path = realization.GNAT_StreamNetwork.absolutePath(
                         GNATProject.projectPath)
                     arcpy.AddMessage("{0} {1}".format("Sinuosity and planform attributes added to",
                                                       GNAT_StreamNetwork_path))
@@ -1062,6 +1061,7 @@ class CalculateGradientTool(object):
 
         return [paramStreamNetwork,
                 paramElevationRaster,
+                paramRiverscapesBool,
                 paramProjectXML,
                 paramRealization,
                 paramSegmentAnalysisName,
@@ -1076,40 +1076,43 @@ class CalculateGradientTool(object):
         validation is performed.  This method is called whenever a parameter
         has been changed."""
 
-        from Riverscapes import Riverscapes
-
         # Tool input variables
         inSegmentedStreamNetwork = p[0]
 
         # Riverscape project variables
-        paramProjectXML = p[2]
-        paramRealization = p[3]
-        paramSegmentAnalysis = p[4]
-        paramAttributeAnalysis = p[5]
+        paramRiverscapesBool = p[2]
+        paramProjectXML = p[3]
+        paramRealization = p[4]
+        paramSegmentAnalysis = p[5]
+        paramAttributeAnalysis = p[6]
 
-        if paramProjectXML.value:
-            if arcpy.Exists(paramProjectXML.value):
-                GNATProject = Riverscapes.Project(paramProjectXML)
+        if paramRiverscapesBool.value == True:
+            paramProjectXML.enabled = True
+            if paramProjectXML.value:
+                from Riverscapes import Riverscapes
+                if arcpy.Exists(paramProjectXML.valueAsText):
+                    GNATProject = Riverscapes.Project(str(paramProjectXML.value))
 
-                paramRealization.enabled = "True"
-                paramRealization.filter.list = GNATProject.Realizations.keys()
+                    paramRealization.enabled = True
+                    paramRealization.filter.list = GNATProject.Realizations.keys()
 
-                if paramRealization.value:
-                    currentRealization = GNATProject.Realizations.get(paramRealization.valueAsText)
-                    inSegmentedStreamNetwork.value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
-                    paramSegmentAnalysis.enabled = "True"
-                    paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
-                    paramAttributeAnalysis.enabled = "True"
+                    if paramRealization.value:
+                        currentRealization = GNATProject.Realizations.get(str(paramRealization.value))
+                        # Switches input stream network feature class to realization output network feature class.
+                        inSegmentedStreamNetwork.value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
+                        paramSegmentAnalysis.enabled = True
+                        paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
+                        paramAttributeAnalysis.enabled = True
 
         else:
-            paramProjectXML.filter.list = []
-            paramProjectXML.value = ''
-            paramRealization.enabled = "False"
-            paramSegmentAnalysis.filter.list = []
+            paramProjectXML.value = ""
+            paramProjectXML.enabled = False
+            paramRealization.value = ""
+            paramRealization.enabled = False
             paramSegmentAnalysis.value = ""
-            paramSegmentAnalysis.enabled = "False"
+            paramSegmentAnalysis.enabled = False
             paramAttributeAnalysis.value = ""
-            paramAttributeAnalysis.enabled = "False"
+            paramAttributeAnalysis.enabled = False
 
         return
 
@@ -1123,43 +1126,72 @@ class CalculateGradientTool(object):
     def execute(self, p, messages):
         """The source code of the tool."""
         reload(CalculateGradient)
-        from Riverscapes import Riverscapes
+        setEnvironmentSettings()
 
         # Tool input variables
-        inSegmentedStreamNetwork = p[0]
-        inDEM = p[1]
+        inSegmentedStreamNetwork = p[0].valueAsText
+        inDEM = p[1].valueAsText
 
         # Riverscapes project variables
-        paramProjectXML = p[2]
-        paramRealization = p[3]
-        paramSegmentAnalysis = p[4]
-        paramAttributeAnalysis = p[5]
+        paramRiverscapesBool = p[2]
+        paramProjectXML = p[3].valueAsText
+        paramRealization = p[4].valueAsText
+        paramSegmentAnalysis = p[5].valueAsText
+        paramAttributeAnalysis = p[6].valueAsText
+
+        # Where the tool output data will be stored in the Riverscapes Project directory
+        if paramRiverscapesBool.value == True:
+            if paramProjectXML:
+                from Riverscapes import Riverscapes
+                GNATProject = Riverscapes.Project()
+                GNATProject.loadProjectXML(paramProjectXML)
+
+                # Where to store attribute analyses input/output datasets
+                if paramSegmentAnalysis:
+                    attributesDir = path.join(GNATProject.projectPath, "Outputs",
+                                              paramRealization, "Analyses",
+                                              paramSegmentAnalysis,
+                                              "GeomorphicAttributes", paramAttributeAnalysis)
+                    if not os.path.exists(attributesDir):
+                        makedirs(attributesDir)
+                    if not os.path.exists(os.path.join(attributesDir, "Inputs")):
+                        makedirs(os.path.join(attributesDir, "Inputs"))
+                    if not os.path.exists(os.path.join(attributesDir, "Outputs")):
+                        makedirs(os.path.join(attributesDir, "Outputs"))
 
         # Main tool module
-        CalculateGradient.main(inSegmentedStreamNetwork.valueAsText,
-                               inDEM.valueAsText)
+        CalculateGradient.main(inSegmentedStreamNetwork,inDEM)
 
         # Add tool run to the Riverscapes project XML
-        if paramProjectXML.value:
-            if arcpy.Exists(paramProjectXML.valueAsText):
+        if paramRiverscapesBool.value == True:
+            if paramProjectXML:
+                from Riverscapes import Riverscapes
+                if arcpy.Exists(paramProjectXML):
 
-                GNATProject = Riverscapes.Project(paramProjectXML.valueAsText)
+                    inDemDS = Riverscapes.Dataset()
+                    inDemDS.create(os.path.basename(inDEM),
+                                   os.path.join(attributesDir, "Inputs",
+                                    os.path.basename(inDEM)))
+                    inDemDS.id = "InputDEM"
 
-                inDemDS = Riverscapes.Dataset()
-                inDemDS.create(arcpy.Describe(inDEM.valueAsText))
-                inDemDS.id = "InputDEM"
+                    GNATProject = Riverscapes.Project(paramProjectXML)
 
-                realization = GNATProject.Realizations.get(paramRealization.valueAsText)
-                analysis = realization.analyses(paramSegmentAnalysis.valueAsText)
-                analysis.newAnalysisGradient(paramAttributeAnalysis.valueAsText,
-                                             "Gradient",
-                                            inDemDS,
-                                            "SegmentedNetwork")
+                    realization = GNATProject.Realizations.get(paramRealization)
+                    analysis = realization.analyses.get(paramSegmentAnalysis)
+                    analysis.newAnalysisGradient(paramAttributeAnalysis,
+                                                 "Gradient",
+                                                inDemDS,
+                                                "SegmentedNetwork")
 
-                realization.analyses[paramSegmentAnalysis.valueAsText] = analysis
-                GNATProject.Realizations[paramRealization.valueAsText] = realization
-                GNATProject.writeProjectXML()
+                    realization.analyses[paramSegmentAnalysis] = analysis
+                    GNATProject.Realizations[paramRealization] = realization
+                    GNATProject.writeProjectXML()
 
+                    # Inform user about where sinuosity/planform attributes were added
+                    GNAT_StreamNetwork_path = realization.GNAT_StreamNetwork.absolutePath(
+                        GNATProject.projectPath)
+                    arcpy.AddMessage("{0} {1}".format("Gradient attribute added to",
+                                                      GNAT_StreamNetwork_path))
         return
 
 
