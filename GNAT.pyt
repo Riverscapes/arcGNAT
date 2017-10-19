@@ -982,8 +982,8 @@ class PlanformTool(object):
                             outValleyCenterlineSinuosity,
                             getTempWorkspace(scratchWorkspace))
 
+        # Add results of tool processing to the Riverscapes project XML
         if paramRiverscapesBool.value == True:
-            # Add tool run to the Riverscapes project XML
             if paramProjectXML:
                 from Riverscapes import Riverscapes
                 if arcpy.Exists(paramProjectXML):
@@ -1239,6 +1239,7 @@ class CalculateThreadednessTool(object):
                     param1,
                     param2,
                     param3,
+                    paramRiverscapesBool,
                     paramProjectXML,
                     paramRealization,
                     paramSegmentAnalysisName,
@@ -1259,33 +1260,39 @@ class CalculateThreadednessTool(object):
             inSegmentedStreamNetwork = p[0]
 
             # Riverscapes project variables
-            paramProjectXML = p[4]
-            paramRealization = p[5]
-            paramSegmentAnalysis = p[6]
-            paramAttributeAnalysis = p[7]
+            paramRiverscapesBool = p[4]
+            paramProjectXML = p[5]
+            paramRealization = p[6]
+            paramSegmentAnalysis = p[7]
+            paramAttributeAnalysis = p[8]
 
-            if paramProjectXML.value:
-                if arcpy.Exists(paramProjectXML.valueAsText):
-                    GNATProject = Riverscapes.Project(paramProjectXML.valueAsText)
+            if paramRiverscapesBool.value == True:
+                paramProjectXML.enabled = True
+                if paramProjectXML.value:
+                    from Riverscapes import Riverscapes
+                    if arcpy.Exists(paramProjectXML.value):
+                        GNATProject = Riverscapes.Project(paramProjectXML.valueAsText)
 
-                    paramRealization.enabled = "True"
-                    paramRealization.filter.list = GNATProject.Realizations.keys()
+                        paramRealization.enabled = "True"
+                        paramRealization.filter.list = GNATProject.Realizations.keys()
 
-                    if paramRealization.value:
-                        currentRealization = GNATProject.Realizations.get(paramRealization.valueAsText)
-                        inSegmentedStreamNetwork.value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
-                        paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
-                        paramSegmentAnalysis.enabled = "True"
-                        paramAttributeAnalysis.enabled = "True"
-
+                        if paramRealization.value:
+                            currentRealization = GNATProject.Realizations.get(str(paramRealization.value))
+                            # Switches input stream network feature class to realization output network feature class.
+                            inSegmentedStreamNetwork.value = currentRealization.GNAT_StreamNetwork.absolutePath(
+                                GNATProject.projectPath)
+                            paramSegmentAnalysis.enabled = True
+                            paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
+                            paramAttributeAnalysis.enabled = True
             else:
-                paramRealization.filter.list = []
-                paramRealization.value = ''
-                paramRealization.enabled = "False"
+                paramProjectXML.value = ""
+                paramProjectXML.enabled = False
+                paramRealization.value = ""
+                paramRealization.enabled = False
                 paramSegmentAnalysis.value = ""
-                paramSegmentAnalysis.enabled = "False"
+                paramSegmentAnalysis.enabled = False
                 paramAttributeAnalysis.value = ""
-                paramAttributeAnalysis.enabled = "False"
+                paramAttributeAnalysis.enabled = False
 
             return
 
@@ -1299,71 +1306,86 @@ class CalculateThreadednessTool(object):
         def execute(self, p, messages):
             """The source code of the tool."""
             reload(CalculateThreadedness)
-            from Riverscapes import Riverscapes
+            setEnvironmentSettings()
 
             # Tool input variables
-            inSegmentedStreamNetwork = p[0]
-            inFullThreadNetwork = p[1]
-            outNodes = p[2]
-            scratchWorkspace = p[3]
+            inSegmentedStreamNetwork = p[0].valueAsText
+            inFullThreadNetwork = p[1].valueAsText
+            outNodes = p[2].valueAsText
+            scratchWorkspace = p[3].valueAsText
 
             # Riverscapes project variables
-            paramProjectXML = p[4]
-            paramRealization = p[5]
-            paramSegmentAnalysis = p[6]
-            paramAttributeAnalysis = p[7]
+            paramRiverscapesBool = p[4]
+            paramProjectXML = p[5].valueAsText
+            paramRealization = p[6].valueAsText
+            paramSegmentAnalysis = p[7].valueAsText
+            paramAttributeAnalysis = p[8].valueAsText
 
             # Where the tool output data will be stored
-            outputFileName = outNodes.valueAsText
-            if paramProjectXML:
-                GNATProject = Riverscapes.Project()
-                GNATProject.loadProjectXML(paramProjectXML)
+            if paramRiverscapesBool.value == True:
+                if paramProjectXML:
+                    from Riverscapes import Riverscapes
+                    GNATProject = Riverscapes.Project()
+                    GNATProject.loadProjectXML(paramProjectXML)
 
-                # Where to store attribute analyses input/output datasets
-                if paramSegmentAnalysis:
-                    attributesDir = path.join(GNATProject.projectPath, "Outputs",
-                                              paramRealization, "Analyses",
-                                              paramSegmentAnalysis,
-                                              "GeomorphicAttributes", paramAttributeAnalysis)
-                    if not os.path.exists(attributesDir):
-                        makedirs(os.path.join(attributesDir, "Outputs"))
-                    outputFileName = path.join(attributesDir, outputFileName) + ".shp"
+                    # Where to store attribute analyses input/output datasets
+                    if paramSegmentAnalysis:
+                        attributesDir = path.join(GNATProject.projectPath, "Outputs",
+                                                  paramRealization, "Analyses",
+                                                  paramSegmentAnalysis,
+                                                  "GeomorphicAttributes", paramAttributeAnalysis)
+                        if not os.path.exists(attributesDir):
+                            makedirs(attributesDir)
+                        if not os.path.exists(os.path.join(attributesDir, "Inputs")):
+                            makedirs(os.path.join(attributesDir, "Inputs"))
+                        if not os.path.exists(os.path.join(attributesDir, "Outputs")):
+                            makedirs(os.path.join(attributesDir, "Outputs"))
 
             # Main tool module
-            CalculateThreadedness.main(inSegmentedStreamNetwork.valueAsText,
-                                       inFullThreadNetwork.valueAsText,
-                                       outputFileName,
-                                       scratchWorkspace.valueAsText)
+            CalculateThreadedness.main(inSegmentedStreamNetwork,
+                                       inFullThreadNetwork,
+                                       outNodes,
+                                       scratchWorkspace)
 
-            # Add tool run to the Riverscapes project XML
-            if paramProjectXML.value:
-                if arcpy.Exists(paramProjectXML.valueAsText):
+            # Add results of tool processing to the Riverscapes project XML
+            if paramRiverscapesBool.value == True:
+                if paramProjectXML:
+                    from Riverscapes import Riverscapes
+                    if arcpy.Exists(paramProjectXML):
 
-                    GNATProject = Riverscapes.Project(paramProjectXML.valueAsText)
+                        inThreadedNetworkDS = Riverscapes.Dataset()
+                        inThreadedNetworkDS.create(os.path.basename(inFullThreadNetwork),
+                                                os.path.join(attributesDir, "Inputs",
+                                                os.path.basename(inFullThreadNetwork)))
+                        inThreadedNetworkDS.id = "InputThreadedNetwork"
 
-                    inThreadedNetworkDS = Riverscapes.Dataset()
-                    inThreadedNetworkDS.create(arcpy.Describe(inFullThreadNetwork.valueAsText))
-                    inThreadedNetworkDS.id = "InputThreadedNetwork"
+                        outNodesDS = Riverscapes.Dataset()
+                        outNodesDS.create(os.path.basename(outNodes),
+                                                os.path.join(attributesDir, "Inputs",
+                                                os.path.basename(outNodes)))
+                        outNodesDS.id = "OutputNodes"
 
-                    outNodesDS = Riverscapes.Dataset()
-                    outNodesDS.create(arcpy.Describe(outNodes.valueAsText))
-                    outNodesDS.id = "OutputNodes"
+                        GNATProject = Riverscapes.Project(paramProjectXML)
 
+                        realization = GNATProject.Realizations.get(paramRealization)
+                        analysis = realization.analyses.get(paramSegmentAnalysis)
+                        analysis.newAnalysisThreadedness(paramAttributeAnalysis,
+                                                         "NODES_BM",
+                                                         "NODES_BB",
+                                                         "NODES_TC",
+                                                         inThreadedNetworkDS,
+                                                         "SegmentNetwork",
+                                                         outNodesDS)
 
-                    realization = GNATProject.Realizations.get(paramRealization.valueAsText)
-                    analysis = realization.analyses(paramSegmentAnalysis.valueAsText)
-                    analysis.newAnalysisThreadedness(paramAttributeAnalysis.valueAsText,
-                                                     "NODES_BM",
-                                                     "NODES_BB",
-                                                     "NODES_TC",
-                                                     inThreadedNetworkDS,
-                                                     "SegmentNetwork",
-                                                     outNodesDS)
+                        realization.analyses[paramSegmentAnalysis] = analysis
+                        GNATProject.Realizations[paramRealization] = realization
+                        GNATProject.writeProjectXML()
 
-                    realization.analyses[paramSegmentAnalysis.valueAsText] = analysis
-                    GNATProject.Realizations[paramRealization.valueAsText] = realization
-                    GNATProject.writeProjectXML()
-
+                        # Inform user about where sinuosity/planform attributes were added
+                        GNAT_StreamNetwork_path = realization.GNAT_StreamNetwork.absolutePath(
+                            GNATProject.projectPath)
+                        arcpy.AddMessage("{0} {1}".format("Threadedness attributes added to",
+                                                          GNAT_StreamNetwork_path))
             return
 
 

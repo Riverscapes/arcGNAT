@@ -7,7 +7,7 @@
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
-# Created:     2017-July-13                                                   #
+# Created:     2017-Oct-19                                                    #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
@@ -43,9 +43,6 @@ def main(fcInputSegments,
          fcOutputNodes,
          tempWorkspace):
 
-    #tempWorkspace = "in_memory"
-    #tempWorkspace = r"C:\JL\Testing\arcGNAT\Issue39\scratch.gdb"
-
     arcpy.env.overwriteOutput = True
 
     # Turn off Z and M geometry
@@ -75,10 +72,13 @@ def main(fcInputSegments,
 
     # Check if the segmented stream network has a field named LineOID
     if findField(fcInputSegments, "LineOID"):
+        LineOID = "LineOID"
         pass
     else:
-        arcpy.AddError("LineOID attribute does not exist in segmented feature class input!")
-        sys.exit(0)
+        arcpy.AddMessage("LineOID attribute field not found in input stream feature class. Using ObjectID field...")
+        LineOID = arcpy.Describe(fcInputSegments).OIDFieldName
+        #arcpy.AddError("LineOID attribute does not exist in segmented feature class input!")
+        #sys.exit(0)
 
     # Check if the full stream network as been run through the Find Braided Network tool.
     if findField(fcInputFullNetworkTemp, "IsBraided"):
@@ -87,7 +87,7 @@ def main(fcInputSegments,
         FindBraidedNetwork.main(fcInputFullNetworkTemp)
 
     # Braid-to-braid nodes
-    arcpy.AddMessage("CBT: Generating braid-to-braid nodes...")
+    arcpy.AddMessage("GNAT CTT: Generating braid-to-braid nodes...")
     arcpy.MakeFeatureLayer_management(fcInputFullNetworkTemp, "lyrInputFullNetworkTemp")
     arcpy.SelectLayerByAttribute_management("lyrInputFullNetworkTemp","NEW_SELECTION", '"IsBraided" = 1')
     arcpy.SelectLayerByLocation_management("lyrInputFullNetworkTemp", "HAVE_THEIR_CENTER_IN",
@@ -102,7 +102,7 @@ def main(fcInputSegments,
     arcpy.AddField_management("lyrNodeBraidToBraidDslv", "NODE_TYPE", "TEXT")
     arcpy.CalculateField_management("lyrNodeBraidToBraidDslv", "NODE_TYPE", '"BB"', "PYTHON_9.3")
     # Braid-to-mainstem nodes
-    arcpy.AddMessage("CBT: Generating braid-to-mainstem nodes...")
+    arcpy.AddMessage("GNAT CTT: Generating braid-to-mainstem nodes...")
     arcpy.Intersect_analysis([fcBraidDslv,fcInputSegments],fcNodeBraidToMainstem, "#", "#", "POINT")
     arcpy.MakeFeatureLayer_management(fcNodeBraidToMainstem, "lyrNodeBraidToMainstem")
     arcpy.MultipartToSinglepart_management("lyrNodeBraidToMainstem", fcNodeBraidToMainstemSingle)
@@ -112,7 +112,7 @@ def main(fcInputSegments,
     arcpy.AddField_management("lyrNodeBraidToMainstemDslv", "NODE_TYPE", "TEXT")
     arcpy.CalculateField_management("lyrNodeBraidToMainstemDslv", "NODE_TYPE", '"BM"', "PYTHON_9.3")
     # Tributary confluence nodes
-    arcpy.AddMessage("CBT: Generating tributary nodes...")
+    arcpy.AddMessage("GNAT CTT: Generating tributary nodes...")
     arcpy.Dissolve_management("lyrInputSegments", fcSegmentDslv, "#", "#", "SINGLE_PART")
     arcpy.Intersect_analysis([fcSegmentDslv], fcNodeTribConfluence, "ONLY_FID", "#", "POINT")
     arcpy.MakeFeatureLayer_management(fcNodeTribConfluence, "lyrNodeTribConfluence")
@@ -123,7 +123,7 @@ def main(fcInputSegments,
     arcpy.AddField_management("lyrNodeTribConfluenceDslv", "NODE_TYPE", "TEXT")
     arcpy.CalculateField_management("lyrNodeTribConfluenceDslv", "NODE_TYPE", '"TC"', "PYTHON_9.3")
     # Merge nodes feature classes together
-    arcpy.AddMessage("CBT: Merge and save node feature class...")
+    arcpy.AddMessage("GNAT CTT: Merge and save node feature class...")
     node_list = ["lyrNodeBraidToBraidDslv", "lyrNodeBraidToMainstemDslv", "lyrNodeTribConfluenceDslv"]
     fieldMapping = nodeFieldMap(node_list)
     arcpy.Merge_management(node_list, fcNodesAll, fieldMapping)
@@ -135,24 +135,24 @@ def main(fcInputSegments,
     arcpy.MakeFeatureLayer_management(fcNodesAll, "lyrNodesAll")
     arcpy.CopyFeatures_management("lyrNodesAll", fcOutputNodes)
     # Summarize each node type by attribute field LineOID
-    arcpy.AddMessage("CBT: Summarize nodes per stream segments...")
+    arcpy.AddMessage("GNAT CTT: Summarize nodes per stream segments...")
     arcpy.MakeFeatureLayer_management(fcNodesToSegments, "lyrNodesToSegments")
     arcpy.SelectLayerByAttribute_management("lyrNodesToSegments", "NEW_SELECTION", """"NODE_TYPE" = 'BM'""")
-    arcpy.Statistics_analysis("lyrNodesToSegments", tblNodeBMSummary, [["NODE_TYPE", "COUNT"]], "LineOID")
+    arcpy.Statistics_analysis("lyrNodesToSegments", tblNodeBMSummary, [["NODE_TYPE", "COUNT"]], LineOID)
     arcpy.SelectLayerByAttribute_management("lyrNodesToSegments", "CLEAR_SELECTION")
     arcpy.SelectLayerByAttribute_management("lyrNodesToSegments", "NEW_SELECTION", """"NODE_TYPE" = 'TC'""")
-    arcpy.Statistics_analysis("lyrNodesToSegments", tblNodeTCSummary, [["NODE_TYPE", "COUNT"]], "LineOID")
+    arcpy.Statistics_analysis("lyrNodesToSegments", tblNodeTCSummary, [["NODE_TYPE", "COUNT"]], LineOID)
     arcpy.SelectLayerByAttribute_management("lyrNodesToSegments", "CLEAR_SELECTION")
     # Spatial join each summary table as a new field to final segment network
     arcpy.AddField_management("lyrInputSegments", "NODES_BM", "TEXT")
     arcpy.AddField_management("lyrInputSegments", "NODES_TC", "TEXT")
     arcpy.MakeTableView_management(tblNodeBMSummary, "viewNodeBMSummary")
     arcpy.MakeTableView_management(tblNodeTCSummary, "viewNodeTCSummary")
-    arcpy.AddJoin_management("lyrInputSegments", "LineOID", "viewNodeBMSummary", "LineOID", "KEEP_COMMON")
+    arcpy.AddJoin_management("lyrInputSegments", LineOID, "viewNodeBMSummary", LineOID, "KEEP_COMMON")
     arcpy.CalculateField_management("lyrInputSegments", "NODES_BM", '"!COUNT_NODE_TYPE!"', "PYTHON_9.3")
     arcpy.RemoveJoin_management("lyrInputSegments")
-    arcpy.AddJoin_management("lyrInputSegments", "LineOID", "viewNodeTCSummary", "LineOID", "KEEP_COMMON")
+    arcpy.AddJoin_management("lyrInputSegments", LineOID, "viewNodeTCSummary", LineOID, "KEEP_COMMON")
     arcpy.CalculateField_management("lyrInputSegments", "NODES_TC", '"!COUNT_NODE_TYPE!"', "PYTHON_9.3")
     arcpy.RemoveJoin_management("lyrInputSegments")
 
-    arcpy.AddMessage("CBT: Processing complete.")
+    arcpy.AddMessage("GNAT CTT: Processing complete.")
