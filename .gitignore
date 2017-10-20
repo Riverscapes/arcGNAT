@@ -27,7 +27,6 @@
 *.sql
 *.sqlite
 *.xml
-*.pyt.xml
 
 # OS generated files #
 ######################

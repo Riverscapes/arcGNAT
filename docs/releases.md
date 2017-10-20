@@ -18,7 +18,14 @@ the **Geomorphic Attributes** group. All **Geomorphic Attribute** tools now save
 as new fields in the input stream network polylie feature class.
 ```
 
-## Version 2.1
+## Version 2.3.0
+**[Version 2.3.0](Downloads/arcGNAT_2.3.0.zip)** 2017-OCTOBER-19
+```markdown
+* Refactored the geomorphic attribute tools to better manage Riverscapes project information.
+* Updated help files for geomorphic attribute tools.
+* Renamed tool menus.
+```
+
 **[Version 2.1.13](Downloads/arcGNAT_2.1.13.zip)** 2017-AUGUST-21
 ```markdown
 * Minor change to Sinuosity and Planform tool, adding default output parameters.
