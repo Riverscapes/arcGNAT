@@ -38,13 +38,13 @@ import FindNetworkFeatures
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.2.02"
+GNAT_version = "2.3.0"
 
-strCatagoryStreamNetworkPreparation = "Main\\Step 1 - Stream Network Preparation"
-strCatagoryStreamNetworkSegmentation = "Main\\Step 2 - Stream Network Segmentation"
-strCatagoryGeomorphicAnalysis = "Main\\Step 3 - Geomorphic Attributes"
+strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
+strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
+strCatagoryGeomorphicAnalysis = "Analyze Network Attributes\\Step 3 - Geomorphic Attributes"
+strCatagoryProjectManagement = "Riverscapes Project Management"
 strCatagoryUtilities = "Utilities"
-strCatagoryProjectManagement = "Project Management"
 
 class Toolbox(object):
     def __init__(self):
