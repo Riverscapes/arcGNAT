@@ -14,7 +14,10 @@ Generally, the primary reason a user will want to use GNAT will be to produce a 
 * No crossed reaches (i.e. a canal that crosses over a stream)
 * All digitized flow directions are downstream
 
-The first two tools found in GNAT under `Step 1 - Stream Network Preperation` - **Build Network Topology Table** and **Find Network Features** - are intended to be used iteratively, ultimately producing a topologically-clean stream network that will serve as an input to the **Segment Stream Network** tool.  The following steps are a suggested workflow for producing such a network.
+The first two tools found in GNAT under `Analyze Network Attributes > Step 1 - Stream Network Preperation` are 
+the**Build Network Topology Table** and **Find Network Features** tools. These tools are intended to be run 
+iteratively, ultimately producing a topologically-clean stream network that will serve as an input to the 
+**Segment Stream Network** tool.  The following steps are a suggested workflow for producing such a network.
 
 ### Suggested Workflow for Step 1
 

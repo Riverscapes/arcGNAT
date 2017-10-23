@@ -2,7 +2,7 @@
 
 [Download and Installation](releases)
 
-* Main
+* Analyze Network Attributes
   * Step 1 - [Stream Network Preparation](Stream-Network-Prep)
     * [Build Network Topology Table](Build-Network-Topology-Table)
     * [Find Network Features](Find-Network-Features)
@@ -11,11 +11,10 @@
   * Step 3 - Geomorphic Attributes
     * [Stream Sinuosity and Planform](Stream-Sinuosity-and-Planform)
     
-* Project Management
-  * [About GNAT Projects](About-GNAT-Projects.md)
+* [Riverscapes Project Management](About-GNAT-Projects)
+    * [Commit Stream Network](Project_CommitRealization)
     * [Create New GNAT Project](Project_NewGNATProject)
-    * [Load Network to Project](Project_LoadNetwork)
-    * [Commit Network to Realization](Project_CommitRealization)
+    * [Load Input Datasets](Project_LoadNetwork)
     
 * Utilities
     * [Calculate Gradient](Calculate-Gradient)

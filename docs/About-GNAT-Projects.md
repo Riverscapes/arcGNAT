@@ -27,7 +27,7 @@ MetaData
 
 ### Realization
 
-A GNAT realization represents steps 1 and 2 in the current GNAT workflow.
+A GNAT realization represents steps 1 and 2 in the current GNAT *Analyze Network Attributes* workflow.
  
 1. Initial Network Topology table is generated 
 2. Network features and errors are identified

@@ -5,7 +5,7 @@ arcGNAT was originally developed to support the geomorphic attribute analysis an
 * Stream network preparation
 * Attribute management
 * Segmentation of stream networks
-* Model geomorphic attributes
+* Modeling geomorphic attributes
 
 
 ###  Support
