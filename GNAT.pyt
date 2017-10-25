@@ -11,7 +11,7 @@
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
 # Version:     2.1.12                                                         #
-# Revised:     2017-October-16                                                #
+# Revised:     2017-October-25                                                #
 # Released:                                                                   #
 #                                                                             #
 # License:     MIT License                                                    #
@@ -38,7 +38,7 @@ import FindNetworkFeatures
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.3.0"
+GNAT_version = "2.3.1"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -910,11 +910,16 @@ class PlanformTool(object):
 
                     if paramRealization.value:
                         currentRealization = GNATProject.Realizations.get(str(paramRealization.value))
-                        # Switches input stream network feature class to realization output network feature class.
-                        inSegmentedStreamNetwork.value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
+
                         paramSegmentAnalysis.enabled = True
                         paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
                         paramAttributeAnalysis.enabled = True
+
+                        if paramSegmentAnalysis.value:
+                            # Switches input stream network feature class to realization segmented network feature class.
+                            currentAnalysis = currentRealization.analyses.get(paramSegmentAnalysis.value)
+                            segmentedOutput = currentAnalysis.outputDatasets["GNAT_SegmentedNetwork"]
+                            inSegmentedStreamNetwork.value = segmentedOutput.absolutePath(GNATProject.projectPath)
         else:
             paramProjectXML.value = ""
             paramProjectXML.enabled = False
@@ -1098,11 +1103,15 @@ class CalculateGradientTool(object):
 
                     if paramRealization.value:
                         currentRealization = GNATProject.Realizations.get(str(paramRealization.value))
-                        # Switches input stream network feature class to realization output network feature class.
-                        inSegmentedStreamNetwork.value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
                         paramSegmentAnalysis.enabled = True
                         paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
                         paramAttributeAnalysis.enabled = True
+
+                        if paramSegmentAnalysis.value:
+                            # Switches input stream network feature class to realization segmented network feature class.
+                            currentAnalysis = currentRealization.analyses.get(paramSegmentAnalysis.value)
+                            segmentedOutput = currentAnalysis.outputDatasets["GNAT_SegmentedNetwork"]
+                            inSegmentedStreamNetwork.value = segmentedOutput.absolutePath(GNATProject.projectPath)
 
         else:
             paramProjectXML.value = ""
@@ -1278,12 +1287,15 @@ class CalculateThreadednessTool(object):
 
                         if paramRealization.value:
                             currentRealization = GNATProject.Realizations.get(str(paramRealization.value))
-                            # Switches input stream network feature class to realization output network feature class.
-                            inSegmentedStreamNetwork.value = currentRealization.GNAT_StreamNetwork.absolutePath(
-                                GNATProject.projectPath)
                             paramSegmentAnalysis.enabled = True
                             paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
                             paramAttributeAnalysis.enabled = True
+
+                            if paramSegmentAnalysis.value:
+                                # Switches input stream network feature class to realization segmented network feature class.
+                                currentAnalysis = currentRealization.analyses.get(paramSegmentAnalysis.value)
+                                segmentedOutput = currentAnalysis.outputDatasets["GNAT_SegmentedNetwork"]
+                                inSegmentedStreamNetwork.value = segmentedOutput.absolutePath(GNATProject.projectPath)
             else:
                 paramProjectXML.value = ""
                 paramProjectXML.enabled = False

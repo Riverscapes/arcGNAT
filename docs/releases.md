@@ -10,7 +10,13 @@ The Confinement Toolbox is provided as a zip file containing a .pyt file and sup
 
 # Downloads
 
-## Version 2.3.0
+## Version 2.3.1
+**[Version 2.3.1](Downloads/arcGNAT_2.3.1.zip)** 2017-OCTOBER-26
+```markdown
+* Fixed issue with how the input stream network parameter is changed when using Riverscapes 
+inputs.
+```
+
 **[Version 2.3.0](Downloads/arcGNAT_2.3.0.zip)** 2017-OCTOBER-19
 ```markdown
 * Refactored the geomorphic attribute tools to better manage Riverscapes project information.
