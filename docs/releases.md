@@ -10,7 +10,12 @@ The Confinement Toolbox is provided as a zip file containing a .pyt file and sup
 
 # Downloads
 
-## Version 2.3.1
+## Version 2.3.2
+**[Version 2.3.2](Downloads/arcGNAT_2.3.2.zip)** 2017-OCTOBER-27
+```markdown
+* Fixed issue another issue with how segmented networks filepaths are stored in the Riverspaces project xml.
+```
+
 **[Version 2.3.1](Downloads/arcGNAT_2.3.1.zip)** 2017-OCTOBER-26
 ```markdown
 * Fixed issue with how the input stream network parameter is changed when using Riverscapes 

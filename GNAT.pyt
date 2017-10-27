@@ -11,7 +11,7 @@
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
 # Version:     2.1.12                                                         #
-# Revised:     2017-October-25                                                #
+# Revised:     2017-October-17                                                #
 # Released:                                                                   #
 #                                                                             #
 # License:     MIT License                                                    #
@@ -38,7 +38,7 @@ import FindNetworkFeatures
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.3.1"
+GNAT_version = "2.3.2"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -719,6 +719,7 @@ class SegmentationTool(object):
                 paramRealization,
                 paramSegmentAnalysisName]
 
+
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
         return True
@@ -801,8 +802,8 @@ class SegmentationTool(object):
 
                 outSegmentedNetwork = Riverscapes.Dataset()
                 outSegmentedNetwork.create(arcpy.Describe(output).basename,
-                                           path.relpath(path.join(output, "SegmentedNetwork"),
-                                                        GNATProject.projectPath) + ".shp",
+                                           path.join("Outputs", str(p[9].value), "Analyses", str(p[10].value),
+                                                     arcpy.Describe(output).basename + ".shp"),
                                            "SegmentedNetwork")
                 outSegmentedNetwork.id = "SegmentedNetwork"
 
