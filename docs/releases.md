@@ -10,7 +10,12 @@ The Confinement Toolbox is provided as a zip file containing a .pyt file and sup
 
 # Downloads
 
-## Version 2.3.2
+## Version 2.3.3
+**[Version 2.3.3](Downloads/arcGNAT_2.3.3.zip)** 2017-NOVEMBER-7
+```markdown
+* Changed name of output dataset for geomorphic attribute analyses.
+```
+
 **[Version 2.3.2](Downloads/arcGNAT_2.3.2.zip)** 2017-OCTOBER-27
 ```markdown
 * Fixed issue another issue with how segmented networks filepaths are stored in the Riverspaces project xml.
