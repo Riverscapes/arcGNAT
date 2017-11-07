@@ -38,7 +38,7 @@ import FindNetworkFeatures
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.3.2"
+GNAT_version = "2.3.3"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -919,7 +919,7 @@ class PlanformTool(object):
                         if paramSegmentAnalysis.value:
                             # Switches input stream network feature class to realization segmented network feature class.
                             currentAnalysis = currentRealization.analyses.get(paramSegmentAnalysis.value)
-                            segmentedOutput = currentAnalysis.outputDatasets["GNAT_SegmentedNetwork"]
+                            segmentedOutput = currentAnalysis.outputDatasets["SegmentedNetwork"]
                             inSegmentedStreamNetwork.value = segmentedOutput.absolutePath(GNATProject.projectPath)
         else:
             paramProjectXML.value = ""
@@ -1111,7 +1111,7 @@ class CalculateGradientTool(object):
                         if paramSegmentAnalysis.value:
                             # Switches input stream network feature class to realization segmented network feature class.
                             currentAnalysis = currentRealization.analyses.get(paramSegmentAnalysis.value)
-                            segmentedOutput = currentAnalysis.outputDatasets["GNAT_SegmentedNetwork"]
+                            segmentedOutput = currentAnalysis.outputDatasets["SegmentedNetwork"]
                             inSegmentedStreamNetwork.value = segmentedOutput.absolutePath(GNATProject.projectPath)
 
         else:
@@ -1295,7 +1295,7 @@ class CalculateThreadednessTool(object):
                             if paramSegmentAnalysis.value:
                                 # Switches input stream network feature class to realization segmented network feature class.
                                 currentAnalysis = currentRealization.analyses.get(paramSegmentAnalysis.value)
-                                segmentedOutput = currentAnalysis.outputDatasets["GNAT_SegmentedNetwork"]
+                                segmentedOutput = currentAnalysis.outputDatasets["SegmentedNetwork"]
                                 inSegmentedStreamNetwork.value = segmentedOutput.absolutePath(GNATProject.projectPath)
             else:
                 paramProjectXML.value = ""
