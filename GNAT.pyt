@@ -38,7 +38,7 @@ import FindNetworkFeatures
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.3.3"
+GNAT_version = "2.3.4"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -863,7 +863,7 @@ class PlanformTool(object):
             displayName="Output Valley Centerline with Sinuosity Attribute",
             name="OutputFCValleyCenterline",
             datatype="DEFeatureClass",
-            parameterType="Optional",
+            parameterType="Required",
             direction="Output")
         
         return [param0,

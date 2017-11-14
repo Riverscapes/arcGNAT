@@ -10,7 +10,12 @@ The Confinement Toolbox is provided as a zip file containing a .pyt file and sup
 
 # Downloads
 
-## Version 2.3.3
+## Version 2.3.4
+**[Version 2.3.4](Downloads/arcGNAT_2.3.4.zip)** 2017-NOVEMBER-14
+```markdown
+* Changed valley centerline output from optional to required.
+```
+
 **[Version 2.3.3](Downloads/arcGNAT_2.3.3.zip)** 2017-NOVEMBER-7
 ```markdown
 * Changed name of output dataset for geomorphic attribute analyses.
