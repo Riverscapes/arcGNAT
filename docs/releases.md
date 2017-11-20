@@ -10,7 +10,12 @@ The Confinement Toolbox is provided as a zip file containing a .pyt file and sup
 
 # Downloads
 
-## Version 2.3.4
+## Version 2.3.5
+**[Version 2.3.5](Downloads/arcGNAT_2.3.5.zip)** 2017-NOVEMBER-20
+```markdown
+* Separated the **Stream Sinuosity and Planform** tool into two new tools, **Channel Sinuosity** and **Planform**.
+```
+
 **[Version 2.3.4](Downloads/arcGNAT_2.3.4.zip)** 2017-NOVEMBER-14
 ```markdown
 * Changed valley centerline output from optional to required.

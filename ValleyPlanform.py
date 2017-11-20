@@ -10,7 +10,7 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Modified:    2017-Sep-28                                                    #
+# Modified:    2017-Nov-16                                                    #
 #                                                                             #
 # Copyright:   (c) South Fork Research, Inc. 2017                             #
 #                                                                             #
@@ -23,44 +23,38 @@ import gis_tools
 import Sinuosity
 import TransferAttributesToLine
 
-def main(fcStreamNetwork,
+def main(fcChannelSinuosity,
          fcValleyCenterline,
          fcValleyBottomPolygon,
          outputFCSinuosityValley,
+         outputFCPlanform,
          workspaceTemp="in_memory"):
     
     # Set workspace and reset modules
     reload(TransferAttributesToLine)
     reload(Sinuosity)
 
-    lyrInputStreamNetwork = "lyrInputStreamNetwork"
-    arcpy.MakeFeatureLayer_management(fcStreamNetwork, lyrInputStreamNetwork)
+    lyrChannelSinuosity = "lyrChannelSinuosity"
+    arcpy.MakeFeatureLayer_management(fcChannelSinuosity, lyrChannelSinuosity)
+    tmpChannelSinuosity = workspaceTemp + r"\tmpChannelSinuosity"
+    arcpy.CopyFeatures_management(lyrChannelSinuosity, tmpChannelSinuosity)
 
-    fieldInputID = gis_tools.resetField(lyrInputStreamNetwork, "InputID", "DOUBLE")
-    arcpy.CalculateField_management(lyrInputStreamNetwork,
+    fieldInputID = gis_tools.resetField(tmpChannelSinuosity, "InputID", "DOUBLE")
+    arcpy.CalculateField_management(tmpChannelSinuosity,
                                     fieldInputID,
-                                    "!" + arcpy.Describe(lyrInputStreamNetwork).OIDFieldName + "!",
+                                    "!" + arcpy.Describe(tmpChannelSinuosity).OIDFieldName + "!",
                                     "PYTHON_9.3")
 
-    # outputs are stored in the temporary workspace
-    outputFCSinuosityChannel = gis_tools.newGISDataset(workspaceTemp, "outputFCSinuosityChannel")
-    outputFCPlanform = gis_tools.newGISDataset(workspaceTemp, "outputFCPlanform")
-
-    # Calculate valley sinuosity for each channel network segment
-    # if arcpy.Exists(outputFCSinuosityChannel):
-    #     arcpy.Delete_management(outputFCSinuosityChannel)
-    Sinuosity.main(fcStreamNetwork, outputFCSinuosityChannel, "C_Sin", workspaceTemp)
-    
     # Calculate centerline sinuosity for each valley centerline segment
     if arcpy.Exists(outputFCSinuosityValley):
         arcpy.Delete_management(outputFCSinuosityValley)
     Sinuosity.main(fcValleyCenterline, outputFCSinuosityValley, "V_Sin", workspaceTemp)
 
-    # Transfer attributes to stream network polyline feature class
+    # Transfer attributes to channel sinuosity polyline feature class
     if arcpy.Exists(outputFCPlanform):
         arcpy.Delete_management(outputFCPlanform)
     TransferAttributesToLine.main(outputFCSinuosityValley,
-                                  outputFCSinuosityChannel,
+                                  tmpChannelSinuosity,
                                   outputFCPlanform,
                                   workspaceTemp)
 
@@ -90,18 +84,18 @@ def main(fcStreamNetwork,
         if dropField not in keepFields:
             arcpy.DeleteField_management("fcOutputView", dropField)
 
-    # remove attribute fields if they are found in the input stream network
-    attrbFields = ["Planform", "C_Sin", "V_Sin"]
-    checkFields = [f.name for f in arcpy.ListFields(lyrInputStreamNetwork)]
-    for attrbField in attrbFields:
-        if attrbField in checkFields:
-            arcpy.DeleteField_management(lyrInputStreamNetwork, attrbField)
-
-    # join final sinuosity/planform output back to input stream network
-    arcpy.JoinField_management(lyrInputStreamNetwork,
-                               "InputID",
-                               "fcOutputView",
-                               "InputID",
-                               ["C_Sin", "Planform", "V_Sin"])
+    # # remove attribute fields if they are found in the input channel sinuosity network
+    # attrbFields = ["Planform", "C_Sin", "V_Sin"]
+    # checkFields = [f.name for f in arcpy.ListFields(lyrChannelSinuosity)]
+    # for attrbField in attrbFields:
+    #     if attrbField in checkFields:
+    #         arcpy.DeleteField_management(lyrChannelSinuosity, attrbField)
+    #
+    # # join final valley sinuosity/planform attributes back to input channel sinuosity network
+    # arcpy.JoinField_management(lyrChannelSinuosity,
+    #                            "InputID",
+    #                            "fcOutputView",
+    #                            "InputID",
+    #                            ["C_Sin", "Planform", "V_Sin"])
 
     return

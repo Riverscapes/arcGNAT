@@ -10,8 +10,8 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.1.12                                                         #
-# Revised:     2017-October-17                                                #
+# Version:     2.3.5                                                          #
+# Revised:     2017-Nov-20                                                    #
 # Released:                                                                   #
 #                                                                             #
 # License:     MIT License                                                    #
@@ -38,7 +38,7 @@ import FindNetworkFeatures
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.3.4"
+GNAT_version = "2.3.5"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -825,228 +825,6 @@ class SegmentationTool(object):
 
 
 # Geomorphic Attributes Tools
-class PlanformTool(object):
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "Stream Sinuosity and Planform"
-        self.description = ""
-        self.canRunInBackground = True
-        self.category = strCatagoryGeomorphicAnalysis
-
-    def getParameterInfo(self):
-        """Define parameter definitions"""
-        param0 = arcpy.Parameter(
-            displayName="Input Segmented Stream Network",
-            name="InputFCStreamNetwork",
-            datatype="GPFeatureLayer", 
-            parameterType="Required",
-            direction="Input")
-        param0.filter.list = ["Polyline"]
-
-        param1 = arcpy.Parameter(
-            displayName="Input Segmented Valley Centerline",
-            name="InputFCValleyCenterline",
-            datatype="GPFeatureLayer",
-            parameterType="Required",
-            direction="Input")
-        param1.filter.list = ["Polyline"]
-
-        param2 = arcpy.Parameter(
-            displayName="Input Valley Bottom Polygon",
-            name="InputFCValleyPolygon",
-            datatype="GPFeatureLayer", 
-            parameterType="Required",
-            direction="Input")
-        param2.filter.list = ["Polygon"]
-
-        param3 = arcpy.Parameter(
-            displayName="Output Valley Centerline with Sinuosity Attribute",
-            name="OutputFCValleyCenterline",
-            datatype="DEFeatureClass",
-            parameterType="Required",
-            direction="Output")
-        
-        return [param0,
-                param1,
-                param2,
-                param3,
-                paramRiverscapesBool, #4
-                paramProjectXML, #5
-                paramRealization, #6
-                paramSegmentAnalysisName, #7
-                paramAttributeAnalysisName] #8
-
-    def isLicensed(self):
-        """Set whether tool is licensed to execute."""
-        return True
-
-    def updateParameters(self, p):
-        """Modify the values and properties of parameters before internal
-        validation is performed.  This method is called whenever a parameter
-        has been changed."""
-
-        # Tool input variables
-        inSegmentedStreamNetwork = p[0]
-        inValleyCenterline = p[1]
-        inValleyBottomPolygon = p[2]
-        outValleyCenterlineSinuosity = p[3]
-
-        # Riverscape project parameters
-
-        paramRiverscapesBool = p[4]
-        paramProjectXML = p[5]
-        paramRealization = p[6]
-        paramSegmentAnalysis = p[7]
-        paramAttributeAnalysis = p[8]
-
-        if paramRiverscapesBool.value == True:
-            paramProjectXML.enabled = True
-            if paramProjectXML.value:
-                from Riverscapes import Riverscapes
-                if arcpy.Exists(paramProjectXML.valueAsText):
-                    GNATProject = Riverscapes.Project(str(paramProjectXML.value))
-
-                    paramRealization.enabled = True
-                    paramRealization.filter.list = GNATProject.Realizations.keys()
-
-                    if paramRealization.value:
-                        currentRealization = GNATProject.Realizations.get(str(paramRealization.value))
-
-                        paramSegmentAnalysis.enabled = True
-                        paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
-                        paramAttributeAnalysis.enabled = True
-
-                        if paramSegmentAnalysis.value:
-                            # Switches input stream network feature class to realization segmented network feature class.
-                            currentAnalysis = currentRealization.analyses.get(paramSegmentAnalysis.value)
-                            segmentedOutput = currentAnalysis.outputDatasets["SegmentedNetwork"]
-                            inSegmentedStreamNetwork.value = segmentedOutput.absolutePath(GNATProject.projectPath)
-        else:
-            paramProjectXML.value = ""
-            paramProjectXML.enabled = False
-            paramRealization.value = ""
-            paramRealization.enabled = False
-            paramSegmentAnalysis.value = ""
-            paramSegmentAnalysis.enabled = False
-            paramAttributeAnalysis.value = ""
-            paramAttributeAnalysis.enabled = False
-
-        return
-
-    def updateMessages(self, parameters):
-        """Modify the messages created by internal validation for each tool
-        parameter.  This method is called after internal validation."""
-        # testWorkspacePath(parameters[6])
-        return
-
-    def execute(self, p, messages):
-        """The source code of the tool."""
-        reload(ValleyPlanform)
-        setEnvironmentSettings()
-
-        # Tool input variables
-        inSegmentedStreamNetwork = p[0].valueAsText
-        inValleyCenterline = p[1].valueAsText
-        inValleyBottomPolygon = p[2].valueAsText
-        outValleyCenterlineSinuosity = p[3].valueAsText
-
-        # Riverscapes project variables
-
-        paramRiverscapesBool = p[4]
-        paramProjectXML = p[5].valueAsText
-        paramRealization = p[6].valueAsText
-        paramSegmentAnalysis = p[7].valueAsText
-        paramAttributeAnalysis = p[8].valueAsText
-
-        scratchWorkspace = "in_memory"
-        outputFileName = os.path.basename(outValleyCenterlineSinuosity)
-
-        # Where the tool output data will be stored in Riverscapes Project directory
-        if paramRiverscapesBool.value == True:
-            if paramProjectXML:
-                from Riverscapes import Riverscapes
-                GNATProject = Riverscapes.Project()
-                GNATProject.loadProjectXML(paramProjectXML)
-
-                # Where to store attribute analyses input/output datasets
-                if paramSegmentAnalysis:
-                    attributesDir = path.join(GNATProject.projectPath, "Outputs",
-                                              paramRealization, "Analyses",
-                                              paramSegmentAnalysis,
-                                              "GeomorphicAttributes", paramAttributeAnalysis)
-                    if not os.path.exists(attributesDir):
-                        makedirs(attributesDir)
-                    if not os.path.exists(os.path.join(attributesDir, "Inputs")):
-                        makedirs(os.path.join(attributesDir, "Inputs"))
-                    if not os.path.exists(os.path.join(attributesDir, "Outputs")):
-                        makedirs(os.path.join(attributesDir, "Outputs"))
-
-        # Main tool module
-        ValleyPlanform.main(inSegmentedStreamNetwork,
-                            inValleyCenterline,
-                            inValleyBottomPolygon,
-                            outValleyCenterlineSinuosity,
-                            getTempWorkspace(scratchWorkspace))
-
-        # Add results of tool processing to the Riverscapes project XML
-        if paramRiverscapesBool.value == True:
-            if paramProjectXML:
-                from Riverscapes import Riverscapes
-                if arcpy.Exists(paramProjectXML):
-
-                    inValleyCenterlineDS = Riverscapes.Dataset()
-                    inValleyCenterlineDS.create(os.path.basename(inValleyCenterline),
-                                                os.path.join(attributesDir, "Inputs",
-                                                os.path.basename(inValleyCenterline)))
-                    inValleyCenterlineDS.id = "InputValleyCenterline"
-
-                    inValleyBottomDS = Riverscapes.Dataset()
-                    inValleyBottomDS.create(os.path.basename(inValleyBottomPolygon),
-                                            os.path.join(attributesDir, "Inputs",
-                                            os.path.basename(inValleyBottomPolygon)))
-                    inValleyBottomDS.id = "InputValleyBottom"
-
-                    outValleyCenterlineSinuosityDS = Riverscapes.Dataset()
-                    outValleyCenterlineSinuosityDS.create(outputFileName, os.path.join(attributesDir, "Outputs", outputFileName))
-                    outValleyCenterlineSinuosityDS.id = "ValleyCenterlineSinuosity"
-
-                    GNATProject = Riverscapes.Project(paramProjectXML)
-
-                    realization = GNATProject.Realizations.get(paramRealization)
-                    analysis = realization.analyses.get(paramSegmentAnalysis)
-                    analysis.newAnalysisSinuosityPlanform(paramAttributeAnalysis,
-                                                          "C_Sin",
-                                                          "Planform",
-                                                          inValleyCenterlineDS,
-                                                          inValleyBottomDS,
-                                                          "SegmentedNetwork",
-                                                          outValleyCenterlineSinuosityDS)
-
-                    realization.analyses[paramSegmentAnalysis] = analysis
-                    GNATProject.Realizations[paramRealization] = realization
-                    GNATProject.writeProjectXML()
-
-                    # Inform user about where sinuosity/planform attributes were added
-                    GNAT_StreamNetwork_path = realization.GNAT_StreamNetwork.absolutePath(
-                        GNATProject.projectPath)
-                    arcpy.AddMessage("{0} {1}".format("Sinuosity and planform attributes added to",
-                                                      GNAT_StreamNetwork_path))
-
-            # Where the tool output data will be stored in Riverscapes Project directory
-            if paramProjectXML:
-                from Riverscapes import Riverscapes
-                GNATProject = Riverscapes.Project()
-                GNATProject.loadProjectXML(paramProjectXML)
-
-                # Where to store attribute analyses input/output datasets
-                if paramSegmentAnalysis:
-                    # Copy the tool output to the attribute analysis output folder
-                    if os.path.isfile(outValleyCenterlineSinuosity):
-                        arcpy.CopyFeatures_management(outValleyCenterlineSinuosity,
-                                                      os.path.join(attributesDir, "Outputs", outputFileName))
-
-        return
-
 
 class CalculateGradientTool(object):
     def __init__(self):
@@ -1264,8 +1042,6 @@ class CalculateThreadednessTool(object):
             validation is performed.  This method is called whenever a parameter
             has been changed."""
 
-            from Riverscapes import Riverscapes
-
             # Tool input variables
             inSegmentedStreamNetwork = p[0]
 
@@ -1365,16 +1141,18 @@ class CalculateThreadednessTool(object):
                 if paramProjectXML:
                     from Riverscapes import Riverscapes
                     if arcpy.Exists(paramProjectXML):
+                        relativeDir = os.path.join("Outputs", paramRealization, "Analyses", paramSegmentAnalysis,
+                                                   "GeomorphicAttributes", paramAttributeAnalysis)
 
                         inThreadedNetworkDS = Riverscapes.Dataset()
                         inThreadedNetworkDS.create(os.path.basename(inFullThreadNetwork),
-                                                os.path.join(attributesDir, "Inputs",
+                                                os.path.join(relativeDir, "Inputs",
                                                 os.path.basename(inFullThreadNetwork)))
                         inThreadedNetworkDS.id = "InputThreadedNetwork"
 
                         outNodesDS = Riverscapes.Dataset()
                         outNodesDS.create(os.path.basename(outNodes),
-                                                os.path.join(attributesDir, "Inputs",
+                                                os.path.join(relativeDir, "Outputs",
                                                 os.path.basename(outNodes)))
                         outNodesDS.id = "OutputNodes"
 
@@ -1400,6 +1178,411 @@ class CalculateThreadednessTool(object):
                         arcpy.AddMessage("{0} {1}".format("Threadedness attributes added to",
                                                           GNAT_StreamNetwork_path))
             return
+
+
+class PlanformTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Valley Planform"
+        self.description = "Calculates a valley planform metric for the input stream network."
+        self.canRunInBackground = True
+        self.category = strCatagoryGeomorphicAnalysis
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input Stream Network with Channel Sinuosity",
+            name="InputFCChannelSinuosity",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Input Segmented Valley Centerline",
+            name="InputFCValleyCenterline",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        param1.filter.list = ["Polyline"]
+
+        param2 = arcpy.Parameter(
+            displayName="Input Valley Bottom Polygon",
+            name="InputFCValleyPolygon",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        param2.filter.list = ["Polygon"]
+
+        param3 = arcpy.Parameter(
+            displayName="Output Valley Centerline with Sinuosity Attribute",
+            name="OutputFCValleyCenterline",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Output")
+
+        param4 = arcpy.Parameter(
+            displayName="Output Valley Centerline with Planform Attribute",
+            name="OutputFCPlanform",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Output",
+        )
+
+        return [param0,
+                param1,
+                param2,
+                param3,
+                param4,
+                paramRiverscapesBool,  # 5
+                paramProjectXML,  # 6
+                paramRealization,  # 7
+                paramSegmentAnalysisName,  # 8
+                paramAttributeAnalysisName]  # 9
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, p):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+
+        # Riverscape project parameters
+
+        paramRiverscapesBool = p[5]
+        paramProjectXML = p[6]
+        paramRealization = p[7]
+        paramSegmentAnalysis = p[8]
+        paramAttributeAnalysis = p[9]
+
+        if paramRiverscapesBool.value == True:
+            paramProjectXML.enabled = True
+            if paramProjectXML.value:
+                from Riverscapes import Riverscapes
+                if arcpy.Exists(paramProjectXML.valueAsText):
+                    GNATProject = Riverscapes.Project(str(paramProjectXML.value))
+
+                    paramRealization.enabled = True
+                    paramRealization.filter.list = GNATProject.Realizations.keys()
+
+                    if paramRealization.value:
+                        currentRealization = GNATProject.Realizations.get(str(paramRealization.value))
+
+                        paramSegmentAnalysis.enabled = True
+                        paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
+                        paramAttributeAnalysis.enabled = True
+
+                        # if paramSegmentAnalysis.value:
+                        #     # Switches input stream network feature class to realization segmented network feature class.
+                        #     currentAnalysis = currentRealization.analyses.get(paramSegmentAnalysis.value)
+                        #     segmentedOutput = currentAnalysis.outputDatasets["SegmentedNetwork"]
+                        #     inChannelSinuosity.value = segmentedOutput.absolutePath(GNATProject.projectPath)
+        else:
+            paramProjectXML.value = ""
+            paramProjectXML.enabled = False
+            paramRealization.value = ""
+            paramRealization.enabled = False
+            paramSegmentAnalysis.value = ""
+            paramSegmentAnalysis.enabled = False
+            paramAttributeAnalysis.value = ""
+            paramAttributeAnalysis.enabled = False
+
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter. This method is called after internal validation."""
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(ValleyPlanform)
+        setEnvironmentSettings()
+
+        # Tool input variables
+        inChannelSinuosity = p[0].valueAsText
+        inValleyCenterline = p[1].valueAsText
+        inValleyBottomPolygon = p[2].valueAsText
+        outValleyCenterlineSinuosity = p[3].valueAsText
+        outPlanform = p[4].valueAsText
+
+        # Riverscapes project variables
+
+        paramRiverscapesBool = p[5]
+        paramProjectXML = p[6].valueAsText
+        paramRealization = p[7].valueAsText
+        paramSegmentAnalysis = p[8].valueAsText
+        paramAttributeAnalysis = p[9].valueAsText
+
+        scratchWorkspace = "in_memory"
+        outValleyCenterlineName = os.path.basename(outValleyCenterlineSinuosity)
+        outPlanformName = os.path.basename(outPlanform)
+
+        # Where the tool output data will be stored in Riverscapes Project directory
+        if paramRiverscapesBool.value == True:
+            if paramProjectXML:
+                from Riverscapes import Riverscapes
+                GNATProject = Riverscapes.Project()
+                GNATProject.loadProjectXML(paramProjectXML)
+
+                # Where to store attribute analyses input/output datasets
+                if paramSegmentAnalysis:
+                    attributesDir = path.join(GNATProject.projectPath, "Outputs",
+                                              paramRealization, "Analyses",
+                                              paramSegmentAnalysis,
+                                              "GeomorphicAttributes", paramAttributeAnalysis)
+                    if not os.path.exists(attributesDir):
+                        makedirs(attributesDir)
+                    if not os.path.exists(os.path.join(attributesDir, "Inputs")):
+                        makedirs(os.path.join(attributesDir, "Inputs"))
+                    if not os.path.exists(os.path.join(attributesDir, "Outputs")):
+                        makedirs(os.path.join(attributesDir, "Outputs"))
+
+        # Main tool module
+        ValleyPlanform.main(inChannelSinuosity,
+                            inValleyCenterline,
+                            inValleyBottomPolygon,
+                            outValleyCenterlineSinuosity,
+                            outPlanform,
+                            getTempWorkspace(scratchWorkspace))
+
+        # Add results of tool processing to the Riverscapes project XML
+        if paramRiverscapesBool.value == True:
+            if paramProjectXML:
+                from Riverscapes import Riverscapes
+                if arcpy.Exists(paramProjectXML):
+                    # Riverscapes requires relative file paths
+                    relativeDir = os.path.join("Outputs", paramRealization, "Analyses", paramSegmentAnalysis,
+                                               "GeomorphicAttributes", paramAttributeAnalysis)
+
+                    inValleyCenterlineDS = Riverscapes.Dataset()
+                    inValleyCenterlineDS.create(os.path.basename(inValleyCenterline),
+                                                os.path.join(relativeDir, "Inputs",
+                                                             os.path.basename(inValleyCenterline)))
+                    inValleyCenterlineDS.id = "InputValleyCenterline"
+
+                    inValleyBottomDS = Riverscapes.Dataset()
+                    inValleyBottomDS.create(os.path.basename(inValleyBottomPolygon),
+                                            os.path.join(relativeDir, "Inputs",
+                                                         os.path.basename(inValleyBottomPolygon)))
+                    inValleyBottomDS.id = "InputValleyBottom"
+
+                    outValleyCenterlineDS = Riverscapes.Dataset()
+                    outValleyCenterlineDS.create(outValleyCenterlineName,
+                                                 os.path.join(relativeDir, "Outputs", outValleyCenterlineName))
+                    outValleyCenterlineDS.id = "ValleyCenterlineSinuosity"
+
+                    outPlanformDS = Riverscapes.Dataset()
+                    outPlanformDS.create(outPlanformName,
+                                         os.path.join(relativeDir, "Outputs", outPlanformName))
+                    outPlanformDS.id = "Planform"
+
+                    GNATProject = Riverscapes.Project(paramProjectXML)
+
+                    realization = GNATProject.Realizations.get(paramRealization)
+                    analysis = realization.analyses.get(paramSegmentAnalysis)
+                    analysis.newAnalysisPlanform(paramAttributeAnalysis,
+                                                "V_Sin",
+                                                "Planform",
+                                                inValleyCenterlineDS,
+                                                inValleyBottomDS,
+                                                "SegmentedNetwork",
+                                                outValleyCenterlineDS,
+                                                outPlanformDS)
+                    realization.analyses[paramSegmentAnalysis] = analysis
+                    GNATProject.Realizations[paramRealization] = realization
+                    GNATProject.writeProjectXML()
+
+
+            # Where the tool output data will be stored in Riverscapes Project directory
+            if paramProjectXML:
+                from Riverscapes import Riverscapes
+                GNATProject = Riverscapes.Project()
+                GNATProject.loadProjectXML(paramProjectXML)
+
+                # Where to store attribute analyses input/output datasets
+                if paramSegmentAnalysis:
+                    # Copy the tool output to the attribute analysis output folder
+                    if os.path.isfile(outValleyCenterlineSinuosity):
+                        arcpy.CopyFeatures_management(outValleyCenterlineSinuosity,
+                                                      os.path.join(attributesDir, "Outputs", outValleyCenterlineName))
+                    if os.path.isfile(outPlanform):
+                        arcpy.CopyFeatures_management(outPlanform, os.path.join(attributesDir, "Outputs", outPlanformName))
+
+        return
+
+
+class SinuosityTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Channel Sinuosity"
+        self.description = "Calculate channel sinuosity in a stream network polyline feature class"
+        self.canRunInBackground = True
+        self.category = strCatagoryGeomorphicAnalysis
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input segmented stream network polyline feature class",
+            name="InputFCCenterline",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Output polyline feature class with sinuosity",
+            name="OutputFCCenterline",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Output")
+        param1.filter.list = ["Polyline"]
+
+        return [param0,
+                param1,
+                paramRiverscapesBool, #2
+                paramProjectXML, #3
+                paramRealization, #4
+                paramSegmentAnalysisName, #5
+                paramAttributeAnalysisName] #6
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, p):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        paramRiverscapesBool = p[2]
+        paramProjectXML = p[3]
+        paramRealization = p[4]
+        paramSegmentAnalysis = p[5]
+        paramAttributeAnalysis = p[6]
+
+        if paramRiverscapesBool.value == True:
+            paramProjectXML.enabled = True
+            if paramProjectXML.value:
+                from Riverscapes import Riverscapes
+                if arcpy.Exists(paramProjectXML.valueAsText):
+                    GNATProject = Riverscapes.Project(paramProjectXML.valueAsText)
+
+                    paramRealization.enabled = True
+                    paramRealization.filter.list = GNATProject.Realizations.keys()
+
+                    if paramRealization.value:
+                        currentRealization = GNATProject.Realizations.get(paramRealization.valueAsText)
+
+                        paramSegmentAnalysis.enabled = True
+                        paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
+                        paramAttributeAnalysis.enabled = True
+
+        else:
+            paramProjectXML.value = ""
+            paramProjectXML.enabled = False
+            paramRealization.value = ""
+            paramRealization.enabled = False
+            paramSegmentAnalysis.value = ""
+            paramSegmentAnalysis.enabled = False
+            paramAttributeAnalysis.value = ""
+            paramAttributeAnalysis.enabled = False
+
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(Sinuosity)
+        setEnvironmentSettings()
+
+        # Tool input variables
+        inCenterline = p[0].valueAsText
+        outSinuosity = p[1].valueAsText
+
+        # Riverscapes project variables
+        paramRiverscapesBool = p[2]
+        paramProjectXML = p[3].valueAsText
+        paramRealization = p[4].valueAsText
+        paramSegmentAnalysis = p[5].valueAsText
+        paramAttributeAnalysis = p[6].valueAsText
+
+        outSinuosityName = os.path.basename(outSinuosity)
+        paramChannelSinuosityField = "C_Sin"
+
+        # Where the tool output data will be stored in Riverscapes Project directory
+        if paramRiverscapesBool.value == True:
+            if paramProjectXML:
+                from Riverscapes import Riverscapes
+                GNATProject = Riverscapes.Project()
+                GNATProject.loadProjectXML(paramProjectXML)
+
+                # Where to store attribute analyses input/output datasets
+                if paramSegmentAnalysis:
+                    attributesDir = path.join(GNATProject.projectPath, "Outputs",
+                                              paramRealization, "Analyses",
+                                              paramSegmentAnalysis,
+                                              "GeomorphicAttributes", paramAttributeAnalysis)
+                    if not os.path.exists(attributesDir):
+                        makedirs(attributesDir)
+                    if not os.path.exists(os.path.join(attributesDir, "Inputs")):
+                        makedirs(os.path.join(attributesDir, "Inputs"))
+                    if not os.path.exists(os.path.join(attributesDir, "Outputs")):
+                        makedirs(os.path.join(attributesDir, "Outputs"))
+
+        # Main tool module
+        Sinuosity.main(inCenterline, outSinuosity)
+
+        # Add results of tool processing to the Riverscapes project XML
+        if paramRiverscapesBool.value == True:
+            if paramProjectXML:
+                from Riverscapes import Riverscapes
+                if arcpy.Exists(paramProjectXML):
+                    # Riverscapes requires relative file paths
+                    relativeDir = path.join("Outputs", paramRealization, "Analyses", paramSegmentAnalysis,
+                                            "GeomorphicAttributes", paramAttributeAnalysis)
+
+                    outSinuosityDS = Riverscapes.Dataset()
+                    outSinuosityDS.create(outSinuosityName, os.path.join(relativeDir, "Outputs", outSinuosityName))
+                    outSinuosityDS.id = "Sinuosity"
+
+                    GNATProject = Riverscapes.Project(paramProjectXML)
+
+                    realization = GNATProject.Realizations.get(paramRealization)
+                    analysis = realization.analyses.get(paramSegmentAnalysis)
+                    analysis.newAnalysisSinuosity(paramAttributeAnalysis,
+                                                  paramChannelSinuosityField,
+                                                  "SegmentedNetwork",
+                                                  outSinuosityDS)
+
+                    realization.analyses[paramSegmentAnalysis] = analysis
+                    GNATProject.Realizations[paramRealization] = realization
+                    GNATProject.writeProjectXML()
+
+                    # Inform user about where sinuosity/planform attributes were added
+                    GNAT_StreamNetwork_path = realization.GNAT_StreamNetwork.absolutePath(
+                        GNATProject.projectPath)
+                    arcpy.AddMessage("{0}{1}".format("Sinuosity attribute added to ",
+                                                      GNAT_StreamNetwork_path))
+
+            # Where the tool output data will be stored in Riverscapes Project directory
+            if paramProjectXML:
+                from Riverscapes import Riverscapes
+                GNATProject = Riverscapes.Project()
+                GNATProject.loadProjectXML(paramProjectXML)
+
+                # Where to store attribute analyses input/output datasets
+                if paramSegmentAnalysis:
+                    # Copy the tool output to the attribute analysis output folder
+                    if os.path.isfile(outSinuosity):
+                        arcpy.CopyFeatures_management(outSinuosity, os.path.join(attributesDir, "Outputs", outSinuosityName))
+
+        return
 
 
 # Utilities
@@ -1583,83 +1766,6 @@ class StreamBranchesTool(object):
                                     p[4].valueAsText,
                                     p[5].valueAsText,
                                     getTempWorkspace(p[6].valueAsText))
-        return
-
-
-class SinuosityTool(object):
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "Sinuosity by Stream Segment"
-        self.description = "Calculate Sinuosity in a polyline feature class by segment"
-        self.canRunInBackground = True
-        self.category = strCatagoryUtilities
-
-    def getParameterInfo(self):
-        """Define parameter definitions"""
-        param0 = arcpy.Parameter(
-            displayName="Input stream network or centerline polyline feature class",
-            name="InputFCCenterline",
-            datatype="GPFeatureLayer", 
-            parameterType="Required",
-            direction="Input")
-        param0.filter.list = ["Polyline"]
-
-        param1 = arcpy.Parameter(
-            displayName="Output polyline feature class with sinousity",
-            name="OutputFCCenterline",
-            datatype="DEFeatureClass",
-            parameterType="Required",
-            direction="Output")
-        param1.filter.list = ["Polyline"]
-
-        param2 = arcpy.Parameter(
-            displayName="Sinuosity attribute field name",
-            name="InputFieldNameSinuosity",
-            datatype="GPString",
-            parameterType="Required",
-            direction="Input")
-        param2.value = "Sinuosity"
-
-        param3 = arcpy.Parameter(
-            displayName="Scratch workspace",
-            name="scratchWorkspace",
-            datatype="DEWorkspace", 
-            parameterType="Optional",
-            direction="Input")
-        param3.enabled = False
-        
-        return [param0,param1,
-                #param2,
-                param3]
-
-    def isLicensed(self):
-        """Set whether tool is licensed to execute."""
-        return True
-
-    def updateParameters(self, parameters):
-        """Modify the values and properties of parameters before internal
-        validation is performed.  This method is called whenever a parameter
-        has been changed."""
-
-        return
-
-    def updateMessages(self, parameters):
-        """Modify the messages created by internal validation for each tool
-        parameter.  This method is called after internal validation."""
-        testWorkspacePath(parameters[2])
-        return
-
-    def execute(self, p, messages):
-        """The source code of the tool."""
-        reload(Sinuosity)
-        setEnvironmentSettings()
-
-        Sinuosity.main(
-            p[0].valueAsText,
-            p[1].valueAsText)
-            #p[2].valueAsText,
-            # getTempWorkspace(p[2].valueAsText))
-
         return
 
 

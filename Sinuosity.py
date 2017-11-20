@@ -1,6 +1,8 @@
 ﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Name:        Sinuosity Tool                                                 #
-# Purpose:     Calculate sinuosity along segments in a stream network         #
+# Name:        Channel Sinuosity                                              #
+# Purpose:     Calculate channel sinuosity of a stream network feature class. #
+#              Please note, this tool can calculate sinuosity for any linear  #
+#              feature class, including valley centerlines.                   #
 #                                                                             #
 # Author:      Kelly Whitehead (kelly@southforkresearch.org)                  #
 #              Jesse Langdon (jesse@southforkresearch.org                     #
@@ -8,12 +10,12 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Modified:    2017-Sep-14                                                    #
+# Modified:    2017-Nov-17                                                    #
 #                                                                             #
 # Copyright:   (c) South Fork Research, Inc. 2017                             #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#!/usr/bin/env python
+#!/usr/bin/env pythonh
 
 import sys
 import arcpy
@@ -22,7 +24,7 @@ import gis_tools
 arcpy.env.qualifiedFieldNames = False
 arcpy.env.overwriteOutput = True
 
-def main(fcInput, fcOutput, fieldName = "Sinuosity", workspaceTmp = "in_memory"):
+def main(fcInput, fcOutput, fieldName = "C_Sin", workspaceTmp = "in_memory"):
 
     # Get list of fields from input feature class
     keepFields = [keepField.name for keepField in arcpy.ListFields(fcInput)]
@@ -46,7 +48,7 @@ def main(fcInput, fcOutput, fieldName = "Sinuosity", workspaceTmp = "in_memory")
     arcpy.CalculateField_management(fcInputTmp, fieldSegmentLength, "!shape.length!", "PYTHON_9.3")
 
     # Find straight line distance
-    fcSegmentEnds =  gis_tools.newGISDataset(workspaceTmp, "SgEnd")
+    fcSegmentEnds = gis_tools.newGISDataset(workspaceTmp, "SgEnd")
     arcpy.FeatureVerticesToPoints_management(fcInputTmp, fcSegmentEnds, "BOTH_ENDS")
 
     fcSegmentDistances = gis_tools.newGISDataset(workspaceTmp, "SgDst")
