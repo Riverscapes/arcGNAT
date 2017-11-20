@@ -10,7 +10,7 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.3.5                                                          #
+# Version:     2.3.6                                                          #
 # Revised:     2017-Nov-20                                                    #
 # Released:                                                                   #
 #                                                                             #
@@ -38,7 +38,7 @@ import FindNetworkFeatures
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.3.5"
+GNAT_version = "2.3.6"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -1456,6 +1456,9 @@ class SinuosityTool(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
+
+        inSegmentedStreamNetwork = p[0]
+
         paramRiverscapesBool = p[2]
         paramProjectXML = p[3]
         paramRealization = p[4]
@@ -1478,6 +1481,12 @@ class SinuosityTool(object):
                         paramSegmentAnalysis.enabled = True
                         paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
                         paramAttributeAnalysis.enabled = True
+
+                        if paramSegmentAnalysis.value:
+                            # Switches input stream network feature class to realization segmented network feature class.
+                            currentAnalysis = currentRealization.analyses.get(paramSegmentAnalysis.value)
+                            segmentedOutput = currentAnalysis.outputDatasets["SegmentedNetwork"]
+                            inSegmentedStreamNetwork.value = segmentedOutput.absolutePath(GNATProject.projectPath)
 
         else:
             paramProjectXML.value = ""

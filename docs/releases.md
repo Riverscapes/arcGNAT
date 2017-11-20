@@ -10,7 +10,12 @@ The Confinement Toolbox is provided as a zip file containing a .pyt file and sup
 
 # Downloads
 
-## Version 2.3.5
+## Version 2.3.6
+**[Version 2.3.6](Downloads/arcGNAT_2.3.6.zip)** 2017-NOVEMBER-20
+```markdown
+* Sinuosity attribute field can be added back to Realization's segmented network for Riverscapes projects.
+```
+
 **[Version 2.3.5](Downloads/arcGNAT_2.3.5.zip)** 2017-NOVEMBER-20
 ```markdown
 * Separated the **Stream Sinuosity and Planform** tool into two new tools, **Channel Sinuosity** and **Planform**.
