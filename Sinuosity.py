@@ -10,7 +10,7 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Modified:    2017-Nov-17                                                    #
+# Modified:    2017-Nov-20                                                    #
 #                                                                             #
 # Copyright:   (c) South Fork Research, Inc. 2017                             #
 #                                                                             #
@@ -24,23 +24,22 @@ import gis_tools
 arcpy.env.qualifiedFieldNames = False
 arcpy.env.overwriteOutput = True
 
-def main(fcInput, fcOutput, fieldName = "C_Sin", workspaceTmp = "in_memory"):
+def main(fcInput, fieldName = "C_Sin", workspaceTmp = "in_memory"):
 
     # Get list of fields from input feature class
     keepFields = [keepField.name for keepField in arcpy.ListFields(fcInput)]
     keepFields.append(fieldName)
-    if workspaceTmp != "in_memory":
-        keepFields.append("OBJECTID")
-        keepFields.append("Shape_Length")
+    keepFields.append("InputID")
+    keepFields.append("C_Sin")
 
     # Prepare inputs
+    fieldInputID = gis_tools.resetField(fcInput, "InputID", "DOUBLE")
+    arcpy.CalculateField_management(fcInput,
+                                    fieldInputID,
+                                    "!" + arcpy.Describe(fcInput).OIDFieldName + "!",
+                                    "PYTHON_9.3")
     fcInputTmp = gis_tools.newGISDataset(workspaceTmp, "fcIn")
     arcpy.CopyFeatures_management(fcInput, fcInputTmp)
-    fieldInputID = gis_tools.resetField(fcInputTmp, "InputID", "DOUBLE")
-    arcpy.CalculateField_management(fcInputTmp,
-                                    fieldInputID,
-                                    "!" + arcpy.Describe(fcInputTmp).OIDFieldName + "!",
-                                    "PYTHON_9.3")
     fieldSinuosity = gis_tools.resetField(fcInputTmp, fieldName, "DOUBLE")
     fieldSegmentLength = gis_tools.resetField(fcInputTmp, "SgLen", "DOUBLE")
 
@@ -80,6 +79,7 @@ def main(fcInput, fcOutput, fieldName = "C_Sin", workspaceTmp = "in_memory"):
                                     codeblock)
 
     # Write Temporary polyline feature class to disk
+    fcOutput = gis_tools.newGISDataset(workspaceTmp, "outputFCSinuosityChannel")
     arcpy.CopyFeatures_management(lyrInputTmp, fcOutput)
 
     dropFields = [dropField.name for dropField in arcpy.ListFields(fcOutput)]
@@ -88,6 +88,14 @@ def main(fcInput, fcOutput, fieldName = "C_Sin", workspaceTmp = "in_memory"):
         if dropField not in keepFields:
             arcpy.DeleteField_management("fcOutputView", dropField)
 
+    # join final sinuosity output back to input stream network
+    arcpy.MakeFeatureLayer_management(fcInput, "lyrInput")
+    fcInputOID = arcpy.Describe("lyrInput").OIDFieldName
+    arcpy.JoinField_management("lyrInput",
+                               fcInputOID,
+                               "fcOutputView",
+                               "InputID",
+                               "C_Sin")
     return
 
 

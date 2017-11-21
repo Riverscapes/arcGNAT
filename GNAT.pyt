@@ -1432,21 +1432,12 @@ class SinuosityTool(object):
             direction="Input")
         param0.filter.list = ["Polyline"]
 
-        param1 = arcpy.Parameter(
-            displayName="Output polyline feature class with sinuosity",
-            name="OutputFCCenterline",
-            datatype="DEFeatureClass",
-            parameterType="Required",
-            direction="Output")
-        param1.filter.list = ["Polyline"]
-
         return [param0,
-                param1,
-                paramRiverscapesBool, #2
-                paramProjectXML, #3
-                paramRealization, #4
-                paramSegmentAnalysisName, #5
-                paramAttributeAnalysisName] #6
+                paramRiverscapesBool, #1
+                paramProjectXML, #2
+                paramRealization, #3
+                paramSegmentAnalysisName, #4
+                paramAttributeAnalysisName] #5
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -1459,11 +1450,11 @@ class SinuosityTool(object):
 
         inSegmentedStreamNetwork = p[0]
 
-        paramRiverscapesBool = p[2]
-        paramProjectXML = p[3]
-        paramRealization = p[4]
-        paramSegmentAnalysis = p[5]
-        paramAttributeAnalysis = p[6]
+        paramRiverscapesBool = p[1]
+        paramProjectXML = p[2]
+        paramRealization = p[3]
+        paramSegmentAnalysis = p[4]
+        paramAttributeAnalysis = p[5]
 
         if paramRiverscapesBool.value == True:
             paramProjectXML.enabled = True
@@ -1512,16 +1503,15 @@ class SinuosityTool(object):
 
         # Tool input variables
         inCenterline = p[0].valueAsText
-        outSinuosity = p[1].valueAsText
 
         # Riverscapes project variables
-        paramRiverscapesBool = p[2]
-        paramProjectXML = p[3].valueAsText
-        paramRealization = p[4].valueAsText
-        paramSegmentAnalysis = p[5].valueAsText
-        paramAttributeAnalysis = p[6].valueAsText
+        paramRiverscapesBool = p[1]
+        paramProjectXML = p[2].valueAsText
+        paramRealization = p[3].valueAsText
+        paramSegmentAnalysis = p[4].valueAsText
+        paramAttributeAnalysis = p[5].valueAsText
 
-        outSinuosityName = os.path.basename(outSinuosity)
+        # outSinuosityName = os.path.basename(outSinuosity)
         paramChannelSinuosityField = "C_Sin"
 
         # Where the tool output data will be stored in Riverscapes Project directory
@@ -1545,29 +1535,32 @@ class SinuosityTool(object):
                         makedirs(os.path.join(attributesDir, "Outputs"))
 
         # Main tool module
-        Sinuosity.main(inCenterline, outSinuosity)
+        Sinuosity.main(inCenterline)
 
         # Add results of tool processing to the Riverscapes project XML
         if paramRiverscapesBool.value == True:
             if paramProjectXML:
                 from Riverscapes import Riverscapes
                 if arcpy.Exists(paramProjectXML):
-                    # Riverscapes requires relative file paths
-                    relativeDir = path.join("Outputs", paramRealization, "Analyses", paramSegmentAnalysis,
-                                            "GeomorphicAttributes", paramAttributeAnalysis)
-
-                    outSinuosityDS = Riverscapes.Dataset()
-                    outSinuosityDS.create(outSinuosityName, os.path.join(relativeDir, "Outputs", outSinuosityName))
-                    outSinuosityDS.id = "Sinuosity"
+                    # # Riverscapes requires relative file paths
+                    # relativeDir = path.join("Outputs", paramRealization, "Analyses", paramSegmentAnalysis,
+                    #                         "GeomorphicAttributes", paramAttributeAnalysis)
+                    #
+                    # outSinuosityDS = Riverscapes.Dataset()
+                    # outSinuosityDS.create(outSinuosityName, os.path.join(relativeDir, "Outputs", outSinuosityName))
+                    # outSinuosityDS.id = "Sinuosity"
 
                     GNATProject = Riverscapes.Project(paramProjectXML)
 
                     realization = GNATProject.Realizations.get(paramRealization)
                     analysis = realization.analyses.get(paramSegmentAnalysis)
+                    # analysis.newAnalysisSinuosity(paramAttributeAnalysis,
+                    #                               paramChannelSinuosityField,
+                    #                               "SegmentedNetwork",
+                    #                               outSinuosityDS)
                     analysis.newAnalysisSinuosity(paramAttributeAnalysis,
                                                   paramChannelSinuosityField,
-                                                  "SegmentedNetwork",
-                                                  outSinuosityDS)
+                                                  "SegmentedNetwork")
 
                     realization.analyses[paramSegmentAnalysis] = analysis
                     GNATProject.Realizations[paramRealization] = realization
@@ -1579,17 +1572,17 @@ class SinuosityTool(object):
                     arcpy.AddMessage("{0}{1}".format("Sinuosity attribute added to ",
                                                       GNAT_StreamNetwork_path))
 
-            # Where the tool output data will be stored in Riverscapes Project directory
-            if paramProjectXML:
-                from Riverscapes import Riverscapes
-                GNATProject = Riverscapes.Project()
-                GNATProject.loadProjectXML(paramProjectXML)
-
-                # Where to store attribute analyses input/output datasets
-                if paramSegmentAnalysis:
-                    # Copy the tool output to the attribute analysis output folder
-                    if os.path.isfile(outSinuosity):
-                        arcpy.CopyFeatures_management(outSinuosity, os.path.join(attributesDir, "Outputs", outSinuosityName))
+            # # Where the tool output data will be stored in Riverscapes Project directory
+            # if paramProjectXML:
+            #     from Riverscapes import Riverscapes
+            #     GNATProject = Riverscapes.Project()
+            #     GNATProject.loadProjectXML(paramProjectXML)
+            #
+            #     # Where to store attribute analyses input/output datasets
+            #     if paramSegmentAnalysis:
+            #         # Copy the tool output to the attribute analysis output folder
+            #         if os.path.isfile(outSinuosity):
+            #             arcpy.CopyFeatures_management(outSinuosity, os.path.join(attributesDir, "Outputs", outSinuosityName))
 
         return
 
