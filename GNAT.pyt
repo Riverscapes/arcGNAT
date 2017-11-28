@@ -10,8 +10,8 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.3.7                                                          #
-# Revised:     2017-Nov-20                                                    #
+# Version:     2.3.8                                                          #
+# Revised:     2017-Nov-28                                                    #
 # Released:                                                                   #
 #                                                                             #
 # License:     MIT License                                                    #
@@ -38,7 +38,7 @@ import FindNetworkFeatures
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.3.7"
+GNAT_version = "2.3.8"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -1249,6 +1249,9 @@ class PlanformTool(object):
         validation is performed.  This method is called whenever a parameter
         has been changed."""
 
+        # Tool input parameters
+        inChannelSinuosity = p[0]
+
         # Riverscape project parameters
 
         paramRiverscapesBool = p[5]
@@ -1274,11 +1277,11 @@ class PlanformTool(object):
                         paramSegmentAnalysis.filter.list = currentRealization.analyses.keys()
                         paramAttributeAnalysis.enabled = True
 
-                        # if paramSegmentAnalysis.value:
-                        #     # Switches input stream network feature class to realization segmented network feature class.
-                        #     currentAnalysis = currentRealization.analyses.get(paramSegmentAnalysis.value)
-                        #     segmentedOutput = currentAnalysis.outputDatasets["SegmentedNetwork"]
-                        #     inChannelSinuosity.value = segmentedOutput.absolutePath(GNATProject.projectPath)
+                        if paramSegmentAnalysis.value:
+                            # Switches input stream network feature class to realization segmented network feature class.
+                            currentAnalysis = currentRealization.analyses.get(paramSegmentAnalysis.value)
+                            segmentedOutput = currentAnalysis.outputDatasets["SegmentedNetwork"]
+                            inChannelSinuosity.value = segmentedOutput.absolutePath(GNATProject.projectPath)
         else:
             paramProjectXML.value = ""
             paramProjectXML.enabled = False
@@ -1535,29 +1538,17 @@ class SinuosityTool(object):
                         makedirs(os.path.join(attributesDir, "Outputs"))
 
         # Main tool module
-        Sinuosity.main(inCenterline)
+        Sinuosity.main(inCenterline, paramChannelSinuosityField)
 
         # Add results of tool processing to the Riverscapes project XML
         if paramRiverscapesBool.value == True:
             if paramProjectXML:
                 from Riverscapes import Riverscapes
                 if arcpy.Exists(paramProjectXML):
-                    # # Riverscapes requires relative file paths
-                    # relativeDir = path.join("Outputs", paramRealization, "Analyses", paramSegmentAnalysis,
-                    #                         "GeomorphicAttributes", paramAttributeAnalysis)
-                    #
-                    # outSinuosityDS = Riverscapes.Dataset()
-                    # outSinuosityDS.create(outSinuosityName, os.path.join(relativeDir, "Outputs", outSinuosityName))
-                    # outSinuosityDS.id = "Sinuosity"
-
                     GNATProject = Riverscapes.Project(paramProjectXML)
 
                     realization = GNATProject.Realizations.get(paramRealization)
                     analysis = realization.analyses.get(paramSegmentAnalysis)
-                    # analysis.newAnalysisSinuosity(paramAttributeAnalysis,
-                    #                               paramChannelSinuosityField,
-                    #                               "SegmentedNetwork",
-                    #                               outSinuosityDS)
                     analysis.newAnalysisSinuosity(paramAttributeAnalysis,
                                                   paramChannelSinuosityField,
                                                   "SegmentedNetwork")
@@ -1571,18 +1562,6 @@ class SinuosityTool(object):
                         GNATProject.projectPath)
                     arcpy.AddMessage("{0}{1}".format("Sinuosity attribute added to ",
                                                       GNAT_StreamNetwork_path))
-
-            # # Where the tool output data will be stored in Riverscapes Project directory
-            # if paramProjectXML:
-            #     from Riverscapes import Riverscapes
-            #     GNATProject = Riverscapes.Project()
-            #     GNATProject.loadProjectXML(paramProjectXML)
-            #
-            #     # Where to store attribute analyses input/output datasets
-            #     if paramSegmentAnalysis:
-            #         # Copy the tool output to the attribute analysis output folder
-            #         if os.path.isfile(outSinuosity):
-            #             arcpy.CopyFeatures_management(outSinuosity, os.path.join(attributesDir, "Outputs", outSinuosityName))
 
         return
 

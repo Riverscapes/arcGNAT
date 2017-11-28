@@ -10,7 +10,7 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Modified:    2017-Nov-16                                                    #
+# Modified:    2017-Nov-28                                                    #
 #                                                                             #
 # Copyright:   (c) South Fork Research, Inc. 2017                             #
 #                                                                             #
@@ -48,12 +48,14 @@ def main(fcChannelSinuosity,
     # Calculate centerline sinuosity for each valley centerline segment
     if arcpy.Exists(outputFCSinuosityValley):
         arcpy.Delete_management(outputFCSinuosityValley)
-    Sinuosity.main(fcValleyCenterline, outputFCSinuosityValley, "V_Sin", workspaceTemp)
+    Sinuosity.main(fcValleyCenterline, "V_Sin", workspaceTemp)
+    # write the valley centerline sinuosity feature class to disk
+    arcpy.CopyFeatures_management(fcValleyCenterline, outputFCSinuosityValley)
 
     # Transfer attributes to channel sinuosity polyline feature class
     if arcpy.Exists(outputFCPlanform):
         arcpy.Delete_management(outputFCPlanform)
-    TransferAttributesToLine.main(outputFCSinuosityValley,
+    TransferAttributesToLine.main(fcValleyCenterline,
                                   tmpChannelSinuosity,
                                   outputFCPlanform,
                                   workspaceTemp)

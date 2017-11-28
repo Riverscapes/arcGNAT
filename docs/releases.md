@@ -2,7 +2,7 @@
 
 ## Zipfile
 
-The Confinement Toolbox is provided as a zip file containing a .pyt file and supporting script files. 
+GNAT is provided as a zip file containing a .pyt file and supporting script files. 
 
 1. Download the zipfile and unzip the contents to your computer (keep all files together).
 2. Open ArcGIS.
@@ -10,12 +10,16 @@ The Confinement Toolbox is provided as a zip file containing a .pyt file and sup
 
 # Downloads
 
-## Version 2.3.7
+## Version 2.3.8
+**[Version 2.3.8](Downloads/arcGNAT_2.3.8.zip)** 2017-NOVEMBER-28
+```markdown
+* Fixed issue with how Sinuosity and Planform handle attribute fields. Also fixed small bug with Planform parameters.
+```
+
 **[Version 2.3.7](Downloads/arcGNAT_2.3.7.zip)** 2017-NOVEMBER-21
 ```markdown
 * Cleaned up comments and attribute fields output for Sinuosity.
 ```
-
 
 **[Version 2.3.6](Downloads/arcGNAT_2.3.6.zip)** 2017-NOVEMBER-20
 ```markdown

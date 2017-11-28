@@ -10,7 +10,7 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Modified:    2017-Nov-20                                                    #
+# Modified:    2017-Nov-28                                                    #
 #                                                                             #
 # Copyright:   (c) South Fork Research, Inc. 2017                             #
 #                                                                             #
@@ -24,13 +24,12 @@ import gis_tools
 arcpy.env.qualifiedFieldNames = False
 arcpy.env.overwriteOutput = True
 
-def main(fcInput, fieldName = "C_Sin", workspaceTmp = "in_memory"):
+def main(fcInput, fieldName = "Sin", workspaceTmp = "in_memory"):
 
     # Get list of fields from input feature class
     keepFields = [keepField.name for keepField in arcpy.ListFields(fcInput)]
     keepFields.append(fieldName)
     keepFields.append("InputID")
-    keepFields.append("C_Sin")
 
     # Prepare inputs
     fieldInputID = gis_tools.resetField(fcInput, "InputID", "DOUBLE")
@@ -95,7 +94,7 @@ def main(fcInput, fieldName = "C_Sin", workspaceTmp = "in_memory"):
                                fcInputOID,
                                "fcOutputView",
                                "InputID",
-                               "C_Sin")
+                               fieldName)
     return
 
 
