@@ -1,31 +1,28 @@
 ---
-title: About Riverscapes Projects
+title: Riverscapes Projects
 ---
 
+ArcGNAT tools are structured in a way to enable the creation and organization of a [Riverscapes](https://github.com/riverscapes) Project. This allows the tools to organize project data and structure multiple versions of model outputs. 
 
-The concepts here are based on the two-step process for generating a confinement project which will conform
-with the [Riverscapes](https://github.com/riverscapes) Project data schema. 
+# General GNAT Project Structure
 
-![](https://docs.google.com/drawings/d/1Y2zYp1tdWn-FWincxK55xr-zfW4yJCfg7Nw4UEpONRk/pub?w=1326&h=722)
+The GNAT project consists of a `project.rs.xml` file that sits at the base of the folder.
 
-## GNAT Project
+##Project MetaData
 
-MetaData
+ArcGNAT project contain at least the following metadata elements:
 
 - Region
 - Watershed
 - User/Operator
 
-### Inputs
+## Inputs
 
-The only input for a GNAT project is a stream network dataset.
+The primary input for a GNAT project is the original stream network dataset used for the project, though additional inputs such as Valley Bottom Polygons, DEMs or Centerlines may be included depending on the Geomorphic and Attribute Analyses that are generated.
 
-MetaData
+**Folder Structure** `/Inputs/StreamNetworks/StreamNetwork###/`
 
-- Source or type (NHD+ V02, 
-- Scale?
-
-### Realization
+## Realization
 
 A GNAT realization represents steps 1 and 2 in the current GNAT *Analyze Network Attributes* workflow.
  
@@ -33,29 +30,30 @@ A GNAT realization represents steps 1 and 2 in the current GNAT *Analyze Network
 2. Network features and errors are identified
 3. Network topology errors are fixed (manually in GIS software).
 4. Return to step 1 and repeat as needed.
+5. Once the network data is cleaned, it may be 'committed' to a realization, from which network analyses can be generated. If the network needs further editing or revising, a new committed network realization must be generated (networks that are committed to a realization should not be edited to maintain data workflow integrity). 
 
-Params
+**Folder Structure** `/Outputs/RealizationName`
 
--
+***Realization Metadata***
 
-Metadata
+- Editing Notes: Manually entered text provided by the user.
 
-- Editing Notes
-
-Outputs
+**Reazlation Outputs***
 
 - GNAT network polyline feature class
 - GNAT network topology table
 
-### Analyses
+## Network Analyses
 
 An "Analysis" represents a segmented or stream branch processed network. These can be input into other geomorphic attribute projects as inputs. Several Analyses can be associated with a Realization, but if the Realization changes or is updated, new analyses must be generated for that Realization.
 
-#### Segmented Network
+**Folder Structure** `/Outputs/RealizationName/Analyses/AnalysisName`
+
+### Segmented Network
 
 Network polyline feature class split by segments with original attributes retained. Segmentation is identified by a `SegmentID` Field.
 
-Parameters
+***Parameters***
 
 - SegID Field
 - Pre-Segmentation Dissolve Options (None, Stream Branches)
@@ -63,24 +61,39 @@ Parameters
 - Segmentation Direction ("Move Upstream", "Move Downstream")
 - Segmentation Remainder Option ("End","Proportional")
 
-Outputs
+***Outputs***
 
 - Segmented GNAT network polyline feature class
 - GNAT network table
 
-#### Stream Branch
+### Stream Branch
 
 Network polyline feature class with a stream branch ID field applied. Original attributes are retained.
 
 - GNAT network polyline feature class with stream branch identifiers
 - GNAT network table
 
-#### Other Analysis types?
+## Attribute Analyses
 
-Are there other types of analyses here? I also think it is possible to have a project just link to the realization and not a specific analysis. 
+A further set of analyses can be generated from a Network Analysis, which represent geomorphic or network metrics calcultated from the Network.
 
-## Workflow
-The following is a proposed workflow for using GNAT in project Mode. The main issue is that Network prep has some cyclical and manual steps, so a realization does not appear until the user commits the updates.
+**Folder Structure** `/Outputs/RealizationName/Analyses/AnalysisName` (Attributes are added to existing network datasets, so no additional files are genreated)
+
+### Sinuosity Analysis
+Adds a sinuosity calculation in a field named `C_Sin` to Network Analysis dataset.
+
+### Planform Analysis
+Adds a planform calculation in a field named `V_Plan` to Network Analysis dataset.
+
+### Gradient Analysis
+Adds a gradient calculation in a field named `Grad` to Network Anaysis dataset.
+
+### Threadedness Analysis
+Adds a threadedness calculation in a field named `--` to Network Analysis dataset.
+
+
+## Project Workflow
+The following is a proposed workflow for using GNAT in project Mode. Note that the Network prep step has some cyclical and manual processing, so a realization does not appear until the user commits the updates.
 
 1. Project Management (Toolset level)
    1. New GNAT Project
@@ -107,7 +120,7 @@ The following is a proposed workflow for using GNAT in project Mode. The main is
       + Keeps original Attributes (Need to retain some type of Original ReachID)
       + Save at Analysis level (Outputs/RealizationName/Analyses/AnalysisName)
 4. Step 3 - Geomorphic Attributes
-   + This probably represents a separate project?
+   + 
 
 ## Example Project File
 
