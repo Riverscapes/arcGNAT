@@ -412,7 +412,7 @@ class FindSubnetworksTool(object):
         param1 = arcpy.Parameter(
             displayName="Output workspace",
             name="OutputWorkspace",
-            datatype="GPWorkspace",
+            datatype="DEWorkspace",
             parameterType="Required",
             direction="Input")
 
@@ -437,8 +437,13 @@ class FindSubnetworksTool(object):
     def execute(self, p, messages):
         """The source code of the tool."""
         reload(FindSubnetworks)
-        FindSubnetworks.main(p[0].valueAsText,
-                        p[1].valueAsText)
+
+        # TEST
+        in_shp = r'C:\JL\Testing\pyGNAT\NetworkFeatures\In\NHD_Disconnected.shp'
+        out_dir = r'C:\JL\Testing\pyGNAT\NetworkFeatures\Out'
+        FindSubnetworks.main(in_shp, out_dir)
+
+        FindSubnetworks.main(p[0].valueAsText, p[1].valueAsText)
 
         return
 
@@ -489,8 +494,7 @@ class GenerateNetworkAttributesTool(object):
     def execute(self, p, messages):
         """The source code of the tool."""
         reload(GenerateNetworkAttributes)
-        GenerateNetworkAttributes.main(p[0].valueAsText,
-                                       p[1].valueAsText)
+        GenerateNetworkAttributes.main(p[0].valueAsText, p[1].valueAsText)
         return
 
 
@@ -1986,7 +1990,6 @@ class FluvialCorridorCenterlineTool(object):
         return
 
 
-
 # Other Functions #
 def setEnvironmentSettings():
     arcpy.env.OutputMFlag = "Disabled"
@@ -2122,3 +2125,12 @@ paramStreamNetwork = arcpy.Parameter(
     parameterType="Required",
     direction="Input")
 paramStreamNetwork.filter.list = ["Polyline"]
+
+
+# TEST
+def main():
+    tool = FindSubnetworksTool()
+    tool.execute(tool.getParameterInfo(), None)
+
+if __name__ == "__main__":
+    main()
