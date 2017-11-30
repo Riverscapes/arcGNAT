@@ -19,7 +19,15 @@
 
 # Import modules
 import arcpy
+import networkx as nx
 import network as net
+
+error_msg = "{0} module not installed. Please install {0} before executing the {1} tool.".format('ogr', "Find Subnetworks")
+
+try:
+    import ogr
+except ImportError:
+    arcpy.AddError(error_msg)
 
 
 def main(in_shp, out_workspace):
@@ -34,8 +42,9 @@ def main(in_shp, out_workspace):
     # get list of network ID values
     net_ids = theNetwork.attribute_as_list(theNetwork.G, "NetworkID")
 
-    # iterate through list of network IDs and generate attributes
+    # iterate through list of network IDs generate attributes, and produce a subnetwork graph
     if theNetwork.gnat_G is None:
+        list_subnets = []
         for id in net_ids:
             subnet_G = theNetwork.select_by_attribute(theNetwork.G, "NetworkID", id)
             theNetwork.add_attribute(subnet_G, "edge_type", "connector")
@@ -48,10 +57,16 @@ def main(in_shp, out_workspace):
                                                 headwater_G,
                                                 braid_complex_G,
                                                 braid_simple_G)
+            theNetwork.calculate_river_km(gnat_G)
             fields = arcpy.ListFields(in_shp, "GNIS_Name")
             if len(fields) != 0:
                 theNetwork.set_mainflow(gnat_G, "GNIS_Name")
-            theNetwork.set_node_types()
-            theNetwork._nx_to_shp(theNetwork.gnat_G, out_workspace)
+            theNetwork.set_node_types(gnat_G)
+            list_subnets.append(gnat_G)
+
+        # Union all subnetwork graphs
+        theNetwork.gnat_G = nx.union_all(list_subnets)
+        # Convert graph to shapefile and write to disk
+        theNetwork._nx_to_shp(theNetwork.gnat_G, out_workspace)
 
     return

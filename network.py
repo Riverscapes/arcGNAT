@@ -123,6 +123,7 @@ class Network:
             lyr.CreateFeature(feature)
             feature.Destroy()
 
+        # TODO - this needs to sort attribute fields in the same order as the input shapefile
         def build_attrb_dict(lyr, data, fields):
             attributes = {}
             # Loop through attribute data in edges
@@ -357,7 +358,7 @@ class Network:
             return outflow_G
         else:
             print "ERROR: Graph is not directed."
-            outflow_G = nx.null_graph()
+            outflow_G = nx.MultiDiGraph()
             return outflow_G
 
     def get_headwater_edges(self, G, attrb_field, attrb_name):
@@ -366,9 +367,9 @@ class Network:
         :param G: networkx graph
         :param attrb_field: name of the attribute field
         :param attrb_name: attribute value
-        :return headwater_G: graph with new attribute
+        :return headwater_G: graph with new headwater edge type attribute
         """
-        if nx.is_directed(G):
+        if nx.is_directed(G) and G.number_of_nodes() > 2:
             RG = nx.reverse(G, copy=True)
             list_nodes = [n for n in RG.nodes_iter()]
             list_successors = []
@@ -383,8 +384,7 @@ class Network:
             self.update_attribute(headwater_RG, attrb_field, attrb_name)
             return headwater_RG
         else:
-            print "ERROR: Graph is not directed."
-            headwater_G = nx.null_graph()
+            headwater_G = nx.MultiDiGraph()
             return headwater_G
 
     def get_complex_braids(self, G, attrb_field, attrb_name):
@@ -406,7 +406,7 @@ class Network:
             return braid_G
         else:
             print "ERROR: Graph is not directed."
-            braid_complex_G = nx.null_graph()
+            braid_complex_G = nx.MultiDiGraph()
             return braid_complex_G
 
     def get_simple_braids(self, G, attrb_field, attrb_name):
@@ -477,6 +477,7 @@ class Network:
             self.gnat_G = nx.compose(G3, braid_simple_G)
         if braid_complex_G is None or braid_simple_G is None:
             self.gnat_G = G2
+
         return self.gnat_G
 
     def find_node_with_ID(self, G, id_field, id_value):
@@ -548,17 +549,17 @@ class Network:
         dupes_G = nx.compose() #FIXME
         return dupes_G
 
-    def set_node_types(self):
+    def set_node_types(self, G):
         """Calculates node types for a graph which already has edge types
         """
         node_dict = {}
         type_list = []
-        edge_dict = nx.get_edge_attributes(self.gnat_G, 'edge_type')
-        node_list = [n for n in self.gnat_G.nodes_iter()]
+        edge_dict = nx.get_edge_attributes(G, 'edge_type')
+        node_list = [n for n in G.nodes_iter()]
         # build dictionary of node with predecessors and successors nodes
         for node in node_list:
-            node_pred = self.gnat_G.predecessors(node)
-            node_succ = self.gnat_G.successors(node)
+            node_pred = G.predecessors(node)
+            node_succ = G.successors(node)
             node_dict[node] = [node_pred, node_succ]
         # build list of nodes with associated edge_types. Can be duplicate node items in list.
         for nk, nv in node_dict.items():
@@ -566,7 +567,7 @@ class Network:
                 if nk in ek:
                     type_list.append([nk, ev])
         # assign a node type code for each node
-        for nd in self.gnat_G.nodes_iter():
+        for nd in G.nodes_iter():
             type_subset = [n[1] for n in type_list if nd == n[0]]
             if 'braid' in type_subset and 'headwater' in type_subset:
                 t = 'BH'
@@ -596,16 +597,16 @@ class Network:
                 t = 'O'
             else:
                 t = None
-            self.gnat_G.node[nd]['node_type'] = t
+            G.node[nd]['node_type'] = t
         return
 
-    def calculate_river_km(self):
+    def calculate_river_km(self, G):
         """Calculates distance of each edge from outflow node, in kilometers."""
-        outflow_G = self.select_by_attribute(self.gnat_G, 'edge_type', 'outflow')
+        outflow_G = self.select_by_attribute(G, 'edge_type', 'outflow')
         outflow_node = next(v for u, v, key, data in outflow_G.edges_iter(keys=True, data=True))
-        self.add_attribute(self.gnat_G, '_river_km_', '-9999')
-        for u, v, key, data in self.gnat_G.edges_iter(keys=True, data=True):
-            path_len = nx.shortest_path_length(self.gnat_G,
+        self.add_attribute(G, '_river_km_', '-9999')
+        for u, v, key, data in G.edges_iter(keys=True, data=True):
+            path_len = nx.shortest_path_length(G,
                                                source=u,
                                                target=outflow_node,
                                                weight='_calc_len_')
