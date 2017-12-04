@@ -23,12 +23,14 @@ import os.path
 import arcpy
 import network as net
 
-error_msg = "{0} module not installed. Please install {0} before executing the {1} tool.".format('ogr', "Find Subnetworks")
+error_msg = "{0} module not installed. Please install {0} before executing the {1} tool."\
+    .format('ogr', "Find Subnetworks")
 
 try:
     import ogr
 except ImportError:
     arcpy.AddError(error_msg)
+
 
 
 def main(in_shp, out_workspace):
@@ -37,13 +39,17 @@ def main(in_shp, out_workspace):
     :param in_shp: Stream network polyline feature class.
     :param out_workspace: Directory where tool output will be stored
     """
-    arcpy.AddMessage("Finding and labeling subnetworks...")
+    arcpy.AddMessage("FSN: Finding and labeling subnetworks...")
+    # remove NetworkID field if it already present
+    for f in arcpy.ListFields(in_shp):
+        if f.name == "NetworkID":
+            arcpy.AddMessage("FSN: Deleting and replacing existing network ID field...")
+            arcpy.DeleteField_management(in_shp, f.name)
+
+    # calculate network ID
     theNetwork = net.Network(in_shp)
     list_SG = theNetwork.get_subgraphs()
     id_G = theNetwork.calc_network_id(list_SG)
-    if os.path.isdir(out_workspace):
-        theNetwork._nx_to_shp(id_G, out_workspace)
-    else:
-        arcpy.AddError("Output workspace does not exist.")
+    theNetwork._nx_to_shp(id_G, out_workspace)
 
     return

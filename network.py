@@ -6,6 +6,7 @@
 #   Created:        4/6/2017
 #   Revised:        11/21/2017
 
+import os
 import ogr
 import osr
 import networkx as nx
@@ -70,7 +71,7 @@ class Network:
 
         return
 
-    def _nx_to_shp(self, G, out_dir):
+    def _nx_to_shp(self, G, out_shp):
         """
         This is a re-purposing of the NetworkX write_shp module with some minor changes.
         :param G: networkx directional graph
@@ -148,10 +149,14 @@ class Network:
                         attributes[key] = data
             return attributes
 
-        node_name = "network_nodes"
-        edge_name = "network_lines"
+        # Set up output shapefile
+        base = os.path.basename(out_shp)
+        shp_name = os.path.splitext(base)[0]
+        dir_name = os.path.dirname(out_shp)
+        node_name = "{}_nodes".format(shp_name)
+        edge_name = "{}_edges".format(shp_name)
         drv = ogr.GetDriverByName("ESRI Shapefile")
-        shpdir = drv.CreateDataSource("{0}".format(out_dir))
+        shpdir = drv.CreateDataSource("{0}".format(dir_name))
 
         # Conversion dict between python and ogr types
         OGRTypes = {int: ogr.OFTInteger, str: ogr.OFTString, float: ogr.OFTReal}
@@ -398,8 +403,10 @@ class Network:
         if nx.is_directed(G):
             UG = nx.Graph(G)
             braid_G = nx.MultiDiGraph()
+            list_cycles = nx.cycle_basis(UG)
+            cycle_edges = [zip(nodes, (nodes[1:] + nodes[:1])) for nodes in list_cycles]
             for edge in G.edges(data=True, keys=True):
-                is_edge = self.get_edge_in_cycle(edge, UG)
+                is_edge = self.get_edge_in_cycle(edge, cycle_edges)
                 if is_edge == True:
                     braid_G.add_edge(*edge)
             self.update_attribute(braid_G, attrb_field, attrb_name)
@@ -448,11 +455,9 @@ class Network:
                 G.add_edge(u, v, k, data)
         return
 
-    def get_edge_in_cycle(self, edge, G):
+    def get_edge_in_cycle(self, edge, cycle_edges):
         """Determines if a specific edge is found in a cycle (i.e. braid)"""
         u, v, key, d = edge
-        list_cycles = nx.cycle_basis(G)
-        cycle_edges = [zip(nodes, (nodes[1:]+nodes[:1])) for nodes in list_cycles]
         found = False
         for cycle in cycle_edges:
             if (u, v) in cycle or (v, u) in cycle:
@@ -546,8 +551,7 @@ class Network:
                     for i in length_list:
                         duplicates_G.add_edge(i[0],i[1],i[2],i[3])
         self.update_attribute(duplicates_G, 'error_dupe', 1)
-        dupes_G = nx.compose() #FIXME
-        return dupes_G
+        return duplicates_G
 
     def set_node_types(self, G):
         """Calculates node types for a graph which already has edge types
