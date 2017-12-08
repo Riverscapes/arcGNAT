@@ -20,9 +20,10 @@
 #!/usr/bin/env python
 
 # # Import Modules # #
-import arcpy
 import os
 from os import path, makedirs
+import arcpy
+from arcpy.da import *
 import FindSubnetworks
 import GenerateNetworkAttributes
 import FindBraidedNetwork
@@ -439,11 +440,13 @@ class FindSubnetworksTool(object):
         reload(FindSubnetworks)
 
         # TEST
-        # in_shp = r'C:\JL\Testing\pyGNAT\NetworkFeatures\In\NHD_Disconnected.shp'
-        # out_dir = r'C:\JL\Testing\pyGNAT\NetworkFeatures\Out'
-        # FindSubnetworks.main(in_shp, out_dir)
+        in_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\In\FullNetwork_no336.shp'
+        out_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test03.shp'
+        testFType(in_shp, 336)  # check to see if canals have been removed from input feature class
+        FindSubnetworks.main(in_shp, out_shp)
 
-        FindSubnetworks.main(p[0].valueAsText, p[1].valueAsText)
+        # testFType(p[0].valueAsText, 336)  # check to see if canals have been removed from input feature class
+        # FindSubnetworks.main(p[0].valueAsText, p[1].valueAsText)
 
         return
 
@@ -474,7 +477,23 @@ class GenerateNetworkAttributesTool(object):
             parameterType="Required",
             direction="Input")
 
-        return [param0, param1]
+        param2 = arcpy.Parameter(
+            displayName="Find topology errors",
+            name="BoolErrors",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input"
+        )
+
+        param3 = arcpy.Parameter(
+            displayName="Calculate river kilometers",
+            name="BoolRiverKM",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input,"
+        )
+
+        return [param0, param1, param2, param3]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -496,11 +515,16 @@ class GenerateNetworkAttributesTool(object):
         reload(GenerateNetworkAttributes)
 
         # TEST
-        in_shp = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\In\network_lines.shp"
-        out_dir = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out"
-        GenerateNetworkAttributes.main(in_shp, out_dir)
+        in_shp = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test03_edges.shp"
+        error_bool = True
+        riverkm_bool = False
+        out_dir = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test04.shp"
+        GenerateNetworkAttributes.main(in_shp, error_bool, riverkm_bool, out_dir)
 
-        #GenerateNetworkAttributes.main(p[0].valueAsText, p[1].valueAsText)
+        #GenerateNetworkAttributes.main(p[0].valueAsText,
+                                        #p[1].valueAsText,
+                                        #p[2].valueAsText,
+                                        #p[3].valueAsText)
         return
 
 
@@ -2076,6 +2100,28 @@ def testWorkspacePath(parameterWorkspace):
                     return
                 if " " in strPath:
                     parameterWorkspace.setWarningMessage(parameterWorkspace.name + " contains a space in the file path name and could cause Geoprocessing issues. Please use a different workspace that does not contain a space in the path name.")
+    return
+
+
+def testFType(parameter, ftype):
+    """
+    Checks if the input stream network feature class includes features where FType == 336 (i.e. canals)
+    :param parameter: input stream network feature class
+    :param ftype: the FType code to check
+    """
+    field_list = arcpy.ListFields(parameter)
+    for f in field_list:
+        if f.name == "FType":
+            value_list = []
+            with arcpy.da.SearchCursor(parameter, ["FType"]) as cursor:
+                for row in cursor:
+                    value = row[0]
+                    value_list.append(value)
+            unique_values = set(val for val in value_list)
+            if ftype in unique_values:
+               arcpy.AddError("Stream features where FType = 336 must be removed from the input shapefile.")
+        else:
+            arcpy.AddWarning("An attribute field named FType was not found in the shapefile.")
     return
 
 # Common params

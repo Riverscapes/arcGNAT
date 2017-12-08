@@ -570,6 +570,7 @@ class Network:
             for ek, ev in edge_dict.items():
                 if nk in ek:
                     type_list.append([nk, ev])
+
         # assign a node type code for each node
         for nd in G.nodes_iter():
             type_subset = [n[1] for n in type_list if nd == n[0]]
@@ -580,7 +581,7 @@ class Network:
             elif 'braid' in type_subset and 'mainflow' in type_subset:
                 t = 'BM'
             elif 'braid' in type_subset and 'outflow' in type_subset:
-                t = 'B0'
+                t = 'BO'
             elif all(ts == 'braid' for ts in type_subset):
                 t = 'BB'
             elif len(type_subset) == 2 and 'connector' in type_subset:
@@ -592,6 +593,14 @@ class Network:
             elif all(ts == 'connector' for ts in type_subset):
                 t = 'TC'
             elif 'headwater' in type_subset and 'mainflow' in type_subset:
+                t = 'TC'
+            elif 'connector' in type_subset and 'mainflow' in type_subset:
+                t = 'TC'
+            elif 'headwater' in type_subset and 'outflow' in type_subset:
+                t = 'TC'
+            elif 'connector' in type_subset and 'outflow' in type_subset:
+                t = 'TC'
+            elif 'mainflow' in type_subset and 'outflow' in type_subset:
                 t = 'TC'
             elif all(ts == 'mainflow' for ts in type_subset):
                 t = 'TC'
