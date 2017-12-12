@@ -417,16 +417,34 @@ class FindSubnetworksTool(object):
             parameterType="Required",
             direction="Input")
 
-        return [param0, param1]
+        param2 = arcpy.Parameter(
+            displayName="Find topology errors",
+            name="BoolError",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input")
+
+        param3 = arcpy.Parameter(
+            displayName="Downstream Reach ID",
+            name="ReachID",
+            datatype="GPLong",
+            parameterType="Optional",
+            direction="Input")
+
+        return [param0, param1, param2, param3]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
         return True
 
-    def updateParameters(self, parameters):
+    def updateParameters(self, p):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
+        if p[2].value:
+            p[3].enabled = True
+        else:
+            p[3].enabled = False
 
         return
 
@@ -441,12 +459,16 @@ class FindSubnetworksTool(object):
 
         # TEST
         in_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\In\FullNetwork_no336.shp'
-        out_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test03.shp'
+        out_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test01.shp'
+        error_bool = True
         testFType(in_shp, 336)  # check to see if canals have been removed from input feature class
-        FindSubnetworks.main(in_shp, out_shp)
+        FindSubnetworks.main(in_shp, out_shp, error_bool)
 
         # testFType(p[0].valueAsText, 336)  # check to see if canals have been removed from input feature class
-        # FindSubnetworks.main(p[0].valueAsText, p[1].valueAsText)
+        # FindSubnetworks.main(p[0].valueAsText,
+                                # p[1].valueAsText,
+                                # p[2].valueAsText,
+                                # p[3].value)
 
         return
 
@@ -478,14 +500,6 @@ class GenerateNetworkAttributesTool(object):
             direction="Input")
 
         param2 = arcpy.Parameter(
-            displayName="Find topology errors",
-            name="BoolErrors",
-            datatype="GPBoolean",
-            parameterType="Optional",
-            direction="Input"
-        )
-
-        param3 = arcpy.Parameter(
             displayName="Calculate river kilometers",
             name="BoolRiverKM",
             datatype="GPBoolean",
@@ -493,7 +507,7 @@ class GenerateNetworkAttributesTool(object):
             direction="Input,"
         )
 
-        return [param0, param1, param2, param3]
+        return [param0, param1, param2]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -514,17 +528,15 @@ class GenerateNetworkAttributesTool(object):
         """The source code of the tool."""
         reload(GenerateNetworkAttributes)
 
-        # TEST
-        in_shp = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test03_edges.shp"
-        error_bool = True
-        riverkm_bool = False
-        out_dir = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test04.shp"
-        GenerateNetworkAttributes.main(in_shp, error_bool, riverkm_bool, out_dir)
+        # # TEST
+        # in_shp = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test03_edges.shp"
+        # riverkm_bool = False
+        # out_dir = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test04.shp"
+        # GenerateNetworkAttributes.main(in_shp, error_bool, riverkm_bool, out_dir)
 
-        #GenerateNetworkAttributes.main(p[0].valueAsText,
-                                        #p[1].valueAsText,
-                                        #p[2].valueAsText,
-                                        #p[3].valueAsText)
+        GenerateNetworkAttributes.main(p[0].valueAsText,
+                                        p[1].valueAsText,
+                                        p[2].valueAsText)
         return
 
 
@@ -2181,7 +2193,7 @@ paramStreamNetwork.filter.list = ["Polyline"]
 
 # TEST
 def main():
-    tool = GenerateNetworkAttributesTool()
+    tool = FindSubnetworksTool()
     tool.execute(tool.getParameterInfo(), None)
 
 if __name__ == "__main__":

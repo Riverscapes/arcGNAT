@@ -31,7 +31,7 @@ except ImportError:
     arcpy.AddError(error_msg)
 
 
-def main(in_shp, error_bool, riverkm_bool, out_workspace):
+def main(in_shp, riverkm_bool, out_workspace):
     """
     Iterates through all identified subnetworks and generates network attributes
     which are added as new attribute fields.
@@ -41,7 +41,6 @@ def main(in_shp, error_bool, riverkm_bool, out_workspace):
     arcpy.AddMessage("GNA: Generating network attributes...")
     arcpy.AddMessage("GNA: Converting shapefile to a NetworkX graph...")
     theNetwork = net.Network(in_shp)
-    # get list of network ID values
     arcpy.AddMessage("GNA: Getting list of network IDs...")
     net_ids = theNetwork.attribute_as_list(theNetwork.G, "NetworkID")
 
@@ -80,6 +79,6 @@ def main(in_shp, error_bool, riverkm_bool, out_workspace):
         theNetwork.gnat_G = nx.union_all(list_subnets)
         # Convert graph to shapefile and write to disk
         arcpy.AddMessage("GNA: Writing to shapefile...")
-        theNetwork._nx_to_shp(theNetwork.gnat_G, out_workspace)
+        theNetwork._nx_to_shp(theNetwork.gnat_G, out_workspace, bool_node=True)
 
     return
