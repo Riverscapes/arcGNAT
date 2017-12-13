@@ -4,7 +4,7 @@
 #   Authors:        Jesse Langdon, jesse@southforkresearch.org
 #                   Matt Reimer, matt@northarrowresearch.com
 #   Created:        4/6/2017
-#   Revised:        11/21/2017
+#   Revised:        12/11/2017
 
 import os
 import ogr
@@ -37,17 +37,18 @@ class Network:
         :param geom_attrs:
         :return:
         """
+
         self.G = nx.MultiDiGraph()
         shp = ogr.Open(self.data_src)
         layer = shp.GetLayer()
         self.srs = layer.GetSpatialRef().ExportToWkt()
 
         for lyr in shp:
-            fields = [x.GetName() for x in lyr.schema]
+            self.fields = [x.GetName() for x in lyr.schema]
             for f in lyr:
                 geo = f.geometry()
-                flddata = [f.GetField(f.GetFieldIndex(x)) for x in fields]
-                attributes = dict(zip(fields, flddata))
+                flddata = [f.GetField(f.GetFieldIndex(x)) for x in self.fields]
+                attributes = dict(zip(self.fields, flddata))
                 # Add a new _FID_ field
                 fid = f.GetFID()
                 attributes[self.id_field] = fid
@@ -124,15 +125,17 @@ class Network:
             lyr.CreateFeature(feature)
             feature.Destroy()
 
-        # TODO - this needs to sort attribute fields in the same order as the input shapefile
-        def build_attrb_dict(lyr, data, fields):
-            attributes = {}
-            # Loop through attribute data in edges
-            for key, data in data.items():
+        def build_attrb_dict(self, lyr, data, fields):
+            from collections import OrderedDict
+            attributes = OrderedDict()
+            ordered_data = order_attributes(self, data)
+            # Loop through attribute data in edges dictionary
+            for key, data in ordered_data.items():
                 # Reject spatial data not required for attribute table
                 if (key != 'Json' and key != 'Wkt' and key != 'Wkb'
                     and key != 'ShpName'):
                     # For all edges check/add field and data type to fields dict
+                    # if key not in fields:
                     if key not in fields:
                         # Field not in previous edges so add to dict
                         if type(data) in OGRTypes:
@@ -148,6 +151,19 @@ class Network:
                         # Field already exists, add data to dict for CreateLayer()
                         attributes[key] = data
             return attributes
+
+        def order_attributes(self, attrb_dict):
+            # order dictionary attributes into list based on field list from input shapefile
+            from collections import OrderedDict
+            ordered_attrb = OrderedDict()
+            for f in self.fields:
+                for k, v in attrb_dict.iteritems():
+                    if k == f:
+                        ordered_attrb.update({k:v})
+            for k, v, in attrb_dict.iteritems():
+                if k.startswith('_') and k.endswith('_'):
+                    ordered_attrb.update({k:v})
+            return ordered_attrb
 
         # Set up output shapefile
         base = os.path.basename(out_shp)
@@ -175,7 +191,7 @@ class Network:
             for n in G:
                 data = G.node[n]
                 g = netgeometry(n, data)
-                n_attributes = build_attrb_dict(nodes, data, n_fields)
+                n_attributes = build_attrb_dict(self, nodes, data, n_fields)
                 create_feature(g, nodes, n_attributes)
             nodes = None
 
@@ -192,7 +208,7 @@ class Network:
         # Edge loop
         for u,v,k,data in G.edges_iter(data=True,keys=True):
             g = netgeometry(k, data)
-            e_attributes = build_attrb_dict(edges, data, e_fields)
+            e_attributes = build_attrb_dict(self, edges, data, e_fields)
             # Create the feature with geometry, passing new attribute data
             create_feature(g, edges, e_attributes)
         edges = None
@@ -336,7 +352,7 @@ class Network:
             if len(dict) > 0:
                 nx.set_edge_attributes(G, attrb_name, attrb_value)
             else:
-                print "ERROR: Attribute type does not exist in the network"
+                print "ERROR: Attribute type does not exist in the network" #FIXME this always seems to print!
 
         except:
             print "ERROR: Missing an input parameter"
@@ -573,6 +589,7 @@ class Network:
             return outerror_G
         else:
             outerror_G = outflow_G
+            # FIXME remove _edgetype_ attribute field
             return outerror_G
 
     def set_node_types(self, G):
