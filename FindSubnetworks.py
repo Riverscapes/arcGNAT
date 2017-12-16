@@ -57,6 +57,8 @@ def find_errors(theNetwork, G, oid_field):
         # merge all error graphs
         erroronly_G = nx.compose_all([duplicates_G, upstream_G, outflow_G])
         error_G = nx.compose(subnet_G, erroronly_G)
+        if theNetwork.check_attribute(error_G, "_edgetype_"):
+            theNetwork.delete_attribute(error_G, "_edgetype_")
         list_subnets.append(error_G)
         arcpy.AddMessage("Subnetwork #{} complete...".format(id))
 
