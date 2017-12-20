@@ -11,6 +11,17 @@ import ogr
 import osr
 import networkx as nx
 
+# global variables
+fid = "_FID_"
+edgetype = "_edgetype_"
+nodetype = "_nodetype_"
+netid = "_netid_"
+calclen = "_calclen_"
+riverkm = "_riverkm_"
+streamorder = "_strmordr_"
+errorflow = "_err_flow_"
+errordup = "_err_dupe_"
+errorout = "_err_out_"
 
 class Network:
 
@@ -19,10 +30,9 @@ class Network:
         Main class for processing stream networks in GNAT.
         """
         self.msgcallback = msgcallback
-        self.id_field = "_FID_"
+        self.id_field = fid
         self.features = {}
         self.cols = []
-        self.gnat_G = None
 
         # get spatial reference
         self.data_src = in_shp
@@ -52,7 +62,7 @@ class Network:
                 # Add a new _FID_ field
                 fid = f.GetFID()
                 attributes[self.id_field] = fid
-                attributes['_calc_len_'] = geo.Length()
+                attributes[calclen] = geo.Length()
 
                 # Using layer level geometry type
                 geo_type = geo.GetGeometryType()
@@ -64,11 +74,6 @@ class Network:
                     self.cols = self.features[self.features.keys()[0]].keys()
                 else:
                     raise ImportError("GeometryType not supported. For now we only support LineString types.")
-
-        # if new graph already has _edgetype_ attribute, populate gnat_G graph in Network instance
-        u, v, k, d = next(self.G.edges_iter(data=True, keys=True))
-        if "_edgetype_" in d:
-            self.gnat_G = self.G
 
         return
 
@@ -269,7 +274,7 @@ class Network:
         :param list_SG: list of subgraphs
         :return: new graph with network IDs added as attribute
         """
-        attrb_field = "_netid_"
+        attrb_field = netid
         try:
             subgraph_count = 1
             for SG in list_SG:
@@ -305,6 +310,11 @@ class Network:
         attrb_list = [d[attrb_name] for u,v,k,d in G.edges_iter(keys=True, data=True)]
         return list(sorted(set(attrb_list)))
 
+    def check_attribute(self, G, attrb_name):
+        data = next(d for u,v,k,d in G.edges_iter(keys=True, data=True))
+        if attrb_name in data:
+            return True
+
     def add_attribute(self, G, attrb_name, attrb_value):
         """
         Add a new attribute to a graph.
@@ -318,6 +328,10 @@ class Network:
         else:
             print "ERROR: Attribute already exists"
         return
+
+    def delete_attribute(self, G, attrb_name):
+        for u,v,k,d in G.edges_iter(keys=True, data=True):
+            del d[attrb_name]
 
     def select_by_attribute(self, G, attrb_name, attrb_value):
         """
@@ -376,9 +390,9 @@ class Network:
                     # get the edge that is connected to outflow node
                     outflow_edge = G.in_edges(i[0], data=True, keys=True)
                     outflow_G = nx.MultiDiGraph(outflow_edge)
-            # set reach_type attribute for outflow and headwater edges
-            self.update_attribute(outflow_G, attrb_field, attrb_name)
-            return outflow_G
+                    # set reach_type attribute for outflow and headwater edges
+                    self.update_attribute(outflow_G, attrb_field, attrb_name)
+                    return outflow_G
         else:
             print "ERROR: Graph is not directed."
             outflow_G = nx.MultiDiGraph()
@@ -462,14 +476,13 @@ class Network:
         :param name_field: name of the edge type attribute field
         :return: graph with new attribute
         """
-        e = '_edgetype_'
         b = 'braid'
         c = 'connector'
         m = 'mainflow'
         for u,v,k,d in G.edges_iter(data=True, keys=True):
-            if d[name_field] != None and d[e] == b or d[name_field] != None and d[e] == c:
+            if d[name_field] != None and d[edgetype] == b or d[name_field] != None and d[edgetype] == c:
                 data = G.get_edge_data(u, v, key=k)
-                data[e] = m
+                data[edgetype] = m
                 G.add_edge(u, v, k, data)
         return
 
@@ -497,11 +510,11 @@ class Network:
         if braid_complex_G is not None:
             G3 = nx.compose(G2, braid_complex_G)
         if braid_simple_G is not None:
-            self.gnat_G = nx.compose(G3, braid_simple_G)
+            gnat_G = nx.compose(G3, braid_simple_G)
         if braid_complex_G is None or braid_simple_G is None:
-            self.gnat_G = G2
+            gnat_G = G2
 
-        return self.gnat_G
+        return gnat_G
 
     def find_node_with_ID(self, G, id_field, id_value):
         """
@@ -541,12 +554,12 @@ class Network:
                 upstream_list.append(edge)
 
         # add new "error_flow" attribute to graph
-        self.add_attribute(RG, '_err_flow_', 0)  # add 'default' value
+        self.add_attribute(RG, errorflow, 0)  # add 'default' value
         for u,v,key,d in RG.edges_iter(keys=True,data=True):
             if (u,v,key,d) in upstream_list:
                 flipped_G.add_edge(u,v,key,d)
         if flipped_G is not None:
-            self.update_attribute(flipped_G, '_err_flow_', 1)
+            self.update_attribute(flipped_G, errorflow, 1)
         nx.reverse(RG)
         upstream_G = nx.compose(RG, flipped_G)
         return upstream_G
@@ -556,7 +569,7 @@ class Network:
         :param G: target multidigraph
         return: multidigraph with new error_dup attribute field
         """
-        self.add_attribute(G, '_err_dupe_', 0)
+        self.add_attribute(G, errordup, 0)
         duplicates_G = nx.MultiDiGraph()
         for e in G.edges_iter():
             keys = G.get_edge_data(*e).keys()
@@ -565,38 +578,37 @@ class Network:
                 for k in keys:
                     data = G.get_edge_data(*e, key=k)
                     length_list.append((e[0],e[1],k,data))
-                if length_list[0][3]['_calc_len_'] == length_list[1][3]['_calc_len_']:
+                if length_list[0][3][calclen] == length_list[1][3][calclen]:
                     for i in length_list:
                         duplicates_G.add_edge(i[0],i[1],i[2],i[3])
-        self.update_attribute(duplicates_G, '_err_dupe_', 1)
+        self.update_attribute(duplicates_G, errordup, 1)
         return duplicates_G
 
     def error_outflow(self, G):
         """Returns graph for network with more than one (or no) outflow edge.
         :param G: target multidigraph
         return: multidigraph with new error_outflow attribute field"""
-        self.add_attribute(G, "_err_out_", 0)
-        self.add_attribute(G, "_edgetype_", "connector")
-        outflow_G = self.get_outflow_edges(G, "_edgetype_", "outflow")
+        self.add_attribute(G, errorout, 0)
+        self.add_attribute(G, edgetype, "connector")
+        outflow_G = self.get_outflow_edges(G, edgetype, "outflow")
         outflow_list = list(outflow_G.edges_iter(data=True, keys=True))
         if len(outflow_list) > 1:
             outerror_G = outflow_G
-            self.update_attribute(outerror_G, "_err_out_", 1)
+            self.update_attribute(outerror_G, errorout, 1)
             return outerror_G
         elif not outflow_list:
             outerror_G = G
-            self.update_attribute(outerror_G, "_err_out_", 1)
+            self.update_attribute(outerror_G, errorout, 1)
             return outerror_G
         else:
             outerror_G = outflow_G
-            # FIXME remove _edgetype_ attribute field
             return outerror_G
 
     def set_node_types(self, G):
         """Calculates node types for a graph which already has edge types"""
         node_dict = {}
         type_list = []
-        edge_dict = nx.get_edge_attributes(G, '_edgetype_')
+        edge_dict = nx.get_edge_attributes(G, edgetype)
         node_list = [n for n in G.nodes_iter()]
         # build dictionary of node with predecessors and successors nodes
         for node in node_list:
@@ -627,7 +639,7 @@ class Network:
             elif len(type_subset) == 2 and 'mainflow' in type_subset:
                 t = 'CC'
             elif 'connector' in type_subset and 'headwater' in type_subset:
-                t = 'TC'
+                t = 'HC'
             elif all(ts == 'connector' for ts in type_subset):
                 t = 'TC'
             elif 'headwater' in type_subset and 'mainflow' in type_subset:
@@ -648,61 +660,72 @@ class Network:
                 t = 'O'
             else:
                 t = None
-            G.node[nd]['node_type'] = t
+            G.node[nd][nodetype] = t
         return
 
     def calculate_river_km(self, G):
         """Calculates distance of each edge from outflow node, in kilometers."""
-        outflow_G = self.select_by_attribute(G, '_edgetype_', 'outflow')
+        outflow_G = self.select_by_attribute(G, edgetype, 'outflow')
         outflow_node = next(v for u, v, key, data in outflow_G.edges_iter(keys=True, data=True))
-        self.add_attribute(G, '_river_km_', '-9999')
+        self.add_attribute(G, riverkm, -9999)
         for u, v, key, data in G.edges_iter(keys=True, data=True):
             path_len = nx.shortest_path_length(G,
                                                source=u,
                                                target=outflow_node,
-                                               weight='_calc_len_')
-            river_km = path_len / 1000
-            data['_river_km_'] = river_km
+                                               weight=calclen)
+            km_val = path_len / 1000
+            data[riverkm] = km_val
         return
 
-    def streamorder(self):
+
+    def streamorder(self, G):
         """Calculates strahler stream order for all edges within a stream network graph.
         The input graph must already have an attribute field with edge types."""
+
         try:
-            self.add_attribute(self.gnat_G, '_strm_ordr_', -9999)
+            self.add_attribute(G, streamorder, -9999)
         except:
-            self.update_attribute(self.gnat_G, '_strm_ordr_', -9999)
+            self.update_attribute(G, streamorder, -9999)
         order_idx = 1
 
         # Set up initial set of reaches where headwaters = stream order 1
-        headwater_G = self.get_headwater_edges(self.gnat_G, '_edgetype_', 'headwater')
-        for u,v,k,d in self.gnat_G.edges_iter(data=True, keys=True):
+        headwater_G = self.get_headwater_edges(G, edgetype, 'headwater')
+        for u,v,k,d in G.edges_iter(data=True, keys=True):
             if headwater_G.has_edge(u, v, key=k):
-                self.gnat_G.add_edge(u, v, key=k, stream_order=order_idx)
+                G.add_edge(u, v, key=k, _strmordr_=order_idx)
 
-        self.streamorder_iter(order_idx)
-
+        self.streamorder_iter(G, order_idx)
         return
 
-    def streamorder_iter(self, order_idx):
+    def streamorder_iter(self, G, order_idx):
         """Recursively iterates to calculate stream order."""
 
+        # tests for duplicate values in a list
+        # from Jochen Ritzel (https://stackoverflow.com/a/10343450/1618640)
+        def isdup(list):
+            return len(list)-1 == len(set(list))
+
         # Check if _edgetype_ != 'outflow', and if not, then execute method
-        next_sel_G = self.select_by_attribute(self.gnat_G, '_strm_ordr_', order_idx)
-        if next_sel_G.number_of_edges() == 1 and self.find_node_with_ID(next_sel_G, '_edgetype_', 'outflow'):
+        prev_sel_G = self.select_by_attribute(G, streamorder, order_idx)
+        if prev_sel_G.number_of_edges() == 2 and self.find_node_with_ID(prev_sel_G, edgetype, 'outflow'):
             print "Stream order process completed!"
             return
         else:
-            prev_sel_G = self.select_by_attribute(self.gnat_G, '_strm_ordr_', order_idx)
-            for u, v, k, d in self.gnat_G.edges_iter(data=True, keys=True):
+            prev_sel_G = self.select_by_attribute(G, streamorder, order_idx)
+            for u, v, k, d in G.edges_iter(data=True, keys=True):
                 if prev_sel_G.has_edge(u, v, key=k):
-                    out_edges = self.gnat_G.out_edges(v, data=True, keys=True)
-                    for e in out_edges:
-                        if self.gnat_G.node[e[1]]['node_type'] == 'TC':
-                            self.gnat_G.edge[e[0]][e[1]][e[2]]['_strm_ordr_'] = order_idx + 1
-                        else:
-                            self.gnat_G.edge[e[0]][e[1]][e[2]]['_strm_ordr_'] = order_idx
-            order_idx += 1
+                    out_edges = G.out_edges(v, data=True, keys=True)
+                    if len(out_edges) > 0:
+                        for e in out_edges:
+                            inflow_strmordr = []
+                            for selected_edge in prev_sel_G.edges_iter(data=True, keys=True):
+                                if selected_edge[1] == e[0]:
+                                    inflow_strmordr.append(d[streamorder])
+                            if G.node[e[0]][nodetype] == 'TC' and len(inflow_strmordr) > 1 and isdup(inflow_strmordr):
+                                G.edge[u][v][k][streamorder] = order_idx + 1
+                    elif d[streamorder] > 1:
+                        G.edge[u][v][k][streamorder] = order_idx
             # recursion
-            self.streamorder_iter(order_idx)
+            order_idx += 1
+            self.streamorder_iter(G, order_idx)
         return
