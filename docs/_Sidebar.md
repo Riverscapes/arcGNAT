@@ -18,7 +18,7 @@
     
 * Utilities
     * [Calculate Gradient](Calculate-Gradient)
-    * [Calculate Stream Order](Calculate-Stream-Order)
+    * [Calculate Stream Order](Stream-Order)
     * [Calculate Threadedness](Calculate-Threadedness)
     * [Centerline Tool](Centerline-Tool)
     * [Combine Attributes](CombineAttributes)
