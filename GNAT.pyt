@@ -31,7 +31,7 @@ import ValleyPlanform
 import Sinuosity
 import DividePolygonBySegment
 import TransferAttributesToLine
-import StreamOrder
+import GenerateStreamOrder
 import Centerline
 import CombineAttributes
 import GenerateStreamBranches
@@ -58,7 +58,7 @@ class Toolbox(object):
         # List of tool classes associated with this toolbox
         self.tools = [FindSubnetworksTool,
                       GenerateNetworkAttributesTool,
-                      StreamOrderTool,
+                      GenerateStreamOrderTool,
                       StreamBranchesTool,
                       FindBraidedNetworkTool,
                       PlanformTool,
@@ -458,9 +458,9 @@ class FindSubnetworksTool(object):
         reload(FindSubnetworks)
 
         # TEST
-        in_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\In\FullNetwork_no336.shp'
-        out_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test01.shp'
-        error_bool = True
+        in_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\In\MinamSubset_noerrors.shp'
+        out_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_MinamSubset_subnet.shp'
+        error_bool = False
         testFType(in_shp, 336)  # check to see if canals have been removed from input feature class
         FindSubnetworks.main(in_shp, out_shp, error_bool)
 
@@ -504,8 +504,7 @@ class GenerateNetworkAttributesTool(object):
             name="BoolRiverKM",
             datatype="GPBoolean",
             parameterType="Optional",
-            direction="Input,"
-        )
+            direction="Input")
 
         return [param0, param1, param2]
 
@@ -528,16 +527,86 @@ class GenerateNetworkAttributesTool(object):
         """The source code of the tool."""
         reload(GenerateNetworkAttributes)
 
-        # # TEST
-        # in_shp = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test03_edges.shp"
-        # riverkm_bool = False
-        # out_dir = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test04.shp"
-        # GenerateNetworkAttributes.main(in_shp, error_bool, riverkm_bool, out_dir)
+        # TEST
+        in_shp = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_MinamSubset_subnet.shp"
+        riverkm_bool = False
+        out_shp = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_MinamSubset_attrb.shp"
+        GenerateNetworkAttributes.main(in_shp, out_shp, riverkm_bool)
 
-        GenerateNetworkAttributes.main(p[0].valueAsText,
-                                        p[1].valueAsText,
-                                        p[2].valueAsText)
+        # GenerateNetworkAttributes.main(p[0].valueAsText,
+        #                                 p[1].valueAsText,
+        #                                 p[2].valueAsText)
         return
+
+
+class GenerateStreamOrderTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Generate Stream Order"
+        self.description = "Generate Strahler stream order for the stream network."
+        self.canRunInBackground = True
+        self.category = strCatagoryStreamNetworkPreparation
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input stream network shapefile",
+            name="InputStreamNetwork",
+            datatype="DEShapefile",
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Output network shapefile with stream order",
+            name="OutputStreamNetwork",
+            datatype="DEShapefile",
+            parameterType="Required",
+            direction="Output")
+        param1.filter.list = ["Polyline"]
+
+        param2 = arcpy.Parameter(
+            displayName="Temporary workspace",
+            name="TempWorkspace",
+            datatype="DEWorkspace",
+            parameterType="Required",
+            direction="Input")
+        param2.filter.list = ["Workspace"]
+
+        return [param0, param1, param2]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+
+        testProjected(parameters[0])
+        testWorkspacePath(parameters[4])
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+
+        reload(GenerateStreamOrder)
+
+        # TEST
+        in_shape = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_MinamSubset_attrb.shp"
+        out_shape = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_MinamSubset_so.shp"
+        temp_workspace = r"C:\JL\Testing\arcGNAT\networkx-refactor\TempWorkspace"
+        GenerateStreamOrder.main(in_shape, out_shape, temp_workspace)
+
+        # GenerateStreamOrder.main(p[0].valueAsText,
+        #                  p[1].valueAsText,
+        #                  p[2].valueAsText)
 
 
 # Stream Segmentation
@@ -1687,85 +1756,6 @@ class CombineAttributesTool(object):
         return
 
 
-class StreamOrderTool(object):
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "Calculate Stream Order"
-        self.description = "Generate Stream Order for the Stream Network."
-        self.canRunInBackground = True
-        self.category = strCatagoryUtilities
-
-    def getParameterInfo(self):
-        """Define parameter definitions"""
-        param0 = arcpy.Parameter(
-            displayName="Input stream network",
-            name="InputStreamNetwork",
-            datatype="GPFeatureLayer",
-            parameterType="Required",
-            direction="Input")
-
-        param1 = arcpy.Parameter(
-            displayName="Downstream reach ID",
-            name="DownstreamReach",
-            datatype="GPLong", #Integer
-            parameterType="Required",
-            direction="Input")
-
-        param2 = arcpy.Parameter(
-            displayName="Output network with stream order",
-            name="outputStreamOrderFC",
-            datatype="DEFeatureClass",
-            parameterType="Required",
-            direction="Output")
-        param2.filter.list = ["Polyline"]
-
-        param3 = arcpy.Parameter(
-            displayName="Output confluence node points",
-            name="outputNodePointsFC",
-            datatype="DEFeatureClass",
-            parameterType="Required",
-            direction="Output")
-        param3.filter.list = ["Point"]
-
-        param4 = arcpy.Parameter(
-            displayName="Scratch workspace",
-            name="InputTempWorkspace",
-            datatype="DEWorkspace", 
-            parameterType="Optional",
-            direction="Input")
-
-        return [param0,param1,param2,param3,param4]# + listControlParams
-
-    def isLicensed(self):
-        """Set whether tool is licensed to execute."""
-        return True
-
-    def updateParameters(self, parameters):
-        """Modify the values and properties of parameters before internal
-        validation is performed.  This method is called whenever a parameter
-        has been changed."""
-        return
-
-    def updateMessages(self, parameters):
-        """Modify the messages created by internal validation for each tool
-        parameter.  This method is called after internal validation."""
-
-        testProjected(parameters[0])
-        testWorkspacePath(parameters[4])
-        return
-
-    def execute(self, p, messages):
-        """The source code of the tool."""
-
-        reload(StreamOrder)
-        StreamOrder.main(p[0].valueAsText,
-                         p[1].valueAsText,
-                         p[2].valueAsText,
-                         p[3].valueAsText,
-                         p[4].valueAsText)
-        return
-
-
 class StreamBranchesTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
@@ -2190,10 +2180,9 @@ paramStreamNetwork = arcpy.Parameter(
     direction="Input")
 paramStreamNetwork.filter.list = ["Polyline"]
 
-
 # TEST
 def main():
-    tool = FindSubnetworksTool()
+    tool = GenerateStreamOrderTool()
     tool.execute(tool.getParameterInfo(), None)
 
 if __name__ == "__main__":

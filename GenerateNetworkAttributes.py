@@ -32,45 +32,8 @@ try:
 except ImportError:
     arcpy.AddError(import_msg)
 
-def check_field(in_shp, field_name):
-    fieldnames = [field.name for field in arcpy.ListFields(in_shp)]
-    if field_name in fieldnames:
-        return True
 
-# def get_fieldmap(in_network, in_gnis_pnt):
-#     fm = arcpy.FieldMappings()
-#
-#     # Add all fields from inputs.
-#     fm.addTable(in_network)
-#     fm.addTable(in_gnis_pnt)
-#
-#     # Name of field to keep
-#     keep = ["GNIS_Name"]
-#
-#     # Remove all output fields you don't want.
-#     for field in fm.fields:
-#         if field.name not in keep:
-#             fm.removeFieldMap(fm.findFieldMapIndex(field.name))
-#
-#     return fm
-#
-# def prep_network(in_shp, temp_wspace):
-#     # Preprocess network
-#     network_dslv = gis_tools.newGISDataset(temp_wspace, "GNAT_SO_NetworkDissolved")
-#     gnis_pnt = gis_tools.newGISDataset(temp_wspace, "GNAT_SO_NetworkDslv_pnt")
-#     network_gnis = gis_tools.newGISDataset(temp_wspace, "GNAT_SO_NetworkDslv_GNIS_join")
-#     arcpy.Dissolve_management(in_shp, network_dslv, multi_part="SINGLE_PART",
-#                               unsplit_lines="DISSOLVE_LINES")
-#     if check_field(in_shp, "GNIS_Name"):
-#         arcpy.FeatureToPoint_management(in_shp, gnis_pnt,"INSIDE")
-#         fieldmapping = get_fieldmap(network_dslv, gnis_pnt)
-#         arcpy.SpatialJoin_analysis(network_dslv, gnis_pnt, network_gnis,"JOIN_ONE_TO_ONE","KEEP_ALL",
-#                                    fieldmapping,"WITHIN_A_DISTANCE", "1 Meters", "#")
-#         return network_gnis
-#     else:
-#         arcpy.AddError("{0} attribute field not found in {1}".format("GNIS_Name", os.path.basename(in_shp)))
-
-def main(in_shp, riverkm_bool, out_shp, temp_workspace):
+def main(in_shp, out_shp, riverkm_bool=False):
     """
     Iterates through all identified subnetworks and generates network attributes
     which are added as new attribute fields.
@@ -129,10 +92,6 @@ def main(in_shp, riverkm_bool, out_shp, temp_workspace):
             arcpy.AddMessage("GNA: Calculating river kilometers...")
             theNetwork.calculate_river_km(gnat_G)
 
-        # # Stream order
-        # arcpy.AddMessage("GNA: Calculating stream order...")
-        # theNetwork.streamorder(gnat_G)
-
         list_subnets.append(gnat_G)
         arcpy.AddMessage("Network ID {0} processed...".format(id))
 
@@ -140,7 +99,7 @@ def main(in_shp, riverkm_bool, out_shp, temp_workspace):
     arcpy.AddMessage("GNA: Merging all subnetworks...")
     theNetwork.G = nx.union_all(list_subnets)
 
-    # Convert graph to shapefile and write to disk
+
     arcpy.AddMessage("GNA: Writing to shapefile...")
     theNetwork._nx_to_shp(theNetwork.G, out_shp, bool_node=True)
 
