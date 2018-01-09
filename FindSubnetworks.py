@@ -10,7 +10,7 @@
 #                                                                             #
 # Created:     2017-Nov-27                                                    #
 # Version:     0.2                                                            #
-# Revised:     2017-Dec-8                                                     #
+# Revised:     2017-Jan-8                                                     #
 # Released:                                                                   #
 #                                                                             #
 # License:     MIT License                                                    #
@@ -40,6 +40,7 @@ def find_errors(theNetwork, G, oid_field):
     :param oid_field:
     :return:
     """
+
     net_ids = theNetwork.attribute_as_list(G, "_netid_")
     # iterate through list of network IDs generate attributes, and produce a subnetwork graph
     list_subnets = []
@@ -47,25 +48,17 @@ def find_errors(theNetwork, G, oid_field):
         subnet_G = theNetwork.select_by_attribute(G, "_netid_", id)
         duplicates_G = theNetwork.error_dup(subnet_G)
         outflow_G = theNetwork.error_outflow(subnet_G)
-        outflow_edge = list((u,v,k,d) for u,v,k,d in outflow_G.edges_iter(data=True,keys=True)
-                            if d['_edgetype_']=='outflow' and d['_err_out_']==0)
-        if len(outflow_edge) == 1:
-            source_node = outflow_edge[0][1]
-            upstream_G = theNetwork.error_flow(subnet_G, source_node)
-        else:
-            upstream_G = nx.MultiDiGraph()
+        if theNetwork.check_attribute(outflow_G, "_edgetype_"):
+            theNetwork.delete_attribute(outflow_G, "_edgetype_")
+        conf_G = theNetwork.error_confluence(subnet_G)
         # merge all error graphs
-        erroronly_G = nx.compose_all([duplicates_G, upstream_G, outflow_G])
-        error_G = nx.compose(subnet_G, erroronly_G)
-        if theNetwork.check_attribute(error_G, "_edgetype_"):
-            theNetwork.delete_attribute(error_G, "_edgetype_")
+        error_G = nx.compose_all([subnet_G, duplicates_G, outflow_G, conf_G])
         list_subnets.append(error_G)
         arcpy.AddMessage("Subnetwork #{} complete...".format(id))
 
     # Union all subnetwork graphs
     union_G = nx.union_all(list_subnets)
     return union_G
-
 
 
 def main(in_shp, out_shp, bool_error=False):
@@ -90,7 +83,7 @@ def main(in_shp, out_shp, bool_error=False):
     if bool_error:
         arcpy.AddMessage("FSN: Finding network topology errors...")
         error_G = find_errors(theNetwork, id_G, "_FID_")
-        final_G = nx.compose(id_G, error_G)
+        final_G = error_G
     else:
         final_G = id_G
 

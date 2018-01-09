@@ -22,6 +22,7 @@ streamorder = "_strmordr_"
 errorflow = "_err_flow_"
 errordup = "_err_dupe_"
 errorout = "_err_out_"
+errorconf = "_err_conf_"
 
 class Network:
 
@@ -587,7 +588,8 @@ class Network:
     def error_outflow(self, G):
         """Returns graph for network with more than one (or no) outflow edge.
         :param G: target multidigraph
-        return: multidigraph with new error_outflow attribute field"""
+        return: multidigraph with new error_outflow attribute field
+        """
         self.add_attribute(G, errorout, 0)
         self.add_attribute(G, edgetype, "connector")
         outflow_G = self.get_outflow_edges(G, edgetype, "outflow")
@@ -595,14 +597,32 @@ class Network:
         if len(outflow_list) > 1:
             outerror_G = outflow_G
             self.update_attribute(outerror_G, errorout, 1)
+
             return outerror_G
         elif not outflow_list:
             outerror_G = G
-            self.update_attribute(outerror_G, errorout, 1)
+            self.update_attribute(outerror_G, errorout, 0)
             return outerror_G
         else:
             outerror_G = outflow_G
             return outerror_G
+
+    def error_confluence(self, G):
+        """Returns graph with edges that are connected to a confluence with
+        more than two incoming edges (e.g. a confluence with three incoming
+        edges).
+        :param G: multidigraph
+        :return: multidigraph with new _err_conf_ attribute field.
+        """
+        self.add_attribute(G, errorconf, 0)
+        conf_G = nx.MultiDiGraph()
+        for u, v, k, d in G.edges_iter(keys=True, data=True):
+            in_edges = G.in_edges((u), keys=True, data=True)
+            if len(in_edges) > 2:
+                conf_G.add_edge(u, v, k, d)
+        if conf_G.number_of_edges() > 0:
+            self.update_attribute(conf_G, errorconf, 1)
+        return conf_G
 
     def set_node_types(self, G):
         """Calculates node types for a graph which already has edge types"""
