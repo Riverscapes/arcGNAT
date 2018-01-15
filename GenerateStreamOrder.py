@@ -16,6 +16,7 @@
 #!/usr/bin/env python
 
 import os
+import gc
 import arcpy
 import networkx as nx
 import gis_tools
@@ -27,6 +28,10 @@ def check_field(in_shp, field_name):
     fieldnames = [field.name for field in arcpy.ListFields(in_shp)]
     if field_name in fieldnames:
         return True
+
+# TODO check if in_shp has error fields with "1" values
+def check_errors(in_shp, field_list):
+    return
 
 def get_fieldmap(in_network, in_gnis_pnt):
     fm = arcpy.FieldMappings()
@@ -67,6 +72,7 @@ def main(in_shp, out_shp, temp_wspace):
     :param out_shp: Stream network shapefile with stream order attribute field.
     """
 
+    gc.enable()
     arcpy.AddMessage("SO: Initiating Generate Stream Order tool...")
 
     # Empty the temporary workspace

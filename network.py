@@ -7,9 +7,14 @@
 #   Revised:        12/11/2017
 
 import os
+import sys
 import ogr
 import osr
 import networkx as nx
+
+from memory_profiler import profile
+
+sys.setrecursionlimit(10000)
 
 # global variables
 fid = "_FID_"
@@ -233,7 +238,7 @@ class Network:
                 if geom_attrs:
                     edge_attrs["Wkb"] = geom.ExportToWkb()
                     edge_attrs["Wkt"] = geom.ExportToWkt()
-                    edge_attrs["Json"] = geom.ExportToJson()
+                    #edge_attrs["Json"] = geom.ExportToJson()
                 yield (geom.GetPoint_2D(0), geom.GetPoint_2D(last), edge_attrs)
             else:
                 for i in range(0, geom.GetPointCount() - 1):
@@ -246,7 +251,7 @@ class Network:
                         segment.AddPoint_2D(pt2[0], pt2[1])
                         edge_attrs["Wkb"] = segment.ExportToWkb()
                         edge_attrs["Wkt"] = segment.ExportToWkt()
-                        edge_attrs["Json"] = segment.ExportToJson()
+                        #edge_attrs["Json"] = segment.ExportToJson()
                         del segment
                     yield (pt1, pt2, edge_attrs)
 
@@ -261,13 +266,8 @@ class Network:
         Finds all subgraphs that are disconnected.
         :param self: graph must be undirected to use this method.
         """
-        try:
-            list_SG = list(nx.weakly_connected_component_subgraphs(self.G, copy=True))
-            return list_SG
-        except:
-            print "ERROR: Could not find subgraphs"
-            list_SG = []
-            return list_SG
+        list_SG = list(nx.weakly_connected_component_subgraphs(self.G, copy=True))
+        return list_SG
 
     def calc_network_id(self, list_SG):
         """
@@ -303,7 +303,6 @@ class Network:
             return list_summary
         else:
             list_summary = []
-            print "ERROR: Network ID attribute not found"
             return list_summary
 
     def attribute_as_list(self, G, attrb_name):
@@ -326,8 +325,6 @@ class Network:
         dict = nx.get_edge_attributes(G, attrb_name)
         if len(dict) == 0:
             nx.set_edge_attributes(G, attrb_name, attrb_value)
-        else:
-            print "ERROR: Attribute already exists"
         return
 
     def delete_attribute(self, G, attrb_name):
@@ -363,14 +360,9 @@ class Network:
         :param attrb_value: new attribute value
         """
         dict = nx.get_edge_attributes(G, attrb_name)
-        try:
-            if len(dict) > 0:
-                nx.set_edge_attributes(G, attrb_name, attrb_value)
-            else:
-                print "ERROR: Attribute type does not exist in the network" #FIXME this always seems to print!
-
-        except:
-            print "ERROR: Missing an input parameter"
+        if len(dict) > 0:
+            nx.set_edge_attributes(G, attrb_name, attrb_value)
+        return
 
     def get_outflow_edges(self, G, attrb_field, attrb_name):
         """
@@ -382,20 +374,21 @@ class Network:
         """
         if nx.is_directed(G):
             # find the outflow node (should have zero outgoing edges, right?)
-            list_nodes = [n for n in G.nodes_iter()]
+            outflow_edges = []
+            list_edges = list(G.edges_iter(data=True, keys=True))
             list_successors = []
-            for node in list_nodes:
-                list_successors.append(tuple((node, len(G.edges(node)))))
+            for u,v,k,d in list_edges:
+                out_edges = G.out_edges(v)
+                list_successors.append(((u,v,k,d), len(out_edges)))
             for i in list_successors:
                 if i[1] == 0:
                     # get the edge that is connected to outflow node
-                    outflow_edge = G.in_edges(i[0], data=True, keys=True)
-                    outflow_G = nx.MultiDiGraph(outflow_edge)
-                    # set reach_type attribute for outflow and headwater edges
-                    self.update_attribute(outflow_G, attrb_field, attrb_name)
-                    return outflow_G
+                    outflow_edges.append(i[0])
+            outflow_G = nx.MultiDiGraph(outflow_edges)
+            # set reach_type attribute for outflow and headwater edges
+            self.update_attribute(outflow_G, attrb_field, attrb_name)
+            return outflow_G
         else:
-            print "ERROR: Graph is not directed."
             outflow_G = nx.MultiDiGraph()
             return outflow_G
 
@@ -445,7 +438,6 @@ class Network:
             self.update_attribute(braid_G, attrb_field, attrb_name)
             return braid_G
         else:
-            print "ERROR: Graph is not directed."
             braid_complex_G = nx.MultiDiGraph()
             return braid_complex_G
 
@@ -593,7 +585,9 @@ class Network:
         self.add_attribute(G, errorout, 0)
         self.add_attribute(G, edgetype, "connector")
         outflow_G = self.get_outflow_edges(G, edgetype, "outflow")
-        outflow_list = list(outflow_G.edges_iter(data=True, keys=True))
+        outflow_list = []
+        for u,v,k,d in outflow_G.edges(data=True, keys=True):
+            outflow_list.append((u,v,k,d))
         if len(outflow_list) > 1:
             outerror_G = outflow_G
             self.update_attribute(outerror_G, errorout, 1)
@@ -711,12 +705,63 @@ class Network:
         for u, v, k, d in G.edges_iter(data=True, keys=True):
             if headwater_G.has_edge(u, v, key=k):
                 G.add_edge(u, v, key=k, _strmordr_=1)
+        del headwater_G
 
         select_G = self.select_by_attribute(G, streamorder, 1)
-        so_G = self.streamorder_iter(G, select_G)
+        select_edges = [(u,v,k,d) for u,v,k,d in select_G.edges(keys=True, data=True)]
+        so_G = self.streamorder_iter(G, select_edges)
         return so_G
 
-    def streamorder_iter(self, G, select_G):
+    # def streamorder_iter(self, G, select_G):
+    #     """Recursively iterates through a graph (representing a stream network) and calculates
+    #      stream order."""
+    #
+    #     def isdup(list):
+    #         """Check for duplicate values in list, see Jochen Ritzel
+    #         (https://stackoverflow.com/a/10343450/1618640)"""
+    #         return len(list) - 1 == len(set(list))
+    #
+    #     # Find all successor edges from selected edges
+    #     out_G = nx.MultiDiGraph()
+    #     while select_G.number_of_edges() > 0:
+    #         for u, v, k, d in G.edges_iter(data=True, keys=True):
+    #             if select_G.has_edge(u, v, key=k):
+    #                 out_edges = G.out_edges(v, data=True, keys=True)
+    #                 for out_e in out_edges:
+    #                     # find all predecessor edges for this successor edge
+    #                     in_strmordr = []
+    #                     in_edges = G.in_edges(out_e[0], data=True, keys=True)
+    #                     for in_e in in_edges:
+    #                         in_strmordr.append((in_e[3][streamorder],in_e[3][edgetype]))
+    #                     # stream order determined by predecessor edge stream order
+    #                     if len(in_strmordr) == 2:
+    #                         so = [x[0] for x in in_strmordr]
+    #                         types = [x[1] for x in in_strmordr]
+    #                         if isdup(so) and 'braid' not in types:
+    #                             out_e[3][streamorder] = (in_strmordr[0][0] + 1)
+    #                         elif isdup(types) and types[0]=='braids':
+    #                             out_e[3][streamorder] = (in_strmordr[0][0])
+    #                         else:
+    #                             out_e[3][streamorder] = max(so)
+    #                     elif len(in_edges) == 1:
+    #                         out_e[3][streamorder] = (in_strmordr[0][0])
+    #                     if not out_G.has_edge(out_e[0], out_e[1], out_e[2]):
+    #                         out_G.add_edge(*out_e)
+    #                 #print "edge TARGET_FID:{0}".format(d['TARGET_FID'])
+    #                 select_G.remove_edge(u, v, key=k)
+    #     # recursion
+    #     if out_G.number_of_edges() > 0:
+    #         print "---out_G.number_of_edges: {0}".format(out_G.number_of_edges())
+    #         compose_G = nx.compose(G, out_G)
+    #         del select_G
+    #         self.streamorder_iter(compose_G, out_G)
+    #     else:
+    #         compose_G = nx.compose(G, out_G)
+    #         print "Stream ordering complete!"
+    #         del select_G
+    #         return compose_G
+
+    def streamorder_iter(self, G, previous_edges):
         """Recursively iterates through a graph (representing a stream network) and calculates
          stream order."""
 
@@ -726,11 +771,10 @@ class Network:
             return len(list) - 1 == len(set(list))
 
         # Find all successor edges from selected edges
-        out_G = nx.MultiDiGraph()
-        #out_strmordr = []
-        while select_G.number_of_edges() > 0:
+        next_edges = []
+        while previous_edges:
             for u, v, k, d in G.edges_iter(data=True, keys=True):
-                if select_G.has_edge(u, v, key=k):
+                if (u,v,k,d) in previous_edges:
                     out_edges = G.out_edges(v, data=True, keys=True)
                     for out_e in out_edges:
                         # find all predecessor edges for this successor edge
@@ -744,29 +788,19 @@ class Network:
                             types = [x[1] for x in in_strmordr]
                             if isdup(so) and 'braid' not in types:
                                 out_e[3][streamorder] = (in_strmordr[0][0] + 1)
-                                #out_strmordr.append(in_strmordr[0][0] + 1)
                             elif isdup(types) and types[0]=='braids':
                                 out_e[3][streamorder] = (in_strmordr[0][0])
-                                #out_strmordr.append(in_strmordr[0][0])
                             else:
                                 out_e[3][streamorder] = max(so)
-                                #out_strmordr.append(max(so))
                         elif len(in_edges) == 1:
                             out_e[3][streamorder] = (in_strmordr[0][0])
-                            #out_strmordr.append(in_strmordr[0][0])
-                        if not out_G.has_edge(out_e[0], out_e[1], out_e[2]):
-                            out_G.add_edge(*out_e)
-                            print "Edge TARGET_FID = {0}".format(out_e[3]["TARGET_FID"])
-                    select_G.remove_edge(u, v, key=k)
+                        if out_e not in next_edges:
+                            next_edges.append(out_e)
+                    previous_edges.remove((u,v,k,d))
+        G.add_edges_from(next_edges)
         # recursion
-        if out_G.number_of_edges() > 0:
-            # max_strmordr = max(out_strmordr)
-            # print "Stream order number: {0}".format(max_strmordr)
-            # select_out_G = self.select_by_attribute(out_G, streamorder, max_strmordr)
-            print "out_G.number_of_edges: {0}".format(out_G.number_of_edges())
-            compose_G = nx.compose(G, out_G)
-            return self.streamorder_iter(compose_G, out_G)
-        else:
-            compose_G = nx.compose(G, out_G)
-            print "Stream ordering complete!"
-            return compose_G
+        if next_edges:
+            print "---next_edges: {0}".format(len(next_edges))
+            return self.streamorder_iter(G, next_edges)
+        print "Stream ordering complete!"
+        return G
