@@ -33,6 +33,18 @@ except ImportError:
     arcpy.AddError(import_msg)
 
 
+def display_types(out_shp, list_types):
+    mxd = arcpy.mapping.MapDocument("current")
+    lyr = arcpy.mapping.ListLayers(mxd, "Network Edge Types")[0]
+    if lyr.symbologyType == "UNIQUE_VALUES":
+        lyr.symbology.classValues = list_types
+        lyr.symbology.showOtherValues = False
+
+    arcpy.RefreshActiveView()
+    arcpy.RefreshTOC()
+    return
+
+
 def main(in_shp, out_shp, riverkm_bool=False):
     """
     Iterates through all identified subnetworks and generates network attributes
@@ -102,5 +114,7 @@ def main(in_shp, out_shp, riverkm_bool=False):
 
     arcpy.AddMessage("GNA: Writing to shapefile...")
     theNetwork._nx_to_shp(theNetwork.G, out_shp, bool_node=True)
+
+    display_types(out_shp, ['headwater', 'outflow', 'connector', 'mainflow', 'braid'])
 
     return

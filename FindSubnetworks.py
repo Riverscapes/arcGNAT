@@ -32,6 +32,18 @@ except ImportError:
     arcpy.AddError(error_msg)
 
 
+def display_subnets(out_shp, list_subnets):
+    mxd = arcpy.mapping.MapDocument("current")
+    lyr = arcpy.mapping.ListLayers(mxd, "Subnetworks")[0]
+    if lyr.symbologyType == "UNIQUE_VALUES":
+        lyr.symbology.classValues = list_subnets
+        lyr.symbology.showOtherValues = False
+
+    arcpy.RefreshActiveView()
+    arcpy.RefreshTOC()
+    return
+
+
 def find_errors(theNetwork, G, oid_field):
     """
     This function attempt to find potential topology errors in the stream network.
@@ -45,14 +57,15 @@ def find_errors(theNetwork, G, oid_field):
     # iterate through list of network IDs generate attributes, and produce a subnetwork graph
     list_subnets = []
     for id in net_ids:
+        arcpy.AddMessage("Finding errors for subnet {0}...".format(id))
         subnet_G = theNetwork.select_by_attribute(G, "_netid_", id)
         duplicates_G = theNetwork.error_dup(subnet_G)
         outflow_G = theNetwork.error_outflow(subnet_G)
+        conf_G = theNetwork.error_confluence(subnet_G)
         if theNetwork.check_attribute(outflow_G, "_edgetype_"):
             theNetwork.delete_attribute(outflow_G, "_edgetype_")
-        conf_G = theNetwork.error_confluence(subnet_G)
         # merge all error graphs
-        error_G = nx.compose_all([subnet_G, duplicates_G, outflow_G, conf_G])
+        error_G = nx.compose_all([subnet_G, duplicates_G, conf_G, outflow_G])
         list_subnets.append(error_G)
         arcpy.AddMessage("Subnetwork #{} complete...".format(id))
 
@@ -68,10 +81,10 @@ def main(in_shp, out_shp, bool_error=False):
     :param out_workspace: Directory where tool output will be stored
     """
     arcpy.AddMessage("FSN: Finding and labeling subnetworks...")
-    # remove NetworkID field if it already present
+    # remove GNAT fields if present
     for f in arcpy.ListFields(in_shp):
-        if f.name == "_netid_":
-            arcpy.AddMessage("FSN: Deleting and replacing existing network ID field...")
+        if f.name[:1] == "_" and f.name[1:] == "_":
+            arcpy.AddMessage("FSN: Deleting and replacing existing GNAT fields...")
             arcpy.DeleteField_management(in_shp, f.name)
 
     # calculate network ID
@@ -89,5 +102,7 @@ def main(in_shp, out_shp, bool_error=False):
 
     arcpy.AddMessage("FSN: Writing networkx graph to shapefile...")
     theNetwork._nx_to_shp(final_G, out_shp, bool_node = False)
+
+    display_subnets(out_shp, list_SG)
 
     return
