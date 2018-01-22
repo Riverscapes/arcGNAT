@@ -2,11 +2,24 @@
 
 ## Zipfile
 
-The Confinement Toolbox is provided as a zip file containing a .pyt file and supporting script files. 
+GNAT is provided as a zip file containing a .pyt file and supporting Pythonscript files. 
 
 1. Download the zipfile and unzip the contents to your computer (keep all files together).
 2. Open ArcGIS.
 3. Add the .pyt file to Arctoolbox as you would any other Geoprocessing Toolbox.
+
+## GDAL
+
+The [Geospatial Data Abstraction Library (GDAL)](http://gdal.org/index.html) must be installed and configured correctly
+ prior to running GNAT tools. Although ArcGIS 10.x products are installed with a custom version of GDAL, it is not generally
+ accessible to developers or third-party tools. GDAL binaries for Windows PCs must be installed separately. 
+ The following instructions outline how to install and configure GDAL binaries for Windows 7.
+ 
+If you do not already have GDAL installed, we recommend installing the binaries maintained by Tamas Szekeres at 
+[GISInternals](http://www.gisinternals.com/).
+
+An excellent walkthrough for this process is available [here](https://sandbox.idre.ucla.edu/sandbox/tutorials/installing-gdal-for-windows).
+
 
 # Downloads
 

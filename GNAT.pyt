@@ -11,7 +11,7 @@
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
 # Version:     2.4.0                                                          #
-# Revised:     2017-Nov-20                                                    #
+# Revised:     2018-Jan-18                                                    #
 # Released:                                                                   #
 #                                                                             #
 # License:     MIT License                                                    #
@@ -19,7 +19,6 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
 
-# # Import Modules # #
 import os
 from os import path, makedirs
 import arcpy
@@ -41,11 +40,13 @@ import CalculateThreadedness
 
 GNAT_version = "2.4.0"
 
+
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
 strCatagoryGeomorphicAnalysis = "Analyze Network Attributes\\Step 3 - Geomorphic Attributes"
 strCatagoryProjectManagement = "Riverscapes Project Management"
 strCatagoryUtilities = "Utilities"
+
 
 class Toolbox(object):
     def __init__(self):
@@ -403,19 +404,19 @@ class FindSubnetworksTool(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Input stream network polyline feature class",
+            displayName="Input stream network shapefle",
             name="InputStreamNetwork",
-            datatype="DEFeatureClass",
+            datatype="DEShapefile",
             parameterType="Required",
             direction="Input")
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Output workspace",
-            name="OutputWorkspace",
-            datatype="DEWorkspace",
+            displayName="Output shapefile",
+            name="OutputStreamNetwork",
+            datatype="DEShapefile",
             parameterType="Required",
-            direction="Input")
+            direction="Output")
 
         param2 = arcpy.Parameter(
             displayName="Find topology errors",
@@ -424,14 +425,8 @@ class FindSubnetworksTool(object):
             parameterType="Optional",
             direction="Input")
 
-        param3 = arcpy.Parameter(
-            displayName="Downstream Reach ID",
-            name="ReachID",
-            datatype="GPLong",
-            parameterType="Optional",
-            direction="Input")
 
-        return [param0, param1, param2, param3]
+        return [param0, param1, param2]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -441,11 +436,6 @@ class FindSubnetworksTool(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
-        if p[2].value:
-            p[3].enabled = True
-        else:
-            p[3].enabled = False
-
         return
 
     def updateMessages(self, parameters):
@@ -457,18 +447,17 @@ class FindSubnetworksTool(object):
         """The source code of the tool."""
         reload(FindSubnetworks)
 
-        # TEST
-        in_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\In\MinamSubset_noerrors.shp'
-        out_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_MinamSubset_subnet.shp'
-        error_bool = False
-        testFType(in_shp, 336)  # check to see if canals have been removed from input feature class
-        FindSubnetworks.main(in_shp, out_shp, error_bool)
+        # # TEST
+        # in_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_FullNetwork_subnet_noerrors.shp'
+        # out_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_FullNetwork_subnet_redo.shp'
+        # error_bool = True
+        # testFType(in_shp, 336)  # check to see if canals have been removed from input feature class
+        # FindSubnetworks.main(in_shp, out_shp, error_bool)
 
-        # testFType(p[0].valueAsText, 336)  # check to see if canals have been removed from input feature class
-        # FindSubnetworks.main(p[0].valueAsText,
-                                # p[1].valueAsText,
-                                # p[2].valueAsText,
-                                # p[3].value)
+        testFType(p[0].valueAsText, 336)  # check to see if canals have been removed from input feature class
+        FindSubnetworks.main(p[0].valueAsText,
+                                p[1].valueAsText,
+                                p[2].valueAsText)
 
         return
 
@@ -479,7 +468,7 @@ class GenerateNetworkAttributesTool(object):
         self.label = "Generate Network Attributes"
         self.description = "Generates a series of network attributes, including edge type, node type, river kilometers," \
                            "and stream order."
-        self.canRunInBackground = True
+        self.canRunInBackground = False
         self.category = strCatagoryStreamNetworkPreparation
 
     def getParameterInfo(self):
@@ -487,17 +476,17 @@ class GenerateNetworkAttributesTool(object):
         param0 = arcpy.Parameter(
             displayName="Input stream network polyline feature class",
             name="InputStreamNetwork",
-            datatype="DEFeatureClass",
+            datatype="DEShapefile",
             parameterType="Required",
             direction="Input")
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Output workspace",
-            name="OutputWorkspace",
-            datatype="DEWorkspace",
+            displayName="Output polyline feature class",
+            name="OutputStreamNetwork",
+            datatype="DEShapefile",
             parameterType="Required",
-            direction="Input")
+            direction="Output")
 
         param2 = arcpy.Parameter(
             displayName="Calculate river kilometers",
@@ -527,15 +516,15 @@ class GenerateNetworkAttributesTool(object):
         """The source code of the tool."""
         reload(GenerateNetworkAttributes)
 
-        # TEST
-        in_shp = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_MinamSubset_subnet.shp"
-        riverkm_bool = False
-        out_shp = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_MinamSubset_attrb.shp"
-        GenerateNetworkAttributes.main(in_shp, out_shp, riverkm_bool)
+        # # TEST
+        # in_shp = r'C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_FullNetwork_subnet_noerrors2.shp'
+        # riverkm_bool = False
+        # out_shp = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_FullNetwork_attrb.shp"
+        # GenerateNetworkAttributes.main(in_shp, out_shp, riverkm_bool)
 
-        # GenerateNetworkAttributes.main(p[0].valueAsText,
-        #                                 p[1].valueAsText,
-        #                                 p[2].valueAsText)
+        GenerateNetworkAttributes.main(p[0].valueAsText,
+                                        p[1].valueAsText,
+                                        p[2].valueAsText)
         return
 
 
@@ -590,7 +579,7 @@ class GenerateStreamOrderTool(object):
         parameter.  This method is called after internal validation."""
 
         testProjected(parameters[0])
-        testWorkspacePath(parameters[4])
+        testWorkspacePath(parameters[2])
         return
 
     def execute(self, p, messages):
@@ -598,15 +587,15 @@ class GenerateStreamOrderTool(object):
 
         reload(GenerateStreamOrder)
 
-        # TEST
-        in_shape = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_MinamSubset_attrb.shp"
-        out_shape = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_MinamSubset_so.shp"
-        temp_workspace = r"C:\JL\Testing\arcGNAT\networkx-refactor\TempWorkspace"
-        GenerateStreamOrder.main(in_shape, out_shape, temp_workspace)
+        # # TEST
+        # in_shape = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_FullNetwork_attrb.shp"
+        # out_shape = r"C:\JL\Testing\arcGNAT\networkx-refactor\NetworkFeatures\Out\Test_FullNetwork_so.shp"
+        # temp_workspace = r"C:\JL\Testing\arcGNAT\networkx-refactor\TempWorkspace"
+        # GenerateStreamOrder.main(in_shape, out_shape, temp_workspace)
 
-        # GenerateStreamOrder.main(p[0].valueAsText,
-        #                  p[1].valueAsText,
-        #                  p[2].valueAsText)
+        GenerateStreamOrder.main(p[0].valueAsText,
+                         p[1].valueAsText,
+                         p[2].valueAsText)
 
 
 # Stream Segmentation
@@ -2122,8 +2111,6 @@ def testFType(parameter, ftype):
             unique_values = set(val for val in value_list)
             if ftype in unique_values:
                arcpy.AddError("Stream features where FType = 336 must be removed from the input shapefile.")
-        else:
-            arcpy.AddWarning("An attribute field named FType was not found in the shapefile.")
     return
 
 # Common params
@@ -2180,10 +2167,10 @@ paramStreamNetwork = arcpy.Parameter(
     direction="Input")
 paramStreamNetwork.filter.list = ["Polyline"]
 
-# TEST
-def main():
-    tool = GenerateStreamOrderTool()
-    tool.execute(tool.getParameterInfo(), None)
-
-if __name__ == "__main__":
-    main()
+# # TEST
+# def main():
+#     tool = FindSubnetworksTool()
+#     tool.execute(tool.getParameterInfo(), None)
+#
+# if __name__ == "__main__":
+#     main()

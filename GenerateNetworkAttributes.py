@@ -18,11 +18,9 @@
 #!/usr/bin/env python
 
 # Import modules
-import os.path
 import arcpy
 import networkx as nx
 import network as net
-import gis_tools
 
 import_msg = "{0} module not installed. Please install {0} before executing the {1} tool."\
     .format('ogr', "Generate Network Attributes")
@@ -32,17 +30,7 @@ try:
 except ImportError:
     arcpy.AddError(import_msg)
 
-
-def display_types(out_shp, list_types):
-    mxd = arcpy.mapping.MapDocument("current")
-    lyr = arcpy.mapping.ListLayers(mxd, "Network Edge Types")[0]
-    if lyr.symbologyType == "UNIQUE_VALUES":
-        lyr.symbology.classValues = list_types
-        lyr.symbology.showOtherValues = False
-
-    arcpy.RefreshActiveView()
-    arcpy.RefreshTOC()
-    return
+arcpy.env.overwriteOutput = True
 
 
 def main(in_shp, out_shp, riverkm_bool=False):
@@ -70,7 +58,6 @@ def main(in_shp, out_shp, riverkm_bool=False):
         net_ids = []
         arcpy.AddError("ERROR: {} attribute field not found! The network should first be processed through"
                        "the Find Subnetworks Tool.".format(netid))
-
 
     if theNetwork.check_attribute(theNetwork.G, edgetype):
         theNetwork.delete_attribute(theNetwork.G, edgetype)
@@ -111,10 +98,7 @@ def main(in_shp, out_shp, riverkm_bool=False):
     arcpy.AddMessage("GNA: Merging all subnetworks...")
     theNetwork.G = nx.union_all(list_subnets)
 
-
     arcpy.AddMessage("GNA: Writing to shapefile...")
     theNetwork._nx_to_shp(theNetwork.G, out_shp, bool_node=True)
-
-    display_types(out_shp, ['headwater', 'outflow', 'connector', 'mainflow', 'braid'])
 
     return

@@ -31,28 +31,16 @@ try:
 except ImportError:
     arcpy.AddError(error_msg)
 
-
-def display_subnets(out_shp, list_subnets):
-    mxd = arcpy.mapping.MapDocument("current")
-    lyr = arcpy.mapping.ListLayers(mxd, "Subnetworks")[0]
-    if lyr.symbologyType == "UNIQUE_VALUES":
-        lyr.symbology.classValues = list_subnets
-        lyr.symbology.showOtherValues = False
-
-    arcpy.RefreshActiveView()
-    arcpy.RefreshTOC()
-    return
+arcpy.env.overwriteOutput = True
 
 
-def find_errors(theNetwork, G, oid_field):
+def find_errors(theNetwork, G):
     """
     This function attempt to find potential topology errors in the stream network.
     :param theNetwork:
-    :param G:
-    :param oid_field:
+    :param G: multidgraph
     :return:
     """
-
     net_ids = theNetwork.attribute_as_list(G, "_netid_")
     # iterate through list of network IDs generate attributes, and produce a subnetwork graph
     list_subnets = []
@@ -62,8 +50,6 @@ def find_errors(theNetwork, G, oid_field):
         duplicates_G = theNetwork.error_dup(subnet_G)
         outflow_G = theNetwork.error_outflow(subnet_G)
         conf_G = theNetwork.error_confluence(subnet_G)
-        if theNetwork.check_attribute(outflow_G, "_edgetype_"):
-            theNetwork.delete_attribute(outflow_G, "_edgetype_")
         # merge all error graphs
         error_G = nx.compose_all([subnet_G, duplicates_G, conf_G, outflow_G])
         list_subnets.append(error_G)
@@ -71,6 +57,8 @@ def find_errors(theNetwork, G, oid_field):
 
     # Union all subnetwork graphs
     union_G = nx.union_all(list_subnets)
+    if theNetwork.check_attribute(union_G, "_edgetype_"):
+        theNetwork.delete_attribute(union_G, "_edgetype_")
     return union_G
 
 
@@ -95,14 +83,12 @@ def main(in_shp, out_shp, bool_error=False):
     # find topology errors
     if bool_error:
         arcpy.AddMessage("FSN: Finding network topology errors...")
-        error_G = find_errors(theNetwork, id_G, "_FID_")
+        error_G = find_errors(theNetwork, id_G)
         final_G = error_G
     else:
         final_G = id_G
 
     arcpy.AddMessage("FSN: Writing networkx graph to shapefile...")
     theNetwork._nx_to_shp(final_G, out_shp, bool_node = False)
-
-    display_subnets(out_shp, list_SG)
 
     return

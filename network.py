@@ -179,6 +179,7 @@ class Network:
         # Set up output shapefiles
         base_name = os.path.basename(out_shp)
         shp_name = os.path.splitext(base_name)[0]
+        shp_name = shp_name.encode('utf-8')
         dir_name = os.path.dirname(out_shp)
         node_name = "{}_nodes".format(shp_name)
         edge_name = "{}_edges".format(shp_name)
@@ -711,55 +712,6 @@ class Network:
         select_edges = [(u,v,k,d) for u,v,k,d in select_G.edges(keys=True, data=True)]
         so_G = self.streamorder_iter(G, select_edges)
         return so_G
-
-    # def streamorder_iter(self, G, select_G):
-    #     """Recursively iterates through a graph (representing a stream network) and calculates
-    #      stream order."""
-    #
-    #     def isdup(list):
-    #         """Check for duplicate values in list, see Jochen Ritzel
-    #         (https://stackoverflow.com/a/10343450/1618640)"""
-    #         return len(list) - 1 == len(set(list))
-    #
-    #     # Find all successor edges from selected edges
-    #     out_G = nx.MultiDiGraph()
-    #     while select_G.number_of_edges() > 0:
-    #         for u, v, k, d in G.edges_iter(data=True, keys=True):
-    #             if select_G.has_edge(u, v, key=k):
-    #                 out_edges = G.out_edges(v, data=True, keys=True)
-    #                 for out_e in out_edges:
-    #                     # find all predecessor edges for this successor edge
-    #                     in_strmordr = []
-    #                     in_edges = G.in_edges(out_e[0], data=True, keys=True)
-    #                     for in_e in in_edges:
-    #                         in_strmordr.append((in_e[3][streamorder],in_e[3][edgetype]))
-    #                     # stream order determined by predecessor edge stream order
-    #                     if len(in_strmordr) == 2:
-    #                         so = [x[0] for x in in_strmordr]
-    #                         types = [x[1] for x in in_strmordr]
-    #                         if isdup(so) and 'braid' not in types:
-    #                             out_e[3][streamorder] = (in_strmordr[0][0] + 1)
-    #                         elif isdup(types) and types[0]=='braids':
-    #                             out_e[3][streamorder] = (in_strmordr[0][0])
-    #                         else:
-    #                             out_e[3][streamorder] = max(so)
-    #                     elif len(in_edges) == 1:
-    #                         out_e[3][streamorder] = (in_strmordr[0][0])
-    #                     if not out_G.has_edge(out_e[0], out_e[1], out_e[2]):
-    #                         out_G.add_edge(*out_e)
-    #                 #print "edge TARGET_FID:{0}".format(d['TARGET_FID'])
-    #                 select_G.remove_edge(u, v, key=k)
-    #     # recursion
-    #     if out_G.number_of_edges() > 0:
-    #         print "---out_G.number_of_edges: {0}".format(out_G.number_of_edges())
-    #         compose_G = nx.compose(G, out_G)
-    #         del select_G
-    #         self.streamorder_iter(compose_G, out_G)
-    #     else:
-    #         compose_G = nx.compose(G, out_G)
-    #         print "Stream ordering complete!"
-    #         del select_G
-    #         return compose_G
 
     def streamorder_iter(self, G, previous_edges):
         """Recursively iterates through a graph (representing a stream network) and calculates

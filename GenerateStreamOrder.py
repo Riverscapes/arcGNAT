@@ -24,14 +24,14 @@ import FindSubnetworks
 import GenerateNetworkAttributes
 import network as net
 
+arcpy.env.overwriteOutput = True
+
+
 def check_field(in_shp, field_name):
     fieldnames = [field.name for field in arcpy.ListFields(in_shp)]
     if field_name in fieldnames:
         return True
 
-# TODO check if in_shp has error fields with "1" values
-def check_errors(in_shp, field_list):
-    return
 
 def get_fieldmap(in_network, in_gnis_pnt):
     fm = arcpy.FieldMappings()
@@ -64,6 +64,7 @@ def dslv_network(in_shp, temp_wspace):
         return network_gnis
     else:
         arcpy.AddError("{0} attribute field not found in {1}".format("GNIS_Name", os.path.basename(in_shp)))
+
 
 def main(in_shp, out_shp, temp_wspace):
     """Main function to calculate Strahler stream order for an input stream network.
