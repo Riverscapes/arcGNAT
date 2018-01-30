@@ -10,41 +10,42 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.3.8                                                          #
-# Revised:     2017-Nov-28                                                    #
-# Released:                                                                   #
+# Version:     2.4.0                                                          #
+# Revised:     2018-Jan-18                                                    #
+# Released:    2018-Jan-30                                                    #
 #                                                                             #
 # License:     MIT License                                                    #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
 
-# # Import Modules # #
-import arcpy
 import os
 from os import path, makedirs
-import BuildNetworkTopology
+import arcpy
+from arcpy.da import *
+import FindSubnetworks
+import GenerateNetworkAttributes
 import FindBraidedNetwork
 import ValleyPlanform
 import Sinuosity
 import DividePolygonBySegment
 import TransferAttributesToLine
-import StreamOrder
+import GenerateStreamOrder
 import Centerline
 import CombineAttributes
 import GenerateStreamBranches
 import Segmentation
-import FindNetworkFeatures
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.3.8"
+GNAT_version = "2.4.0"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
 strCatagoryGeomorphicAnalysis = "Analyze Network Attributes\\Step 3 - Geomorphic Attributes"
 strCatagoryProjectManagement = "Riverscapes Project Management"
 strCatagoryUtilities = "Utilities"
+
 
 class Toolbox(object):
     def __init__(self):
@@ -55,10 +56,11 @@ class Toolbox(object):
         self.description = "Tools for generating a stream network and for generating geomorphic attributes."
 
         # List of tool classes associated with this toolbox
-        self.tools = [StreamOrderTool,
+        self.tools = [FindSubnetworksTool,
+                      GenerateNetworkAttributesTool,
+                      GenerateStreamOrderTool,
                       StreamBranchesTool,
                       FindBraidedNetworkTool,
-                      BuildNetworkTopologyTool,
                       PlanformTool,
                       SinuosityTool,
                       DividePolygonBySegmentsTool,
@@ -66,7 +68,6 @@ class Toolbox(object):
                       FluvialCorridorCenterlineTool,
                       CombineAttributesTool,
                       SegmentationTool,
-                      FindNetworkFeaturesTool,
                       NewGNATProject,
                       LoadNetworkToProject,
                       CommitRealization,
@@ -391,24 +392,102 @@ class CommitRealization(object):
 
 
 # Stream Network Prep Tools
-class FindBraidedNetworkTool(object):
+class FindSubnetworksTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Find Braids In Stream Network"
-        self.description = "Find braided segments in a stream network."
-        self.canRunInBackground = True
-        self.category = strCatagoryUtilities
+        self.label = "Find Subnetworks"
+        self.description = "Finds disconnected subnetworks within a stream network."
+        self.canRunInBackground = False
+        self.category = strCatagoryStreamNetworkPreparation
 
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Input Stream Network",
+            displayName="Input stream network shapefle",
             name="InputStreamNetwork",
-            datatype="GPFeatureLayer",
+            datatype="DEShapefile",
             parameterType="Required",
             direction="Input")
+        param0.filter.list = ["Polyline"]
 
-        return [param0]
+        param1 = arcpy.Parameter(
+            displayName="Output shapefile",
+            name="OutputStreamNetwork",
+            datatype="DEShapefile",
+            parameterType="Required",
+            direction="Output")
+
+        param2 = arcpy.Parameter(
+            displayName="Find topology errors",
+            name="BoolError",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input")
+
+
+        return [param0, param1, param2]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, p):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(FindSubnetworks)
+
+        testFType(p[0].valueAsText, 336)  # check to see if canals have been removed from input feature class
+        FindSubnetworks.main(p[0].valueAsText,
+                                p[1].valueAsText,
+                                p[2].valueAsText)
+
+        return
+
+
+class GenerateNetworkAttributesTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Generate Network Attributes"
+        self.description = "Generates a series of network attributes, including edge type, node type, river kilometers," \
+                           "and stream order."
+        self.canRunInBackground = False
+        self.category = strCatagoryStreamNetworkPreparation
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input stream network polyline feature class",
+            name="InputStreamNetwork",
+            datatype="DEShapefile",
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Output polyline feature class",
+            name="OutputStreamNetwork",
+            datatype="DEShapefile",
+            parameterType="Required",
+            direction="Output")
+
+        param2 = arcpy.Parameter(
+            displayName="Calculate river kilometers",
+            name="BoolRiverKM",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input")
+
+        return [param0, param1, param2]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -423,109 +502,53 @@ class FindBraidedNetworkTool(object):
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter. This method is called after internal validation."""
-        testProjected(parameters[0])
         return
 
-    def execute(self, parameters, messages):
+    def execute(self, p, messages):
         """The source code of the tool."""
-        reload(FindBraidedNetwork)
-        FindBraidedNetwork.main(parameters[0].valueAsText)
+        reload(GenerateNetworkAttributes)
 
+        GenerateNetworkAttributes.main(p[0].valueAsText,
+                                        p[1].valueAsText,
+                                        p[2].valueAsText)
         return
 
 
-class BuildNetworkTopologyTool(object):
+class GenerateStreamOrderTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Build Network Topology Table"
-        self.description = ""
+        self.label = "Generate Stream Order"
+        self.description = "Generate Strahler stream order for the stream network."
         self.canRunInBackground = True
         self.category = strCatagoryStreamNetworkPreparation
 
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Input Stream Network",
+            displayName="Input stream network shapefile",
             name="InputStreamNetwork",
-            datatype="GPFeatureLayer", 
+            datatype="DEShapefile",
             parameterType="Required",
             direction="Input")
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Downstream Reach Object ID",
-            name="DownstreamReach",
-            datatype="GPLong", #Integer
+            displayName="Output network shapefile with stream order",
+            name="OutputStreamNetwork",
+            datatype="DEShapefile",
             parameterType="Required",
-            direction="Input")
-
-        return [param0,param1]
-
-    def isLicensed(self):
-        """Set whether tool is licensed to execute."""
-        return True
-
-    def updateParameters(self, parameters):
-        """Modify the values and properties of parameters before internal
-        validation is performed. This method is called whenever a parameter
-        has been changed."""
-        return
-
-    def updateMessages(self, parameters):
-        """Modify the messages created by internal validation for each tool
-        parameter. This method is called after internal validation."""
-        return
-
-    def execute(self, parameters, messages):
-        """The source code of the tool."""
-        reload(BuildNetworkTopology)
-        BuildNetworkTopology.main(parameters[0].valueAsText,parameters[1].valueAsText)
-        return
-
-
-class TransferLineAttributesTool(object):
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "Transfer Line Attributes"
-        self.description = "Transfer polyline attributes from one network polyine feature class to another with similar geometry."
-        self.canRunInBackground = True
-        self.category = strCatagoryUtilities
-
-    def getParameterInfo(self):
-        """Define parameter definitions"""
-        param0 = arcpy.Parameter(
-            displayName="""Input "From" polyline feature class""",
-            name="InputFCFromLine",
-            datatype="GPFeatureLayer", 
-            parameterType="Required",
-            direction="Input")
-        param0.filter.list = ["Polyline"]
-
-        param1 = arcpy.Parameter(
-            displayName="""Input "To" polyline feature class""",
-            name="InputFCToLine",
-            datatype="GPFeatureLayer", 
-            parameterType="Required",
-            direction="Input")
+            direction="Output")
         param1.filter.list = ["Polyline"]
 
         param2 = arcpy.Parameter(
-            displayName="Output polyline feature class",
-            name="OutputFCLineNetwork",
-            datatype="DEFeatureClass",
+            displayName="Temporary workspace",
+            name="TempWorkspace",
+            datatype="DEWorkspace",
             parameterType="Required",
-            direction="Output")
-        param2.filter.list = ["Polyline"]
-
-        param3 = arcpy.Parameter(
-            displayName="Scratch workspace",
-            name="scratchWorkspace",
-            datatype="DEWorkspace", 
-            parameterType="Optional",
             direction="Input")
-        param3.filter.list = ["Local Database"]
-        
-        return [param0,param1,param2,param3]
+        param2.filter.list = ["Workspace"]
+
+        return [param0, param1, param2]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -535,102 +558,24 @@ class TransferLineAttributesTool(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
-
         return
 
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
+
         testProjected(parameters[0])
-        testProjected(parameters[1])
-        testWorkspacePath(parameters[3])
+        testWorkspacePath(parameters[2])
         return
 
     def execute(self, p, messages):
         """The source code of the tool."""
-        reload(TransferAttributesToLine)
-        setEnvironmentSettings()
 
-        TransferAttributesToLine.main(p[0].valueAsText,
-                                      p[1].valueAsText,
-                                      p[2].valueAsText,
-                                      getTempWorkspace(p[3].valueAsText))
+        reload(GenerateStreamOrder)
 
-        return
-
-
-class CombineAttributesTool(object):
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "Combine Attributes"
-        self.description = "Merge network attributes in different datasets into a single feature class."
-        self.canRunInBackground = True
-        self.category = strCatagoryUtilities
-
-    def getParameterInfo(self):
-        """Define parameter definitions"""
-        param0 = arcpy.Parameter(
-            displayName="Input polyline feature classes",
-            name="InputFCList",
-            datatype="GPFeatureLayer", 
-            parameterType="Required",
-            direction="Input",
-            multiValue=True)
-        param0.filter.list = ["Polyline"]
-        
-        param1 = arcpy.Parameter(
-            displayName="Bounding or buffer polygon feature class",
-            name="InputFCBounding Polygon",
-            datatype="GPFeatureLayer", 
-            parameterType="Required",
-            direction="Input")
-        param1.filter.list = ["Polygon"] 
-        
-        param2 = arcpy.Parameter(
-            displayName="Is polygon segmented?",
-            name="InputBoolIsSegmented",
-            datatype="GPBoolean", 
-            parameterType="Optional",
-            direction="Input")
-        param2.value = False
-
-        param3 = arcpy.Parameter(
-            displayName="Output polyline feature class",
-            name="OutputFCCombinedNetwork",
-            datatype="DEFeatureClass",
-            parameterType="Required",
-            direction="Output")
-        param3.filter.list = ["Polyline"]
-        
-        return [param0,param1,param2,param3]
-
-    def isLicensed(self):
-        """Set whether tool is licensed to execute."""
-        return True
-
-    def updateParameters(self, parameters):
-        """Modify the values and properties of parameters before internal
-        validation is performed.  This method is called whenever a parameter
-        has been changed."""
-
-        return
-
-    def updateMessages(self, parameters):
-        """Modify the messages created by internal validation for each tool
-        parameter.  This method is called after internal validation."""
-        return
-
-    def execute(self, p, messages):
-        """The source code of the tool."""
-        reload(CombineAttributes)
-        setEnvironmentSettings()
-
-        CombineAttributes.main(p[0].values,
-                                p[1].valueAsText,
-                                p[2].valueAsText,
-                                p[3].valueAsText)
-
-        return
+        GenerateStreamOrder.main(p[0].valueAsText,
+                         p[1].valueAsText,
+                         p[2].valueAsText)
 
 
 # Stream Segmentation
@@ -764,7 +709,6 @@ class SegmentationTool(object):
 
         # todo Check if analysis name already exists
         testProjected(parameters[0])
-
         return
 
     def execute(self, p, messages):
@@ -825,7 +769,6 @@ class SegmentationTool(object):
 
 
 # Geomorphic Attributes Tools
-
 class CalculateGradientTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
@@ -1567,54 +1510,92 @@ class SinuosityTool(object):
 
 
 # Utilities
-class StreamOrderTool(object):
+class FindBraidedNetworkTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Calculate Stream Order"
-        self.description = "Generate Stream Order for the Stream Network."
+        self.label = "Find Braids In Stream Network"
+        self.description = "Find braided segments in a stream network."
         self.canRunInBackground = True
         self.category = strCatagoryUtilities
 
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Input stream network",
+            displayName="Input Stream Network",
             name="InputStreamNetwork",
             datatype="GPFeatureLayer",
             parameterType="Required",
             direction="Input")
 
-        param1 = arcpy.Parameter(
-            displayName="Downstream reach ID",
-            name="DownstreamReach",
-            datatype="GPLong", #Integer
+        return [param0]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed. This method is called whenever a parameter
+        has been changed."""
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter. This method is called after internal validation."""
+        testProjected(parameters[0])
+        return
+
+    def execute(self, parameters, messages):
+        """The source code of the tool."""
+        reload(FindBraidedNetwork)
+        FindBraidedNetwork.main(parameters[0].valueAsText)
+
+        return
+
+
+class TransferLineAttributesTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Transfer Line Attributes"
+        self.description = "Transfer polyline attributes from one network polyine feature class to another with similar geometry."
+        self.canRunInBackground = True
+        self.category = strCatagoryUtilities
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="""Input "From" polyline feature class""",
+            name="InputFCFromLine",
+            datatype="GPFeatureLayer",
             parameterType="Required",
             direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="""Input "To" polyline feature class""",
+            name="InputFCToLine",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        param1.filter.list = ["Polyline"]
 
         param2 = arcpy.Parameter(
-            displayName="Output network with stream order",
-            name="outputStreamOrderFC",
+            displayName="Output polyline feature class",
+            name="OutputFCLineNetwork",
             datatype="DEFeatureClass",
             parameterType="Required",
             direction="Output")
         param2.filter.list = ["Polyline"]
 
         param3 = arcpy.Parameter(
-            displayName="Output confluence node points",
-            name="outputNodePointsFC",
-            datatype="DEFeatureClass",
-            parameterType="Required",
-            direction="Output")
-        param3.filter.list = ["Point"]
-
-        param4 = arcpy.Parameter(
             displayName="Scratch workspace",
-            name="InputTempWorkspace",
-            datatype="DEWorkspace", 
+            name="scratchWorkspace",
+            datatype="DEWorkspace",
             parameterType="Optional",
             direction="Input")
+        param3.filter.list = ["Local Database"]
 
-        return [param0,param1,param2,param3,param4]# + listControlParams
+        return [param0, param1, param2, param3]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -1624,25 +1605,101 @@ class StreamOrderTool(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
+
         return
 
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
         parameter.  This method is called after internal validation."""
-
         testProjected(parameters[0])
-        testWorkspacePath(parameters[4])
+        testProjected(parameters[1])
+        testWorkspacePath(parameters[3])
         return
 
     def execute(self, p, messages):
         """The source code of the tool."""
+        reload(TransferAttributesToLine)
+        setEnvironmentSettings()
 
-        reload(StreamOrder)
-        StreamOrder.main(p[0].valueAsText,
-                         p[1].valueAsText,
-                         p[2].valueAsText,
-                         p[3].valueAsText,
-                         p[4].valueAsText)
+        TransferAttributesToLine.main(p[0].valueAsText,
+                                      p[1].valueAsText,
+                                      p[2].valueAsText,
+                                      getTempWorkspace(p[3].valueAsText))
+
+        return
+
+
+class CombineAttributesTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Combine Attributes"
+        self.description = "Merge network attributes in different datasets into a single feature class."
+        self.canRunInBackground = True
+        self.category = strCatagoryUtilities
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input polyline feature classes",
+            name="InputFCList",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input",
+            multiValue=True)
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Bounding or buffer polygon feature class",
+            name="InputFCBounding Polygon",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        param1.filter.list = ["Polygon"]
+
+        param2 = arcpy.Parameter(
+            displayName="Is polygon segmented?",
+            name="InputBoolIsSegmented",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input")
+        param2.value = False
+
+        param3 = arcpy.Parameter(
+            displayName="Output polyline feature class",
+            name="OutputFCCombinedNetwork",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Output")
+        param3.filter.list = ["Polyline"]
+
+        return [param0, param1, param2, param3]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(CombineAttributes)
+        setEnvironmentSettings()
+
+        CombineAttributes.main(p[0].values,
+                               p[1].valueAsText,
+                               p[2].valueAsText,
+                               p[3].valueAsText)
+
         return
 
 
@@ -1912,66 +1969,6 @@ class FluvialCorridorCenterlineTool(object):
         return
 
 
-class FindNetworkFeaturesTool(object):
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "Find Network Features"
-        self.description = "Find topological features and errors in a stream network feature class."
-        self.canRunInBackground = False
-        self.category = strCatagoryStreamNetworkPreparation
-
-    def getParameterInfo(self):
-        """Define parameter definitions"""
-        param0 = arcpy.Parameter(
-            displayName="Processed Input Stream Network",
-            name="InputStreamNetwork",
-            datatype="GPFeatureLayer",
-            parameterType="Required",
-            direction="Input")
-        param0.filter.list = ["Polyline"]
-
-        param1 = arcpy.Parameter(
-            displayName="Stream Network Table",
-            name="StreamNetworkTable",
-            datatype="GPTableView",
-            parameterType="Required",
-            direction="Input")
-
-        param2 = arcpy.Parameter(
-            displayName="Downstream Reach Object ID",
-            name="DownstreamReach",
-            datatype="GPLong",  # Integer
-            parameterType="Required",
-            direction="Input")
-
-        return [param0, param1, param2]
-
-    def isLicensed(self):
-        """Set whether tool is licensed to execute."""
-        return True
-
-    def updateParameters(self, parameters):
-        """Modify the values and properties of parameters before internal
-        validation is performed.  This method is called whenever a parameter
-        has been changed."""
-
-        return
-
-    def updateMessages(self, parameters):
-        """Modify the messages created by internal validation for each tool
-        parameter.  This method is called after internal validation."""
-        return
-
-    def execute(self, p, messages):
-        """The source code of the tool."""
-        reload(FindNetworkFeatures)
-        FindNetworkFeatures.main(p[0].valueAsText,
-                        p[1].valueAsText,
-                        p[2].valueAsText)
-
-        return
-
-
 # Other Functions #
 def setEnvironmentSettings():
     arcpy.env.OutputMFlag = "Disabled"
@@ -2053,6 +2050,36 @@ def testWorkspacePath(parameterWorkspace):
                 if " " in strPath:
                     parameterWorkspace.setWarningMessage(parameterWorkspace.name + " contains a space in the file path name and could cause Geoprocessing issues. Please use a different workspace that does not contain a space in the path name.")
     return
+
+
+def testFType(parameter, ftype):
+    """
+    Checks if the input stream network feature class includes features where FType == 336 (i.e. canals)
+    :param parameter: input stream network feature class
+    :param ftype: the FType code to check
+    """
+    field_list = arcpy.ListFields(parameter)
+    for f in field_list:
+        if f.name == "FType":
+            value_list = []
+            with arcpy.da.SearchCursor(parameter, ["FType"]) as cursor:
+                for row in cursor:
+                    value = row[0]
+                    value_list.append(value)
+            unique_values = set(val for val in value_list)
+            if ftype in unique_values:
+               arcpy.AddError("Stream features where FType = 336 must be removed from the input shapefile.")
+    return
+
+
+# def testModule(pkgs):
+#     import pip
+#     for package in pkgs:
+#         try:
+#             import package
+#         except ImportError, e:
+#             pip.main(['install', package])
+#     return
 
 # Common params
 
