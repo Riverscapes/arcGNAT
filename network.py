@@ -12,8 +12,6 @@ import ogr
 import osr
 import networkx as nx
 
-from memory_profiler import profile
-
 sys.setrecursionlimit(10000)
 
 # global variables
@@ -35,7 +33,6 @@ class Network:
         """
         Main class for processing stream networks in GNAT.
         """
-        self.msgcallback = msgcallback
         self.id_field = fid
         self.features = {}
         self.cols = []
@@ -621,6 +618,7 @@ class Network:
 
     def set_node_types(self, G):
         """Calculates node types for a graph which already has edge types"""
+
         node_dict = {}
         type_list = []
         edge_dict = nx.get_edge_attributes(G, edgetype)
@@ -680,6 +678,7 @@ class Network:
 
     def calculate_river_km(self, G):
         """Calculates distance of each edge from outflow node, in kilometers."""
+
         outflow_G = self.select_by_attribute(G, edgetype, 'outflow')
         outflow_node = next(v for u, v, key, data in outflow_G.edges_iter(keys=True, data=True))
         self.add_attribute(G, riverkm, -9999)

@@ -20,15 +20,34 @@ If you do not already have GDAL installed, we recommend installing the binaries 
 
 An excellent walkthrough for this process is available [here](https://sandbox.idre.ucla.edu/sandbox/tutorials/installing-gdal-for-windows).
 
+*Please note*: in 'Step 4: Testing the GDAL install' of this walkthrough, just type in `gdalinfo --version`.
+
+## Networkx
+
+The [NetworkX](https://networkx.github.io/documentation/networkx-1.11/) python package (specifically version 1.11) is required by several GNAT tools, but it must
+be installed separately. We highly recommend using [pip](https://pypi.python.org/pypi/pip) to install NetworkX on your system. 
+**pip** is the recommended package management system for installing all third-party Python packages. Fortunately, a **pip** 
+executable file is included in the Python installation for ArcGIS, versions 10.4 and higher.
+
+1. Within the directory where Python is installed on you computer, find the filepath to the `Scripts` subdirectory.
+If you have version ArcGIS 10.4 (or higher) installed, it will most likely be something like `C:\Python27\ArcGIS10.4\Scripts`
+2. Open your Windows command prompt and type the following (make sure the file path matches your Python install):
+`C:\Python27\ArcGIS10.4\Scripts\pip.exe install networkx==1.11`'
+3. In ArcMap, open the Python interpreter, and type `import networkx`.  If there are no error messages returned, then the
+NetworkX 1.11 package was successfully installed.
 
 # Downloads
 
-## Version 2.3.7
+**[Version 2.4](Downloads/arcGNAT_2.4.0.zip)** 2018-JANUARY-30
+```markdown
+* Major refactoring of network preparation tools. New requirements for running GNAT version 2.4, including ArcGIS 10.4, 
+GDAL, and NetworkX.
+```
+
 **[Version 2.3.7](Downloads/arcGNAT_2.3.7.zip)** 2017-NOVEMBER-21
 ```markdown
 * Cleaned up comments and attribute fields output for Sinuosity.
 ```
-
 
 **[Version 2.3.6](Downloads/arcGNAT_2.3.6.zip)** 2017-NOVEMBER-20
 ```markdown

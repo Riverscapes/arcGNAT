@@ -729,7 +729,6 @@ class SegmentationTool(object):
 
         # todo Check if analysis name already exists
         testProjected(parameters[0])
-
         return
 
     def execute(self, p, messages):
@@ -2112,6 +2111,16 @@ def testFType(parameter, ftype):
             if ftype in unique_values:
                arcpy.AddError("Stream features where FType = 336 must be removed from the input shapefile.")
     return
+
+
+# def testModule(pkgs):
+#     import pip
+#     for package in pkgs:
+#         try:
+#             import package
+#         except ImportError, e:
+#             pip.main(['install', package])
+#     return
 
 # Common params
 
