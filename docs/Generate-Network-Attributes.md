@@ -1,5 +1,6 @@
 ---
 title: Generate Network Attributes
+---
 
 
 The **Generate Network Attributes** tool accepts an input stream network shapefile, converts it into a NetworkX graph,

@@ -1,5 +1,6 @@
 ---
 title: Find Subnetworks
+---
 
 
 The **Find Subnetworks** tool finds all disconnected networks within a polyline shapefile, and labels all stream 
@@ -13,12 +14,12 @@ input network, including:
 
 **Illustrated examples of topographic error**
 
-| Feature Type            | Example                                                                      |
-| ----------------------- | -----------------------------------------------------------------------------|
-| Duplicate reaches       | ![error_duplicate]({{site.baseurl}}/images/error_dupe.png)                   |
-| Confluence errors       | ![error_confluence]({{site.baseurl}}/images/error_conf.png)                  |
-| Multiple outflows       | ![error_outflow]({{site.baseurl}}/images/error_out.png)                      |
-__________________________________________________________________________________________________________
+| Error   Type      | Example                                                     |
+| ------------------| :-----------------------------------------------------------|
+| Duplicate reaches | ![error_duplicate]({{site.baseurl}}/images/error_dupe.png)  |
+| Confluence errors | ![error_confluence]({{site.baseurl}}/images/error_conf.png) |
+| Multiple outflows | ![error_outflow]({{site.baseurl}}/images/error_out.png)     |
+
 
 ## Usage
 
