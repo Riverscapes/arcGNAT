@@ -10,9 +10,9 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.4.0                                                          #
-# Revised:     2018-Jan-18                                                    #
-# Released:    2018-Jan-30                                                    #
+# Version:     2.4.1                                                          #
+# Revised:     2018-Jan-31                                                    #
+# Released:    2018-Jan-31                                                    #
 #                                                                             #
 # License:     MIT License                                                    #
 #                                                                             #
@@ -38,7 +38,7 @@ import Segmentation
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.4.0"
+GNAT_version = "2.4.1"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -446,7 +446,7 @@ class FindSubnetworksTool(object):
         """The source code of the tool."""
         reload(FindSubnetworks)
 
-        testFType(p[0].valueAsText, 336)  # check to see if canals have been removed from input feature class
+        # testFType(p[0].valueAsText, 336)  # check to see if canals have been removed from input feature class
         FindSubnetworks.main(p[0].valueAsText,
                                 p[1].valueAsText,
                                 p[2].valueAsText)
@@ -2071,15 +2071,6 @@ def testFType(parameter, ftype):
                arcpy.AddError("Stream features where FType = 336 must be removed from the input shapefile.")
     return
 
-
-# def testModule(pkgs):
-#     import pip
-#     for package in pkgs:
-#         try:
-#             import package
-#         except ImportError, e:
-#             pip.main(['install', package])
-#     return
 
 # Common params
 

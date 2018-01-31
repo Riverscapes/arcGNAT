@@ -38,7 +38,12 @@ NetworkX 1.11 package was successfully installed.
 
 # Downloads
 
-## Version 2.4
+## Version 2.4.1
+**[Version_2.4.1](Downloads/arcGNAT_2.4.1.zip)** 2018-JANUARY-31
+```markdown
+* Turned off check for `FTYPE = 336` in input stream network shapefile.
+```
+
 **[Version 2.4](Downloads/arcGNAT_2.4.0.zip)** 2018-JANUARY-30
 ```markdown
 * Major refactoring of network preparation tools. New requirements for running GNAT version 2.4, including ArcGIS 10.4, 
