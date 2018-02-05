@@ -21,10 +21,38 @@ import sys
 import arcpy
 import gis_tools
 
-# # Main Function # # 
+
+def get_fields(inFC):
+    field_list = []
+    fields = arcpy.ListFields(inFC.value)
+    for field in fields:
+        field_list.append(field.name)
+    return field_list
+
+
+def test_field(inFC, field_name):
+    field_names = get_fields(inFC)
+    if field_name in field_names:
+        arcpy.AddMessage("...{0} was found in {1}".format(field_name, inFC))
+    else:
+        arcpy.AddError("{0} not found in {1}. {0} is a required attribute field.".format(field_name, inFC))
+    return
+
+
+def get_trib_confluences(fcInputPoints):
+    """
+    Find and selects network nodes that are tributary confluences and separates these points out
+    into a new point shapefile.
+    :param fcInputPoints: point shapefile (nodes from stream network)
+    :return: point shapefile representing only tributary confluences
+    """
+
+    return
+
+
 def main(
     fcLineNetwork,
-    fcSplitPoints,
+    fcNetworkNodes,
     fieldStreamName,
     fieldStreamOrder,
     fcOutputStreamNetwork,
@@ -36,6 +64,10 @@ def main(
     # Preprocessing
     gis_tools.resetData(fcOutputStreamNetwork)
     listfcMerge = []
+
+    # Check for required attribute fields
+    test_field(fcLineNetwork, "GNIS_Name")
+    test_field(fcNetworkNodes, "_strmordr_")
 
     # Make Feature Layer for 
     lyrStreamSelection = gis_tools.newGISDataset("LAYER","GNAT_BRANCHES_SelectByName")
@@ -58,9 +90,9 @@ def main(
             arcpy.Dissolve_management(lyrStreamSelection,fcDissolveByStreamOrder,fieldStreamOrder)
 
     # Split Stream Order Junctions
-        if arcpy.Exists(fcSplitPoints):
+        if arcpy.Exists(fcNetworkNodes):
             fcDissolveByStreamOrderSplit = gis_tools.newGISDataset(tempWorkspace,"GNAT_BRANCHES_DissolveByStreamOrderSplit")
-            arcpy.SplitLineAtPoint_management(fcDissolveByStreamOrder,fcSplitPoints,fcDissolveByStreamOrderSplit,"1 METER")
+            arcpy.SplitLineAtPoint_management(fcDissolveByStreamOrder,fcNetworkNodes,fcDissolveByStreamOrderSplit,"1 METER")
             listfcMerge.append(fcDissolveByStreamOrderSplit)
         else:
             listfcMerge.append(fcDissolveByStreamOrder)

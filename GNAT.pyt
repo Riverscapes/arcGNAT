@@ -10,7 +10,7 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.4.1                                                          #
+# Version:     2.4.2                                                          #
 # Revised:     2018-Jan-31                                                    #
 # Released:    2018-Jan-31                                                    #
 #                                                                             #
@@ -38,7 +38,7 @@ import Segmentation
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.4.1"
+GNAT_version = "2.4.2"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -1722,8 +1722,8 @@ class StreamBranchesTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Input Junction Points",
-            name="InputJunctionPoints",
+            displayName="Input Stream Network Nodes",
+            name="InputNetworknodes",
             datatype="GPFeatureLayer",
             parameterType="Optional",
             direction="Input")
@@ -1776,9 +1776,19 @@ class StreamBranchesTool(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
-
-        populateFields(parameters[0],parameters[2],"GNIS_Name")
-        populateFields(parameters[0],parameters[3],"StreamOrder")
+        if parameters[0].altered:
+            fields = arcpy.ListFields(parameters[0].value)
+            field_names = []
+            for field in fields:
+                field_names.append(field.name)
+                if field.name == "GNIS_Name":
+                    parameters[2].value = field.name
+                if field.name == "_strmordr_":
+                    parameters[3].value = field.name
+            parameters[2].filter.type = "ValueList"
+            parameters[2].filter.list = field_names
+            parameters[3].filter.type = "ValueList"
+            parameters[3].filter.list = field_names
 
         return
 
@@ -1791,7 +1801,6 @@ class StreamBranchesTool(object):
         testLayerSelection(parameters[0])
         testLayerSelection(parameters[1])
         testWorkspacePath(parameters[6])
-
         return
 
     def execute(self, p, messages):
@@ -2007,13 +2016,12 @@ def populateFields(parameterSource, parameterField, strDefaultFieldName):
     if parameterSource.value:
         if arcpy.Exists(parameterSource.valueAsText):
             # Get fields
-
             for field in arcpy.Describe(parameterSource.valueAsText).fields:
             # list_fields = []
             # for f in fields:
             #     list_fields.append(f.name)
                 parameterField.filter.list.append(field.name)
-            if strDefaultFieldName in parameterField.filter.list:#list_fields:
+            if strDefaultFieldName in parameterField.filter.list:
                 parameterField.value = strDefaultFieldName
         else:
             parameterField.value = ""
