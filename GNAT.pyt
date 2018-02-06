@@ -10,9 +10,9 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.4.2                                                          #
+# Version:     2.4.3                                                          #
 # Revised:     2018-Jan-31                                                    #
-# Released:    2018-Jan-31                                                    #
+# Released:    2018-Feb-6                                                    #
 #                                                                             #
 # License:     MIT License                                                    #
 #                                                                             #
@@ -38,7 +38,7 @@ import Segmentation
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.4.2"
+GNAT_version = "2.4.3"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -517,8 +517,8 @@ class GenerateNetworkAttributesTool(object):
 class GenerateStreamOrderTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Generate Stream Order"
-        self.description = "Generate Strahler stream order for the stream network."
+        self.label = "Generate Strahler Stream Order"
+        self.description = "Generate Strahler stream order for the stream network"
         self.canRunInBackground = True
         self.category = strCatagoryStreamNetworkPreparation
 
@@ -576,6 +576,119 @@ class GenerateStreamOrderTool(object):
         GenerateStreamOrder.main(p[0].valueAsText,
                          p[1].valueAsText,
                          p[2].valueAsText)
+
+
+class StreamBranchesTool(object):
+    def __init__(self):
+        """Define the tool (tool name is the name of the class)."""
+        self.label = "Generate Stream Branches"
+        self.description = "Generate stream branch IDs for the stream network."
+        self.canRunInBackground = True
+        self.category = strCatagoryStreamNetworkPreparation
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+        param0 = arcpy.Parameter(
+            displayName="Input Stream Network (with Stream Order)",
+            name="InputStreamNetwork",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input")
+        param0.filter.list = ["Polyline"]
+
+        param1 = arcpy.Parameter(
+            displayName="Input Stream Network Nodes",
+            name="InputNetworknodes",
+            datatype="GPFeatureLayer",
+            parameterType="Optional",
+            direction="Input")
+        param1.filter.list = ["Point", "Multipoint"]
+
+        param2 = arcpy.Parameter(
+            displayName="Primary Stream Name Field (i.e. GNIS Name)",
+            name="fieldStreamName",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+
+        param3 = arcpy.Parameter(
+            displayName="Stream Order Field",
+            name="fieldStreamOrder",
+            datatype="GPString",
+            parameterType="Optional",
+            direction="Input")
+
+        param4 = arcpy.Parameter(
+            displayName="Output Line Network with Branch ID",
+            name="outputStreamOrderFC",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Output")
+        param4.filter.list = ["Polyline"]
+
+        param5 = arcpy.Parameter(
+            displayName="Dissolve Output Network by BranchID?",
+            name="boolDissolve",
+            datatype="GPBoolean",
+            parameterType="Optional",
+            direction="Input")
+
+        param6 = arcpy.Parameter(
+            displayName="Scratch Workspace",
+            name="InputTempWorkspace",
+            datatype="DEWorkspace",
+            parameterType="Optional",
+            direction="Input")
+        param6.filter.list = ["Local Database"]
+
+        return [param0, param1, param2, param3, param4, param5, param6]
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+        if parameters[0].altered:
+            fields = arcpy.ListFields(parameters[0].value)
+            field_names = []
+            for field in fields:
+                field_names.append(field.name)
+                if field.name == "GNIS_Name":
+                    parameters[2].value = field.name
+                if field.name == "_strmordr_":
+                    parameters[3].value = field.name
+            parameters[2].filter.type = "ValueList"
+            parameters[2].filter.list = field_names
+            parameters[3].filter.type = "ValueList"
+            parameters[3].filter.list = field_names
+
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+
+        testProjected(parameters[0])
+        testProjected(parameters[1])
+        testLayerSelection(parameters[0])
+        testLayerSelection(parameters[1])
+        testWorkspacePath(parameters[6])
+        return
+
+    def execute(self, p, messages):
+        """The source code of the tool."""
+        reload(GenerateStreamBranches)
+        GenerateStreamBranches.main(p[0].valueAsText,
+                                    p[1].valueAsText,
+                                    p[2].valueAsText,
+                                    p[3].valueAsText,
+                                    p[4].valueAsText,
+                                    p[5].valueAsText,
+                                    getTempWorkspace(p[6].valueAsText))
+        return
 
 
 # Stream Segmentation
@@ -1700,119 +1813,6 @@ class CombineAttributesTool(object):
                                p[2].valueAsText,
                                p[3].valueAsText)
 
-        return
-
-
-class StreamBranchesTool(object):
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "Generate Stream Branches"
-        self.description = "Generate Stream Branches for the Stream Network."
-        self.canRunInBackground = True
-        self.category = strCatagoryUtilities
-
-    def getParameterInfo(self):
-        """Define parameter definitions"""
-        param0 = arcpy.Parameter(
-            displayName="Input Stream Network (with Stream Order)",
-            name="InputStreamNetwork",
-            datatype="GPFeatureLayer",
-            parameterType="Required",
-            direction="Input")
-        param0.filter.list = ["Polyline"]
-
-        param1 = arcpy.Parameter(
-            displayName="Input Stream Network Nodes",
-            name="InputNetworknodes",
-            datatype="GPFeatureLayer",
-            parameterType="Optional",
-            direction="Input")
-        param1.filter.list = ["Point","Multipoint"]
-
-        param2 = arcpy.Parameter(
-            displayName="Primary Stream Name Field (i.e. GNIS Name)",
-            name="fieldStreamName",
-            datatype="GPString",
-            parameterType="Required",
-            direction="Input")
-
-        param3 = arcpy.Parameter(
-            displayName="Stream Order Field",
-            name="fieldStreamOrder",
-            datatype="GPString",
-            parameterType="Optional",
-            direction="Input")
-
-        param4 = arcpy.Parameter(
-            displayName="Output Line Network with Branch ID",
-            name="outputStreamOrderFC",
-            datatype="DEFeatureClass",
-            parameterType="Required",
-            direction="Output")
-        param4.filter.list = ["Polyline"]
-
-        param5 = arcpy.Parameter(
-            displayName="Dissolve Output Network by BranchID?",
-            name="boolDissolve",
-            datatype="GPBoolean",
-            parameterType="Optional",
-            direction="Input")
-
-        param6 = arcpy.Parameter(
-            displayName="Scratch Workspace",
-            name="InputTempWorkspace",
-            datatype="DEWorkspace", 
-            parameterType="Optional",
-            direction="Input")
-        param6.filter.list = ["Local Database"]
-
-        return [param0,param1,param2,param3,param4,param5,param6]
-
-    def isLicensed(self):
-        """Set whether tool is licensed to execute."""
-        return True
-
-    def updateParameters(self, parameters):
-        """Modify the values and properties of parameters before internal
-        validation is performed.  This method is called whenever a parameter
-        has been changed."""
-        if parameters[0].altered:
-            fields = arcpy.ListFields(parameters[0].value)
-            field_names = []
-            for field in fields:
-                field_names.append(field.name)
-                if field.name == "GNIS_Name":
-                    parameters[2].value = field.name
-                if field.name == "_strmordr_":
-                    parameters[3].value = field.name
-            parameters[2].filter.type = "ValueList"
-            parameters[2].filter.list = field_names
-            parameters[3].filter.type = "ValueList"
-            parameters[3].filter.list = field_names
-
-        return
-
-    def updateMessages(self, parameters):
-        """Modify the messages created by internal validation for each tool
-        parameter.  This method is called after internal validation."""
-
-        testProjected(parameters[0])
-        testProjected(parameters[1])
-        testLayerSelection(parameters[0])
-        testLayerSelection(parameters[1])
-        testWorkspacePath(parameters[6])
-        return
-
-    def execute(self, p, messages):
-        """The source code of the tool."""
-        reload(GenerateStreamBranches)
-        GenerateStreamBranches.main(p[0].valueAsText,
-                                    p[1].valueAsText,
-                                    p[2].valueAsText,
-                                    p[3].valueAsText,
-                                    p[4].valueAsText,
-                                    p[5].valueAsText,
-                                    getTempWorkspace(p[6].valueAsText))
         return
 
 
