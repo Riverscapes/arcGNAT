@@ -8,10 +8,10 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Sept-15                                                   #
-# Version:     2.0 beta                                                       #
-# Modified:    2017-Feb-22                                                    #
+# Version:     2.1                                                            #
+# Modified:    2018-Feb-6                                                     #
 #                                                                             #
-# Copyright:   (c) Kelly Whitehead, Jesse Langdon 2017                        #
+# Copyright:   (c) Kelly Whitehead, Jesse Langdon                             #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
@@ -22,18 +22,32 @@ import arcpy
 import gis_tools
 import def__SLEM as dS
 import ClearInMemory
-import StreamOrder
-import GenerateStreamBranches
 from decimal import *
 
 listStrSegMethod = ["Remaining segment at inflow (top) of stream branch",
                     "Remaining segment at outflow (bottom) of stream branch",
                     "Divide remainder between all reaches per stream branch"]
 
-# Turn off Z and M geometry
+# Set environmental variables
 arcpy.env.outputMFlag = "Disabled"
 arcpy.env.outputZFlag = "Disabled"
+arcpy.env.overwriteOutput = True
 
+
+def getNetworkNodes(inStreamNetwork, scratchWorkspace="in_memory"):
+    # Preprocess network
+    fcNetworkDissolved = gis_tools.newGISDataset(scratchWorkspace, "GNAT_SO_NetworkDissolved")
+    arcpy.Dissolve_management(inStreamNetwork, fcNetworkDissolved, multi_part="SINGLE_PART",
+                              unsplit_lines="DISSOLVE_LINES")
+
+    fcNetworkIntersectPoints = gis_tools.newGISDataset(scratchWorkspace, "GNAT_SO_NetworkIntersectPoints")
+    arcpy.Intersect_analysis(fcNetworkDissolved, fcNetworkIntersectPoints, "ALL", output_type="POINT")
+    arcpy.AddXY_management(fcNetworkIntersectPoints)
+    fcNetworkNodes = gis_tools.newGISDataset(scratchWorkspace, "GNAT_SO_NetworkNodes")
+    arcpy.Dissolve_management(fcNetworkIntersectPoints, fcNetworkNodes, ["POINT_X", "POINT_Y"], "#", "SINGLE_PART")
+    del fcNetworkDissolved
+    del fcNetworkIntersectPoints
+    return fcNetworkNodes
 
 def cleanLineGeom(inLine, streamID, segID, lineClusterTolerance):
     lyrs = []
@@ -105,15 +119,15 @@ def cleanLineGeom(inLine, streamID, segID, lineClusterTolerance):
     return cleaned
 
 
-def segOptionA(in_hydro, seg_length, outFGB):
+def segOptionA(in_hydro, seg_length, outFGB, outSegmentIDField="SegmentID", scratchWorkspace="in_memory"):
     """Segment the input stream network feature class using 'remainder at inflow of reach' method."""
     arcpy.AddMessage("Segmenting process using the remainder at stream branch inflow method...")
     DeleteTF = "true"
 
     # Segmentation of the polyline using module from Fluvial Corridors toolbox.
-    splitLine = dS.SLEM(in_hydro, seg_length, r"in_memory\splitLine", DeleteTF)
+    splitLine = dS.SLEM(in_hydro, seg_length, scratchWorkspace + r"\splitLine", DeleteTF)
 
-    outSort = r"in_memory\segments_sort"
+    outSort = scratchWorkspace + r"\segments_sort"
     arcpy.Sort_management(splitLine, outSort, [["Rank_UGO", "ASCENDING"], ["Distance", "ASCENDING"]])
 
     arcpy.AddField_management(outSort, "Rank_DGO", "LONG", "", "", "", "","NULLABLE", "NON_REQUIRED")
@@ -123,10 +137,14 @@ def segOptionA(in_hydro, seg_length, outFGB):
     # Merges adjacent stream segments if less than 75% length threshold.
     clusterTolerance = float(seg_length) * 0.25
     clean_stream = cleanLineGeom(outSort, "Rank_UGO", "Rank_DGO", clusterTolerance)
-    arcpy.AddField_management(clean_stream, "LineOID", "LONG", "", "", "", "", "NULLABLE", "NON_REQUIRED")
-    arcpy.CalculateField_management(clean_stream, "LineOID", '"!OBJECTID!"', "PYTHON_9.3")
+    arcpy.AddField_management(clean_stream, outSegmentIDField, "LONG", "", "", "", "", "NULLABLE", "NON_REQUIRED")
+    arcpy.CalculateField_management(clean_stream, outSegmentIDField, '"!OBJECTID!"', "PYTHON_9.3")
     arcpy.DeleteField_management(clean_stream, "Rank_UGO")
     arcpy.DeleteField_management(clean_stream, "Rank_DGO")
+
+    # Clean up
+    del splitLine
+    del outSort
 
     return clean_stream
 
@@ -135,7 +153,7 @@ def segOptionBC(fcDissolvedStreamBranch,
          inputDistance,
          segMethod,
          fcTempStreamNetwork=r"in_memory\temp_network",
-         outputSegmentIDField="LineOID",
+         outSegmentIDField="SegmentID",
          scratchWorkspace=r"in_memory"):
     """Segment the input stream network feature class using one of two methods:
 
@@ -173,80 +191,45 @@ def segOptionBC(fcDissolvedStreamBranch,
         for point in listPoints:
             icSplitPoints.insertRow([point])
     arcpy.SplitLineAtPoint_management(fcDissolvedStreamBranch,fcSplitPoints,fcTempStreamNetwork,"1 Meters")
-    gis_tools.addUniqueIDField(fcTempStreamNetwork,outputSegmentIDField)
+    gis_tools.addUniqueIDField(fcTempStreamNetwork,outSegmentIDField)
 
     # Remove unnecessary fields
     fieldObjects = arcpy.ListFields(fcTempStreamNetwork)
     oidField = arcpy.Describe(fcTempStreamNetwork).OIDFieldName
     shapeField = arcpy.Describe(fcTempStreamNetwork).shapeFieldName
     lengthField = arcpy.Describe(fcTempStreamNetwork).lengthFieldName
-    keepFields = [oidField, shapeField, lengthField, "LineOID"]
+    keepFields = [oidField, shapeField, lengthField, outSegmentIDField]
     for field in fieldObjects:
         if field.name not in keepFields:
             arcpy.DeleteField_management(fcTempStreamNetwork, [field.name])
+
+    # Clean up
+    del fcSplitPoints
 
     return fcTempStreamNetwork
 
 
 # # Main Function # #
-def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boolNode, boolMerge, outputFCSegments,
-         braidField=""):
+def main(inputFCStreamNetwork, inputDistance, strmIndex, segMethod, boolNode, boolMerge, outputFCSegments):
     """Segment a stream network into user-defined length intervals."""
-
-    reload(StreamOrder)
 
     # Get output workspace from output feature class
     out_wspace = os.path.dirname(outputFCSegments)
-    out_file = os.path.basename(outputFCSegments)
-    wspace_type = arcpy.Describe(out_wspace).dataType
 
-    # Data pre-processing, includes calculating stream order and branch ID using GNAT modules
-    spatial_join_fc = r"in_memory\spatial_join_fc"
-    if wspace_type == "Folder":
-        strm_order_fc_out = out_wspace + r"\strm_order.shp"
-        strm_node_fc_out = out_wspace + r"\strm_nodes.shp"
-        strm_branch_fc_out = out_wspace + r"\strm_branch.shp"
-    elif wspace_type == "Workspace":
-        strm_order_fc_out = out_wspace + r"\strm_order"
-        strm_node_fc_out = out_wspace + r"\strm_nodes"
-        strm_branch_fc_out = out_wspace + r"\strm_branch"
-    strm_order_fc_lyr = "strm_order_fc_lyr"
-    strm_branch_fc_lyr = "strm_branch_fc_lyr"
-    spatial_join_fc_lyr = "spatial_join_fc_lyr"
+    # process terminates if input requirements not met
+    gis_tools.checkReq(inputFCStreamNetwork)
 
-    gis_tools.checkReq(inputFCStreamNetwork) # process terminates if input requirements not met
+    lyrStreamNetwork = gis_tools.newGISDataset("LAYER", "GNAT_SEGMENT_StreamNetwork")
+    arcpy.MakeFeatureLayer_management(inputFCStreamNetwork, lyrStreamNetwork)
 
-    if braidField:
-        fcNetworkBraidFilter = gis_tools.newGISDataset("in_memory","NetworkNoBraids")
-        lyr_in_network = gis_tools.newGISDataset("LAYER","lyrInNetwork")
-        arcpy.MakeFeatureLayer_management(inputFCStreamNetwork,lyr_in_network,
-                                          arcpy.AddFieldDelimiters(inputFCStreamNetwork,braidField) + " = 0")
-        arcpy.CopyFeatures_management(lyr_in_network, fcNetworkBraidFilter)
-    else:
-        fcNetworkBraidFilter = inputFCStreamNetwork
-
-    strm_order_fc, nodes_fc = StreamOrder.main(fcNetworkBraidFilter, reachID, strm_order_fc_out, strm_node_fc_out)
-    strm_branch_fc = GenerateStreamBranches.main(strm_order_fc, nodes_fc, strmIndex,
-                                 "strm_order", strm_branch_fc_out, "true", "in_memory")
-    arcpy.MakeFeatureLayer_management(strm_order_fc, strm_order_fc_lyr)
-    arcpy.MakeFeatureLayer_management(strm_branch_fc, strm_branch_fc_lyr)
-
-    # Field mapping for the spatial join
-    fms = arcpy.FieldMappings()
-    fms.addTable(strm_order_fc)
-    fms.addTable(strm_branch_fc)
-
-    # Join the branch ID output back to the stream order output feature class
-    arcpy.SpatialJoin_analysis(strm_order_fc, strm_branch_fc, spatial_join_fc,
-                               "JOIN_ONE_TO_ONE", "KEEP_ALL", fms, "HAVE_THEIR_CENTER_IN")
-    arcpy.MakeFeatureLayer_management(spatial_join_fc, spatial_join_fc_lyr)
+    strm_nodes = getNetworkNodes(lyrStreamNetwork)
     strm_dslv = r"in_memory\strm_dslv"
-    arcpy.Dissolve_management(spatial_join_fc_lyr, strm_dslv, "BranchID", "", "SINGLE_PART", "DISSOLVE_LINES")
+    arcpy.Dissolve_management(lyrStreamNetwork, strm_dslv, "BranchID", "", "SINGLE_PART", "DISSOLVE_LINES")
 
     # Split dissolved network at intersection nodes before segmentation, if option is chosen by user
     if boolNode == "true":
         strm_split_node = r"in_memory\strm_split_node"
-        arcpy.SplitLineAtPoint_management(strm_dslv, strm_node_fc_out, strm_split_node, "0.0001 Meters")
+        arcpy.SplitLineAtPoint_management(strm_dslv, strm_nodes, strm_split_node, "0.0001 Meters")
     else:
         strm_split_node = strm_dslv
 
@@ -265,4 +248,6 @@ def main(inputFCStreamNetwork, inputDistance, reachID, strmIndex, segMethod, boo
 
     # Finalize the process
     ClearInMemory.main()
-    arcpy.AddMessage("Segmentation process complete!")
+    arcpy.AddMessage("GNAT: Segmentation process complete!")
+
+    return

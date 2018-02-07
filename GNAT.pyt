@@ -10,9 +10,9 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.4.3                                                          #
-# Revised:     2018-Jan-31                                                    #
-# Released:    2018-Feb-6                                                    #
+# Version:     2.4.4                                                          #
+# Revised:     2018-Feb-7                                                     #
+# Released:    2018-Jan-31                                                    #
 #                                                                             #
 # License:     MIT License                                                    #
 #                                                                             #
@@ -38,7 +38,7 @@ import Segmentation
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.4.3"
+GNAT_version = "2.4.4"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -720,13 +720,6 @@ class SegmentationTool(object):
             direction="Input")
         paramSegmentLength.value = "200"
 
-        paramDownstreamID = arcpy.Parameter(
-            displayName="Downstream Reach ID",
-            name="reachID",
-            datatype="GPLong",
-            parameterType="Required",
-            direction="Input")
-
         paramFieldStreamName = arcpy.Parameter(
             displayName="Stream Name Field",
             name="streamIndex",
@@ -765,17 +758,16 @@ class SegmentationTool(object):
             parameterType="Required",
             direction="Output")
 
-        return [paramInStreamNetwork,
-                paramSegmentLength,
-                paramDownstreamID,
-                paramFieldStreamName,
-                paramSegmentationMethod,
-                paramBoolSplitAtConfluences,
-                paramBoolRetainOrigAttributes,
-                paramOutputSegmentedNetwork,
-                paramProjectXML,
-                paramRealization,
-                paramSegmentAnalysisName]
+        return [paramInStreamNetwork, #p[0]
+                paramSegmentLength, #p[1]
+                paramFieldStreamName, #p[3] -> 2
+                paramSegmentationMethod, #p[4] -> 3
+                paramBoolSplitAtConfluences, #p[5] -> 4
+                paramBoolRetainOrigAttributes, #p[6] -> 5
+                paramOutputSegmentedNetwork, #p[7] -> 6
+                paramProjectXML, #p[8] -> 7
+                paramRealization, #p[9] -> 8
+                paramSegmentAnalysisName] #p[10] -> 9
 
 
     def isLicensed(self):
@@ -789,30 +781,30 @@ class SegmentationTool(object):
 
         from Riverscapes import Riverscapes
 
-        if p[8].value:
-            if arcpy.Exists(p[8].valueAsText):
-                GNATProject = Riverscapes.Project(p[8].valueAsText)
+        if p[7].value:
+            if arcpy.Exists(p[7].valueAsText):
+                GNATProject = Riverscapes.Project(p[7].valueAsText)
 
-                p[9].enabled = "True"
-                p[9].filter.list = GNATProject.Realizations.keys()
-                p[7].enabled = "False"
+                p[8].enabled = "True"
+                p[8].filter.list = GNATProject.Realizations.keys()
+                p[6].enabled = "False"
 
-                if p[9].value:
-                    currentRealization = GNATProject.Realizations.get(p[9].valueAsText)
+                if p[8].value:
+                    currentRealization = GNATProject.Realizations.get(p[8].valueAsText)
                     p[0].value = currentRealization.GNAT_StreamNetwork.absolutePath(GNATProject.projectPath)
-                    p[10].enabled = "True"
-                    if p[10].value:
-                        p[7].value = path.join(GNATProject.projectPath, "Outputs", p[9].valueAsText, "Analyses",
-                                                p[10].valueAsText, "SegmentedNetwork") + ".shp"
+                    p[9].enabled = "True"
+                    if p[9].value:
+                        p[6].value = path.join(GNATProject.projectPath, "Outputs", p[8].valueAsText, "Analyses",
+                                                p[9].valueAsText, "SegmentedNetwork") + ".shp"
 
         else:
-            p[9].filter.list = []
-            p[9].value = ''
-            p[9].enabled = "False"
-            p[10].value = ""
-            p[7].enabled = "True"
+            p[8].filter.list = []
+            p[8].value = ''
+            p[8].enabled = "False"
+            p[9].value = ""
+            p[6].enabled = "True"
 
-        populateFields(p[0],p[3],"GNIS_Name")
+        populateFields(p[0],p[2],"GNIS_Name")
 
         return
 
@@ -829,17 +821,17 @@ class SegmentationTool(object):
         reload(Segmentation)
         from Riverscapes import Riverscapes
 
-        output = p[7].valueAsText
+        output = p[6].valueAsText
 
         # Where the tool outputs will be store for Riverscapes projects
-        if p[8].value:
+        if p[7].value:
             GNATProject = Riverscapes.Project()
-            GNATProject.loadProjectXML(p[8].valueAsText)
-            if p[9].valueAsText:
-                makedirs(path.join(GNATProject.projectPath, "Outputs", p[9].valueAsText, "Analyses",
-                                   p[10].valueAsText))
-                output = path.join(GNATProject.projectPath, "Outputs", p[9].valueAsText, "Analyses",
-                                                p[10].valueAsText, "SegmentedNetwork") + ".shp"
+            GNATProject.loadProjectXML(p[7].valueAsText)
+            if p[8].valueAsText:
+                makedirs(path.join(GNATProject.projectPath, "Outputs", p[8].valueAsText, "Analyses",
+                                   p[9].valueAsText))
+                output = path.join(GNATProject.projectPath, "Outputs", p[8].valueAsText, "Analyses",
+                                                p[9].valueAsText, "SegmentedNetwork") + ".shp"
 
         # Main tool module
         Segmentation.main(p[0].valueAsText,
@@ -848,24 +840,24 @@ class SegmentationTool(object):
                           p[3].valueAsText,
                           p[4].valueAsText,
                           p[5].valueAsText,
-                          p[6].valueAsText,
                           output)
 
-        # Add tool run to the Riverscapes project XML
-        if p[8].value:
-            if arcpy.Exists(p[8].valueAsText):
 
-                GNATProject = Riverscapes.Project(p[8].valueAsText)
+        # Add tool run to the Riverscapes project XML
+        if p[7].value:
+            if arcpy.Exists(p[7].valueAsText):
+
+                GNATProject = Riverscapes.Project(p[7].valueAsText)
 
                 outSegmentedNetwork = Riverscapes.Dataset()
                 outSegmentedNetwork.create(arcpy.Describe(output).basename,
-                                           path.join("Outputs", str(p[9].value), "Analyses", str(p[10].value),
+                                           path.join("Outputs", str(p[8].value), "Analyses", str(p[9].value),
                                                      arcpy.Describe(output).basename + ".shp"),
                                            "SegmentedNetwork")
                 outSegmentedNetwork.id = "SegmentedNetwork"
 
-                realization = GNATProject.Realizations.get(p[9].valueAsText)
-                realization.newAnalysisNetworkSegmentation(p[10].valueAsText,
+                realization = GNATProject.Realizations.get(p[8].valueAsText)
+                realization.newAnalysisNetworkSegmentation(p[9].valueAsText,
                                                            p[1].valueAsText,
                                                            "NONE",
                                                            p[2].valueAsText,
@@ -875,7 +867,7 @@ class SegmentationTool(object):
                                                            p[6].valueAsText,
                                                            outSegmentedNetwork)
 
-                GNATProject.Realizations[p[9].valueAsText] = realization
+                GNATProject.Realizations[p[8].valueAsText] = realization
                 GNATProject.writeProjectXML()
 
         return
