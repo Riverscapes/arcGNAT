@@ -7,18 +7,20 @@ title: Stream Network Preparation
 
 One of the primary reasons a user may want to use GNAT will be to produce a stream network dataset that is segmented 
 using the **Segment Stream Network** tool. In order for a segmentation process to be successful, that tool requires a 
-stream network that is free from topological errors, with all subnetwork identified. For GNAT, we define a topological 
-lean network based on the following criteria:
+stream network that is free from topological errors, with all subnetwork identified. For GNAT, we define a topologically 
+clean network based on the following criteria:
 
 * No duplicate reaches
-* Only one outflow per network
-* All digitized flow directions are downstream
+* Only one outflow per subnetwork
+* All digitized directions flow downstream
 
 The first tool found in GNAT under `Analyze Network Attributes > Step 1 - Stream Network Preperation` is the **Find 
 Subnetworks** tool. This tools is intended to be run iteratively, ultimately producing a topologically-clean stream 
-network that will serve as an input for the **Generate Network Attributes** tool. The end goal of the workflow described here
-is a topologically clean, attributed shapefile that can serve as an input for the **Segment Stream Network** tool.
-The following steps are a suggested workflow for producing such a network.
+network that will serve as an input for the **Generate Network Attributes** tool. This attributed network will then
+be supplied to the **Generate Strahler Stream Order** tool, and the output for that tool will be the main input for the
+ last step in the stream network preparation process - the **Generate Stream Branches** tool. The end goal of the 
+ workflow described here is a topologically clean, attributed shapefile that can serve as an input for the 
+ **Segment Stream Network** tool. The following steps are a suggested workflow for producing such a network.
 
 ### Suggested Workflow for Step 1
 
@@ -57,7 +59,7 @@ subnetwork where the number of outflow features != 0.
 of the errors, the user can then using ArcMap editing tools to manually correct these features.
 9. At this point, the user can choose to continue running the **Find Subnetworks** tool until no errors are found.
 
-##### Generate network attributes and stream order
+##### Generate network attributes, stream order, and stream branch IDs.
 
 10. Using a shapefile representing a topologically clean network with subnetworks identified, run the **Generate Network
 Attributes** tool. This tool iterates through each subnetwork within the shapefile, and labels each feature with an 
@@ -73,5 +75,9 @@ subnetwork. Edge types include:
 
 11. After processing is finished, the edge type classification of output shapefile should be reviewed in ArcMap, with symbolization based on the
 `_edgetype_` attribute field.
-12. Finally, the output from the **Generate Network Attributes** tool should serve as the input for the **Generate Stream
+12. The output from the **Generate Network Attributes** tool should serve as the input for the **Generate Strahler Stream
 Order** tool. Stream order will be calculated separately for each subnetwork found within the network shapefile.
+13. Symbolize the output shapefile using the `_strmordr_` attribute field, and review the strahler stream order values.
+Each subnetwork within the shapefile will have it's own stream order classficiation.
+14. Finally, run the **Generate Stream Branches**, and then symbolize and review the stream branch ID values, using the `
+BranchID` attribute field.

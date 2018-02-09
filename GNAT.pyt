@@ -10,9 +10,9 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.4.4                                                          #
+# Version:     2.5.0                                                          #
 # Revised:     2018-Feb-7                                                     #
-# Released:    2018-Jan-31                                                    #
+# Released:    2018-Feb-8                                                     #
 #                                                                             #
 # License:     MIT License                                                    #
 #                                                                             #
@@ -38,7 +38,7 @@ import Segmentation
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.4.4"
+GNAT_version = "2.5.0"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -705,7 +705,7 @@ class SegmentationTool(object):
         reload(Segmentation)
 
         paramInStreamNetwork = arcpy.Parameter(
-            displayName="Stream Network Polyline Feature Class",
+            displayName="Stream network polyline feature class",
             name="InputStreamNetwork",
             datatype="DEFeatureClass",
             parameterType="Required",
@@ -713,7 +713,7 @@ class SegmentationTool(object):
         paramInStreamNetwork.filter.list = ["Polyline"]
 
         paramSegmentLength = arcpy.Parameter(
-            displayName="Segment Length (Meters)",
+            displayName="Segment length",
             name="InputSegmentDistance",
             datatype="GPDouble",
             parameterType="Required",
@@ -721,7 +721,7 @@ class SegmentationTool(object):
         paramSegmentLength.value = "200"
 
         paramFieldStreamName = arcpy.Parameter(
-            displayName="Stream Name Field",
+            displayName="Stream name field",
             name="streamIndex",
             datatype="Field",
             parameterType="Required",
@@ -729,7 +729,7 @@ class SegmentationTool(object):
         paramFieldStreamName.parameterDependencies = [paramInStreamNetwork.name]
 
         paramSegmentationMethod = arcpy.Parameter(
-            displayName="Segmentation Method",
+            displayName="Segmentation method",
             name="strSegmentationMethod",
             datatype="GPString",
             parameterType="Required",
@@ -744,7 +744,7 @@ class SegmentationTool(object):
             direction="Input")
 
         paramBoolRetainOrigAttributes = arcpy.Parameter(
-            displayName="Retain Original attributes and geometry from input stream network",
+            displayName="Retain original attributes and geometry from input stream network",
             name="boolKeepOrig",
             datatype="GPBoolean",
             parameterType="Optional",
@@ -752,7 +752,7 @@ class SegmentationTool(object):
         # TODO if project mode, this is always yes.
 
         paramOutputSegmentedNetwork = arcpy.Parameter(
-            displayName="Output Segmented Line Network",
+            displayName="Output segmented line network",
             name="outputStreamOrderFC",
             datatype="DEFeatureClass",
             parameterType="Required",
