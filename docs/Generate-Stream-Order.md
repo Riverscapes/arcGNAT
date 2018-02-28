@@ -15,12 +15,14 @@ calculated separately for each subnetwork.
 
 ### Requirements
 
-* ArcGIS version 10.4 or higher
-* GDAL: The [Geospatial Data Abstraction Library](https://www.gdal.org) is required by this tool, in order 
-to directly convert between shapefiles and NetworkX graphs. Because GNAT users will most likely be operating in a 
-Windows environment, we strongly recommend that the user installs GDAL separately using the Windows binaries offered by 
+* **ArcGIS**: version 10.4 or higher
+* **GDAL**: A separate installation of the [Geospatial Data Abstraction Library](https://www.gdal.org) is required by this tool, in order 
+to directly convert between shapefiles and NetworkX graphs. Because GNAT users must operate ArcGIS in a Windows 
+environment, we strongly recommend that the user installs GDAL separately using the Windows binaries offered by 
 Tamas Szekeres at [GISInternals](http://www.gisinternals.com/). Detailed instructions for installing the GDAL binaries
-area available [here](#).
+area available [here](https://sandbox.idre.ucla.edu/sandbox/tutorials/installing-gdal-for-windows).
+* **NetworkX 1.11**: Please note, GNAT has only been tested with version 1.11. Other versions have not been tested and
+are not currently supported.
 
 ### Input Parameters
 
