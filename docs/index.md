@@ -19,4 +19,4 @@ GNAT was originally developed to support the geomorphic attribute analysis and m
 
 GNAT is actively developed and maintained by [South Fork Research, Inc](http://southforkresearch.org). 
 
-Please submit bug reports [here](https://github.com/Riverscapes/arcGNAT/Issues).
+Please submit bug reports [here](https://github.com/Riverscapes/arcGNAT/issues).
