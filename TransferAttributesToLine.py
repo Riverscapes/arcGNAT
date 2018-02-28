@@ -55,17 +55,15 @@ def main(fcFromLine,
     arcpy.AddField_management(fcFromLineTemp, "FromID", "LONG")
     arcpy.CalculateField_management(fcFromLineTemp, "FromID", "!{0}!".format(from_oid), "PYTHON_9.3")
 
-    # TEST
     # Snap "From" line network to "To" line network
     lyrFromLineTemp = gis_tools.newGISDataset("Layer", "lyrFromLineTemp")
     arcpy.MakeFeatureLayer_management(fcFromLineTemp, lyrFromLineTemp)
     arcpy.Snap_edit(lyrFromLineTemp, [[fcToLine, "EDGE", "25 Meters"],[fcToLine, "END", "50 Meters"]])
-    # TEST
 
     # Make bounding polygon for "From" line feature class
     arcpy.AddMessage("GNAT TLA: Create buffer polygon around 'From' network")
     fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FromLineBuffer")
-    arcpy.Buffer_analysis(fcFromLineTemp,fcFromLineBuffer,"150 Meters","FULL","ROUND","ALL") # TEST
+    arcpy.Buffer_analysis(fcFromLineTemp,fcFromLineBuffer,"150 Meters","FULL","ROUND","ALL")
     fcFromLineBufDslv = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBUfDslv")
     arcpy.Dissolve_management(fcFromLineBuffer, fcFromLineBufDslv)
 
@@ -101,13 +99,11 @@ def main(fcFromLine,
     #                            match_option="WITHIN")
     # arcpy.JoinField_management(fcOutputLineNetwork, "FromID", fcFromLineTemp, "FromID")
 
-    # TEST
     # instead of spatial join, use Transfer Attributes tool
     arcpy.MakeFeatureLayer_management(fcSplitLines, "lyrSplitLines")
     arcpy.CopyFeatures_management("lyrSplitLines", fcOutputLineNetwork)
     arcpy.MakeFeatureLayer_management(fcOutputLineNetwork, "lyrOutputLineNetwork")
     arcpy.TransferAttributes_edit(fcFromLineTemp, "lyrOutputLineNetwork", ["PERMANENT_"], "100 Meters")
-    # TEST
 
     # Append the "To" lines that were outside of the "From" line buffer, which will have NULL or zero values
     arcpy.env.extent = fcToLine # changed earlier in the workflow in DividePolygonBySegment module
