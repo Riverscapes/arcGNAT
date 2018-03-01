@@ -50,6 +50,7 @@ def transfer_fields(fc):
 def main(fcFromLine,
          fcToLine,
          fcOutputLineNetwork,
+         searchDistance,
          tempWorkspace):
 
     gis_tools.resetData(fcOutputLineNetwork)
@@ -67,12 +68,13 @@ def main(fcFromLine,
     # Snap "From" line network to "To" line network
     lyrFromLineTemp = gis_tools.newGISDataset("Layer", "lyrFromLineTemp")
     arcpy.MakeFeatureLayer_management(fcFromLineTemp, lyrFromLineTemp)
-    arcpy.Snap_edit(lyrFromLineTemp, [[fcToLine, "EDGE", "25 Meters"],[fcToLine, "END", "50 Meters"]])
+    arcpy.Snap_edit(lyrFromLineTemp,
+                    [[fcToLine, "EDGE", "{0} Meters".format(searchDistance/2)],[fcToLine, "END", "{0} Meters".format(searchDistance)]])
 
     # Make bounding polygon for "From" line feature class
     arcpy.AddMessage("GNAT TLA: Create buffer polygon around 'From' network")
     fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FromLineBuffer")
-    arcpy.Buffer_analysis(fcFromLineTemp,fcFromLineBuffer,"150 Meters","FULL","ROUND","ALL")
+    arcpy.Buffer_analysis(fcFromLineTemp,fcFromLineBuffer,"{0} Meters".format(searchDistance * 3), "FULL", "ROUND", "ALL")
     fcFromLineBufDslv = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBUfDslv")
     arcpy.Dissolve_management(fcFromLineBuffer, fcFromLineBufDslv)
 
@@ -93,10 +95,10 @@ def main(fcFromLine,
     DividePolygonBySegment.main(fcFromLineTemp, fcFromLineBuffer, fcSegmentedBoundingPolygons, 10.0, 150.0)
 
     # Split points of "To" line at intersection of polygon segments
-    fcIntersectSplitPoints = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_IntersectSplitPoints")
-    arcpy.Intersect_analysis([fcToLineWithinFromBuffer,fcSegmentedBoundingPolygons],fcIntersectSplitPoints,output_type="POINT")
-    fcSplitLines = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_SplitLines")
-    arcpy.SplitLineAtPoint_management(fcToLineWithinFromBuffer,fcIntersectSplitPoints,fcSplitLines,"0.1 METERS")
+    fcIntersectSplitPoints = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_IntersectSplitPoints")
+    arcpy.Intersect_analysis([fcToLineWithinFromBuffer, fcSegmentedBoundingPolygons], fcIntersectSplitPoints, output_type="POINT")
+    fcSplitLines = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_SplitLines")
+    arcpy.SplitLineAtPoint_management(fcToLineWithinFromBuffer, fcIntersectSplitPoints, fcSplitLines, "0.1 METERS")
 
     # # Spatial join lines based on a common field, as transferred by segmented polygon
     # arcpy.AddMessage("GNAT TLA: Joining polygon segments")
@@ -109,7 +111,7 @@ def main(fcFromLine,
     # arcpy.JoinField_management(fcOutputLineNetwork, "FromID", fcFromLineTemp, "FromID")
 
     # instead of spatial join, use Transfer Attributes tool
-    arcpy.AddMessage("Transferring attributes...")
+    arcpy.AddMessage("GNAT TLA: Transferring attributes")
     listFromFieldNames, strFromFieldNames = transfer_fields(fcFromLine)
     arcpy.MakeFeatureLayer_management(fcSplitLines, "lyrSplitLines")
     arcpy.CopyFeatures_management("lyrSplitLines", fcOutputLineNetwork)
@@ -132,10 +134,11 @@ def main(fcFromLine,
     return
 
 
-if __name__ == "__main__":
-    fcFrom = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\input\NHD_24k_Entiat_noMZ.shp'
-    fcTo   = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\input\NHD_100k_Entiat.shp'
-    fcOutput = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\output\final_tests\test_24k_to_100k.shp'
-    tempWspace = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\scratch.gdb'
-
-    main(fcFrom, fcTo, fcOutput, tempWspace)
+# if __name__ == "__main__":
+#     fcFrom = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\input\NHD_24k_Entiat_noMZ.shp'
+#     fcTo   = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\input\NHD_100k_Entiat.shp'
+#     fcOutput = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\output\final_tests\test_search50m.shp'
+#     searchDistance = 50
+#     tempWspace = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\scratch.gdb'
+#
+#     main(fcFrom, fcTo, fcOutput, searchDistance, tempWspace)

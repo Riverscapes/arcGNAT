@@ -10,9 +10,9 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.5.0                                                          #
-# Revised:     2018-Feb-7                                                     #
-# Released:    2018-Feb-8                                                     #
+# Version:     2.5.1                                                          #
+# Revised:     2018-Mar-1                                                     #
+# Released:    2018-Mar-1                                                     #
 #                                                                             #
 # License:     MIT License                                                    #
 #                                                                             #
@@ -38,7 +38,7 @@ import Segmentation
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.5.0"
+GNAT_version = "2.5.1"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -1693,14 +1693,22 @@ class TransferLineAttributesTool(object):
         param2.filter.list = ["Polyline"]
 
         param3 = arcpy.Parameter(
+            displayName="Search distance",
+            name="SearchDistance",
+            datatype="Double",
+            parameterType="Optional",
+            direction="Input")
+        param3.value = 50
+
+        param4 = arcpy.Parameter(
             displayName="Scratch workspace",
             name="scratchWorkspace",
             datatype="DEWorkspace",
             parameterType="Optional",
             direction="Input")
-        param3.filter.list = ["Local Database"]
+        param4.filter.list = ["Local Database"]
 
-        return [param0, param1, param2, param3]
+        return [param0, param1, param2, param3, param4]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -1718,7 +1726,7 @@ class TransferLineAttributesTool(object):
         parameter.  This method is called after internal validation."""
         testProjected(parameters[0])
         testProjected(parameters[1])
-        testWorkspacePath(parameters[3])
+        testWorkspacePath(parameters[4])
         return
 
     def execute(self, p, messages):
@@ -1729,8 +1737,8 @@ class TransferLineAttributesTool(object):
         TransferAttributesToLine.main(p[0].valueAsText,
                                       p[1].valueAsText,
                                       p[2].valueAsText,
-                                      getTempWorkspace(p[3].valueAsText))
-
+                                      p[3].value,
+                                      getTempWorkspace(p[4].valueAsText))
         return
 
 
