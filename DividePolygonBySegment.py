@@ -26,7 +26,7 @@ def main(fcInputCenterline,
          fcInputPolygon,
          fcSegmentedPolygons,
          dblPointDensity=10.0,
-         dblJunctionBuffer=120.00):
+         dblJunctionBuffer=100.00):
 
     workspaceTemp = "in_memory"
 
