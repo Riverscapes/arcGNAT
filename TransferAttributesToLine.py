@@ -13,7 +13,7 @@
 # Copyright:   (c) South Fork Research, Inc. 2017                              #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#!/usr/bin/env python
+
 
 import arcpy
 import gis_tools
@@ -37,6 +37,14 @@ def empty_attributes(fc, to_fields):
                 if field.type == "SmallInteger":
                     row[0] = -999
                     cursor.updateRow(row)
+    return
+
+
+def transfer_fields(fc):
+    listFieldObjects = arcpy.ListFields(fc)
+    listFieldNames = [f.name for f in listFieldObjects if f.type != "OID" and f.type != "Geometry"]
+    strFieldNames = "; ".join(listFieldNames)
+    return listFieldNames, strFieldNames
 
 
 def main(fcFromLine,
@@ -45,6 +53,7 @@ def main(fcFromLine,
          tempWorkspace):
 
     gis_tools.resetData(fcOutputLineNetwork)
+    arcpy.env.overwriteOutput = True
 
     fcFromLineTemp = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineTemp")
     arcpy.MakeFeatureLayer_management(fcFromLine, "lyrFromLine")
@@ -100,23 +109,33 @@ def main(fcFromLine,
     # arcpy.JoinField_management(fcOutputLineNetwork, "FromID", fcFromLineTemp, "FromID")
 
     # instead of spatial join, use Transfer Attributes tool
+    arcpy.AddMessage("Transferring attributes...")
+    listFromFieldNames, strFromFieldNames = transfer_fields(fcFromLine)
     arcpy.MakeFeatureLayer_management(fcSplitLines, "lyrSplitLines")
     arcpy.CopyFeatures_management("lyrSplitLines", fcOutputLineNetwork)
     arcpy.MakeFeatureLayer_management(fcOutputLineNetwork, "lyrOutputLineNetwork")
-    arcpy.TransferAttributes_edit(fcFromLineTemp, "lyrOutputLineNetwork", ["PERMANENT_"], "100 Meters")
+    arcpy.TransferAttributes_edit(lyrFromLineTemp, "lyrOutputLineNetwork", listFromFieldNames, "100 Meters")
 
     # Append the "To" lines that were outside of the "From" line buffer, which will have NULL or zero values
     arcpy.env.extent = fcToLine # changed earlier in the workflow in DividePolygonBySegment module
     arcpy.Append_management([fcToLineOutsideFromBuffer], fcOutputLineNetwork, "NO_TEST")
 
-    # # Change values of "From" features to -99999 if no "To" features to transfer to.
-    # arcpy.MakeFeatureLayer_management(fcOutputLineNetwork, "lyrOutputLineNetwork")
-    # #arcpy.SelectLayerByAttribute_management("lyrOutputLineNetwork", "NEW_SELECTION", """"Join_Count" = 0""")
-    # arcpy.SelectLayerByAttribute_management("lyrOutputLineNetwork", "NEW_SELECTION", """"PERMANENT1" = 0""")
-    # to_fields = [f.name for f in arcpy.ListFields(fcToLine)]
-    # empty_attributes("lyrOutputLineNetwork", to_fields)
-    # arcpy.SelectLayerByAttribute_management("lyrOutputLineNetwork", "CLEAR_SELECTION")
+    # Change values of "From" features to -99999 if no "To" features to transfer to.
+    arcpy.MakeFeatureLayer_management(fcOutputLineNetwork, "lyrOutputLineNetwork")
+    arcpy.SelectLayerByLocation_management("lyrOutputLineNetwork", "ARE_IDENTICAL_TO", fcToLineOutsideFromBuffer, "#", "NEW_SELECTION")
+    to_fields = [f.name for f in arcpy.ListFields(fcToLine)]
+    empty_attributes("lyrOutputLineNetwork", to_fields)
+    arcpy.SelectLayerByAttribute_management("lyrOutputLineNetwork", "CLEAR_SELECTION")
 
     arcpy.AddMessage("GNAT TLA: Tool complete")
 
     return
+
+
+if __name__ == "__main__":
+    fcFrom = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\input\NHD_24k_Entiat_noMZ.shp'
+    fcTo   = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\input\NHD_100k_Entiat.shp'
+    fcOutput = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\output\final_tests\test_24k_to_100k.shp'
+    tempWspace = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\scratch.gdb'
+
+    main(fcFrom, fcTo, fcOutput, tempWspace)
