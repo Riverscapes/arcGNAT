@@ -44,7 +44,11 @@ GNAT is provided as a zip file containing a .pyt file and supporting Python scri
 
 # Downloads
 
-## Version 2.5
+## Version 2.5.1
+**[Version 2.5.1](Downloads/arcGNAT_2.5.1.zip)** 2018-MARCH-1
+* Refactored the **Transfer Line Attributes** tool to improve speed and results.
+
+
 **[Version 2.5](Downloads/arcGNAT_2.5.zip)** 2018-FEBRUARY-8
 ```markdown
 * Redesigned and refactored the **Generate Stream Branches** and **Segment Stream Network** tools, to better
