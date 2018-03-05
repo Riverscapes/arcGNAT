@@ -14,9 +14,8 @@ The [Geospatial Data Abstraction Library (GDAL)](http://gdal.org/index.html) mus
 If you do not already have GDAL installed, we recommend installing the binaries maintained by Tamas Szekeres at 
 [GISInternals](http://www.gisinternals.com/).
 
-An excellent walkthrough for this process is available [here](https://sandbox.idre.ucla.edu/sandbox/tutorials/installing-gdal-for-windows).
+Detailed installation instructions are available [here](GDAL-install).
 
-*Please note*: in 'Step 4: Testing the GDAL install' of this walkthrough, just type in `gdalinfo --version`.
 
 ## Networkx
 
