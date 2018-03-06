@@ -56,8 +56,13 @@ def main(fcInputCenterline,
     #arcpy.CreateThiessenPolygons_analysis(lyrThiessanPoints,fcThiessanPoly,"ONLY_FID")
     arcpy.CreateThiessenPolygons_analysis(lyrThiessanPoints, fcThiessanPoly, "ALL")
 
+    # Clean polygons
+    lyrInputPolygon = gis_tools.newGISDataset("Layer", "lyrInputPolygon")
+    arcpy.MakeFeatureLayer_management(fcInputPolygon, lyrInputPolygon)
+    arcpy.RepairGeometry_management(lyrInputPolygon, "KEEP_NULL")
+
     fcThiessanPolyClip = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_TheissanPolyClip")
-    arcpy.Clip_analysis(fcThiessanPoly,fcInputPolygon,fcThiessanPolyClip)
+    arcpy.Clip_analysis(fcThiessanPoly,lyrInputPolygon,fcThiessanPolyClip)
 
     # Split the junction Thiessan polygons
     arcpy.AddMessage("GNAT DPS: Split junction Thiessan polygons")

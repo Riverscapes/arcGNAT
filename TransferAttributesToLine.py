@@ -76,9 +76,11 @@ def main(fcFromLine,
     fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FromLineBuffer")
     arcpy.Buffer_analysis(fcFromLineTemp,fcFromLineBuffer,"{0} Meters".format(searchDistance * 3), "FULL", "ROUND", "ALL")
     fcFromLineBufDslv = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBUfDslv")
+    arcpy.AddMessage("GNAT TLA: Dissolve buffer")
     arcpy.Dissolve_management(fcFromLineBuffer, fcFromLineBufDslv)
 
     # Select features from "To" line feature class that are inside "From" line buffer
+    arcpy.AddMessage("GNAT TLA: Select 'To' line features inside 'From' buffer")
     lyrFromLineBuffer = gis_tools.newGISDataset("Layer", "lyrFromLineBuffer")
     arcpy.MakeFeatureLayer_management(fcFromLineBufDslv, lyrFromLineBuffer)
     lyrToLine = gis_tools.newGISDataset("Layer", "lyrToLine")
@@ -91,10 +93,12 @@ def main(fcFromLine,
     fcToLineOutsideFromBuffer = arcpy.FeatureClassToFeatureClass_conversion(lyrToLine, tempWorkspace, "GNAT_TLA_ToLineOutsideFromBuffer")
 
     # Segment "From" line buffer polygon
+    arcpy.AddMessage("GNAT TLA: Segmenting 'From' line buffer polygon")
     fcSegmentedBoundingPolygons = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_SegmentedBoundingPolygons")
     DividePolygonBySegment.main(fcFromLineTemp, fcFromLineBuffer, fcSegmentedBoundingPolygons, 10.0, 150.0)
 
     # Split points of "To" line at intersection of polygon segments
+    arcpy.AddMessage("GNAT TLA: Split 'To' line features")
     fcIntersectSplitPoints = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_IntersectSplitPoints")
     arcpy.Intersect_analysis([fcToLineWithinFromBuffer, fcSegmentedBoundingPolygons], fcIntersectSplitPoints, output_type="POINT")
     fcSplitLines = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_SplitLines")
@@ -135,10 +139,10 @@ def main(fcFromLine,
 
 
 # if __name__ == "__main__":
-#     fcFrom = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\input\NHD_24k_Entiat_noMZ.shp'
-#     fcTo   = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\input\NHD_100k_Entiat.shp'
-#     fcOutput = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\output\final_tests\test_search50m.shp'
+#     fcFrom = r'C:\JL\Testing\arcGNAT\Issue74\transfer_line_attrib\Asotin_Test\Test2a_NHD24k\Asotin_NHD_EP_20160906_RC.shp'
+#     fcTo   = r'C:\JL\Testing\arcGNAT\Issue74\transfer_line_attrib\Asotin_Test\Test2a_NHD24k\Asotin_NHDFlowline_20180207.shp'
+#     fcOutput = r'C:\JL\Testing\arcGNAT\Issue74\transfer_line_attrib\Asotin_Test\Test2a_NHD24k\Asotin_EPtoNHD_20180302.shp'
 #     searchDistance = 50
-#     tempWspace = r'C:\JL\Testing\arcGNAT\Issue63\arcpy\scratch.gdb'
+#     tempWspace = r'C:\JL\Testing\arcGNAT\Issue74\transfer_line_attrib\Asotin_Test\Test2a_NHD24k\TLAscratch.gdb'
 #
 #     main(fcFrom, fcTo, fcOutput, searchDistance, tempWspace)

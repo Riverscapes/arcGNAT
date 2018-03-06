@@ -43,10 +43,16 @@ GNAT is provided as a zip file containing a .pyt file and supporting Python scri
 
 # Downloads
 
-## Version 2.5.1
-**[Version 2.5.1](Downloads/arcGNAT_2.5.1.zip)** 2018-MARCH-1
-* Refactored the **Transfer Line Attributes** tool to improve speed and results.
+## Version 2.5.2
+**[Version 2.5.2](Downloads/arcGNAT_2.5.2.zip)** 2018-MARCH-5
+```markdown
+* 'From' line buffer now has its geometry repaired by default, to deal with potential topology issues.
+```
 
+**[Version 2.5.1](Downloads/arcGNAT_2.5.1.zip)** 2018-MARCH-1
+```markdown
+* Refactored the **Transfer Line Attributes** tool to improve speed and results.
+```
 
 **[Version 2.5](Downloads/arcGNAT_2.5.zip)** 2018-FEBRUARY-8
 ```markdown
