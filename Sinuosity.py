@@ -73,7 +73,7 @@ def main(fcInput, fieldName = "Sin", workspaceTmp = "in_memory"):
             return length/distance """
     arcpy.CalculateField_management(lyrInputTmp,
                                     fieldSinuosity,
-                                    "calculateSinuosity(!" + fieldSegmentLength + "!, !" + fieldDistance + "!)",
+                                    "calculateSinuosity(!{}!, !{}!".format(fieldSegmentLength, fieldDistance),
                                     "PYTHON_9.3",
                                     codeblock)
 
