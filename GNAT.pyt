@@ -61,7 +61,7 @@ class Toolbox(object):
                       GenerateStreamOrderTool,
                       StreamBranchesTool,
                       FindBraidedNetworkTool,
-                      SinuositySuiteTool,
+                      SinuosityAttributesTool,
                       SinuosityTool,
                       DividePolygonBySegmentsTool,
                       TransferLineAttributesTool,
@@ -1210,18 +1210,18 @@ class CalculateThreadednessTool(object):
             return
 
 
-class SinuositySuiteTool(object):
+class SinuosityAttributesTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Sinuosity Metrics"
-        self.description = "Calculates suite of sinuosity metrics for the stream network and valley."
+        self.label = "Sinuosity Attributes"
+        self.description = "Calculates Channel, Planform and Valley Bottom Sinuosity Attributes."
         self.canRunInBackground = True
         self.category = strCatagoryGeomorphicAnalysis
 
     def getParameterInfo(self):
         """Define parameter definitions"""
         param0 = arcpy.Parameter(
-            displayName="Input Stream Network with Channel Sinuosity",
+            displayName="Input Segmented Stream Network",
             name="InputFCChannelSinuosity",
             datatype="GPFeatureLayer",
             parameterType="Required",
@@ -1229,7 +1229,7 @@ class SinuositySuiteTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Input Segmented Valley Centerline",
+            displayName="Input Valley Centerline",
             name="InputFCValleyCenterline",
             datatype="GPFeatureLayer",
             parameterType="Required",
@@ -1237,38 +1237,29 @@ class SinuositySuiteTool(object):
         param1.filter.list = ["Polyline"]
 
         param2 = arcpy.Parameter(
-            displayName="Input Valley Bottom Polygon",
-            name="InputFCValleyPolygon",
-            datatype="GPFeatureLayer",
-            parameterType="Required",
-            direction="Input")
-        param2.filter.list = ["Polygon"]
-
-        param3 = arcpy.Parameter(
-            displayName="Output Valley Centerline with Sinuosity Attribute",
-            name="OutputFCValleyCenterline",
+            displayName="Output Stream Network with Sinuosity",
+            name="OutputFCSinuosity",
             datatype="DEFeatureClass",
             parameterType="Required",
             direction="Output")
 
-        param4 = arcpy.Parameter(
-            displayName="Output Valley Centerline with Planform Attribute",
-            name="OutputFCPlanform",
-            datatype="DEFeatureClass",
+        param3 = arcpy.Parameter(
+            displayName="Temporary workspace",
+            name="TempWorkspace",
+            datatype="DEWorkspace",
             parameterType="Required",
-            direction="Output",
-        )
+            direction="Input")
+        param2.filter.list = ["Workspace"]
 
         return [param0,
                 param1,
                 param2,
                 param3,
-                param4,
-                paramRiverscapesBool,  # 5
-                paramProjectXML,  # 6
-                paramRealization,  # 7
-                paramSegmentAnalysisName,  # 8
-                paramAttributeAnalysisName]  # 9
+                paramRiverscapesBool,  # 4
+                paramProjectXML,  # 5
+                paramRealization,  # 6
+                paramSegmentAnalysisName,  # 7
+                paramAttributeAnalysisName]  # 8
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -1284,11 +1275,11 @@ class SinuositySuiteTool(object):
 
         # Riverscape project parameters
 
-        paramRiverscapesBool = p[5]
-        paramProjectXML = p[6]
-        paramRealization = p[7]
-        paramSegmentAnalysis = p[8]
-        paramAttributeAnalysis = p[9]
+        paramRiverscapesBool = p[4]
+        paramProjectXML = p[5]
+        paramRealization = p[6]
+        paramSegmentAnalysis = p[7]
+        paramAttributeAnalysis = p[8]
 
         if paramRiverscapesBool.value == True:
             paramProjectXML.enabled = True
@@ -1337,21 +1328,18 @@ class SinuositySuiteTool(object):
         # Tool input variables
         inChannelSinuosity = p[0].valueAsText
         inValleyCenterline = p[1].valueAsText
-        inValleyBottomPolygon = p[2].valueAsText
-        outValleyCenterlineSinuosity = p[3].valueAsText
-        outPlanform = p[4].valueAsText
+        out_sinuosity = p[2].valueAsText
 
         # Riverscapes project variables
 
-        paramRiverscapesBool = p[5]
-        paramProjectXML = p[6].valueAsText
-        paramRealization = p[7].valueAsText
-        paramSegmentAnalysis = p[8].valueAsText
-        paramAttributeAnalysis = p[9].valueAsText
+        paramRiverscapesBool = p[4]
+        paramProjectXML = p[5].valueAsText
+        paramRealization = p[6].valueAsText
+        paramSegmentAnalysis = p[7].valueAsText
+        paramAttributeAnalysis = p[8].valueAsText
 
         scratchWorkspace = "in_memory"
-        outValleyCenterlineName = os.path.basename(outValleyCenterlineSinuosity)
-        outPlanformName = os.path.basename(outPlanform)
+        outSinuosityName = os.path.basename(out_sinuosity)
 
         # Where the tool output data will be stored in Riverscapes Project directory
         if paramRiverscapesBool.value == True:
@@ -1376,10 +1364,8 @@ class SinuositySuiteTool(object):
         # Main tool module
         ValleyPlanform.main(inChannelSinuosity,
                             inValleyCenterline,
-                            inValleyBottomPolygon,
-                            outValleyCenterlineSinuosity,
-                            outPlanform,
-                            getTempWorkspace(scratchWorkspace))
+                            out_sinuosity,
+                            p[3].valueAsText)#getTempWorkspace(scratchWorkspace))
 
         # Add results of tool processing to the Riverscapes project XML
         if paramRiverscapesBool.value == True:
@@ -1396,34 +1382,23 @@ class SinuositySuiteTool(object):
                                                              os.path.basename(inValleyCenterline)))
                     inValleyCenterlineDS.id = "InputValleyCenterline"
 
-                    inValleyBottomDS = Riverscapes.Dataset()
-                    inValleyBottomDS.create(os.path.basename(inValleyBottomPolygon),
-                                            os.path.join(relativeDir, "Inputs",
-                                                         os.path.basename(inValleyBottomPolygon)))
-                    inValleyBottomDS.id = "InputValleyBottom"
-
-                    outValleyCenterlineDS = Riverscapes.Dataset()
-                    outValleyCenterlineDS.create(outValleyCenterlineName,
-                                                 os.path.join(relativeDir, "Outputs", outValleyCenterlineName))
-                    outValleyCenterlineDS.id = "ValleyCenterlineSinuosity"
-
-                    outPlanformDS = Riverscapes.Dataset()
-                    outPlanformDS.create(outPlanformName,
-                                         os.path.join(relativeDir, "Outputs", outPlanformName))
-                    outPlanformDS.id = "Planform"
+                    outSinuosityDS = Riverscapes.Dataset()
+                    outSinuosityDS.create(outSinuosityName,
+                                         os.path.join(relativeDir, "Outputs", outSinuosityName))
+                    outSinuosityDS.id = "Sinuosity"
 
                     GNATProject = Riverscapes.Project(paramProjectXML)
 
                     realization = GNATProject.Realizations.get(paramRealization)
                     analysis = realization.analyses.get(paramSegmentAnalysis)
-                    analysis.newAnalysisPlanform(paramAttributeAnalysis,
-                                                "V_Sin",
-                                                "Planform",
-                                                inValleyCenterlineDS,
-                                                inValleyBottomDS,
-                                                "SegmentedNetwork",
-                                                outValleyCenterlineDS,
-                                                outPlanformDS)
+                    # analysis.newAnalysisPlanform(paramAttributeAnalysis,
+                    #                             "V_Sin",
+                    #                             "Planform",
+                    #                             inValleyCenterlineDS,
+                    #                             inValleyBottomDS,
+                    #                             "SegmentedNetwork",
+                    #                             outValleyCenterlineDS,
+                    #                             outSinuosityDS)
                     realization.analyses[paramSegmentAnalysis] = analysis
                     GNATProject.Realizations[paramRealization] = realization
                     GNATProject.writeProjectXML()
@@ -1438,22 +1413,23 @@ class SinuositySuiteTool(object):
                 # Where to store attribute analyses input/output datasets
                 if paramSegmentAnalysis:
                     # Copy the tool output to the attribute analysis output folder
-                    if os.path.isfile(outValleyCenterlineSinuosity):
-                        arcpy.CopyFeatures_management(outValleyCenterlineSinuosity,
-                                                      os.path.join(attributesDir, "Outputs", outValleyCenterlineName))
-                    if os.path.isfile(outPlanform):
-                        arcpy.CopyFeatures_management(outPlanform, os.path.join(attributesDir, "Outputs", outPlanformName))
+                    # if os.path.isfile(outValleyCenterlineSinuosity):
+                    #     arcpy.CopyFeatures_management(outValleyCenterlineSinuosity,
+                    #                                   os.path.join(attributesDir, "Outputs", outValleyCenterlineName))
+                    if os.path.isfile(out_sinuosity):
+                        arcpy.CopyFeatures_management(out_sinuosity, os.path.join(attributesDir, "Outputs", outSinuosityName))
 
         return
 
 
+# Utilities
 class SinuosityTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
         self.label = "Sinuosity (simple)"
         self.description = "Calculate Sinuosity for a polyline feature class"
         self.canRunInBackground = True
-        self.category = strCatagoryGeomorphicAnalysis
+        self.category = strCatagoryUtilities
 
     def getParameterInfo(self):
         """Define parameter definitions"""
@@ -1605,7 +1581,6 @@ class SinuosityTool(object):
         return
 
 
-# Utilities
 class FindBraidedNetworkTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""

@@ -23,7 +23,7 @@ import Sinuosity
 import TransferAttributesToLine
 
 
-def main(fcChannelSinuosity,
+def Old_main(fcChannelSinuosity,
          fcValleyCenterline,
          fcValleyBottomPolygon,
          outputFCSinuosityValley,
@@ -103,74 +103,151 @@ def main(fcChannelSinuosity,
     return
 
 
-def split_line_near(source_segments, to_split, outname, temp_workspace=arcpy.env.workspace):
-    """ Geoprocccsing: split features in a line network by features in an adjacent line network"""
+def main(source_segments, vb_centerline, outname, temp_workspace=arcpy.env.workspace, xy_dist=160, filterfield="_vb_"):
+    """ Calculate channel, planform and valley bottom sinuosity"""
 
     import gis_tools
-    temp_source_segments = gis_tools.newGISDataset(temp_workspace, "SourceSegments")
-    arcpy.Copy_management(source_segments, temp_source_segments)
-    fieldname_segments = gis_tools.addUniqueIDField(temp_source_segments, "SegSplitID")
+    out_segments_file = gis_tools.newGISDataset(arcpy.Describe(outname).path,
+                                          arcpy.Describe(outname).basename) if arcpy.Exists(outname) else outname
+
+    arcpy.Copy_management(source_segments, out_segments_file)
+    out_segments = gis_tools.newGISDataset("LAYER", "OutputSegments")
+    where = '"{}" = 1'.format(filterfield) if filterfield else None
+    arcpy.MakeFeatureLayer_management(out_segments_file, out_segments, where_clause=where)
+    #fieldname_segments = gis_tools.addUniqueIDField(out_segments, "SegSplitID")
 
     # Generate points used to find near (split) points.
-    endpoints_raw = gis_tools.newGISDataset(temp_workspace, "Endpoints_raw")
-    endpoints_count = gis_tools.newGISDataset(temp_workspace, "Endpoints_Count")
-    endpoints = gis_tools.newGISDataset(temp_workspace, "Endpoints_Final")
-    arcpy.FeatureVerticesToPoints_management(temp_source_segments, endpoints_raw, "BOTH_ENDS")
-    arcpy.CollectEvents_stats(endpoints_raw, endpoints_count)
-    lyr_endpoints_count = gis_tools.newGISDataset("LAYER", "EndpointsCount")
-    arcpy.FeatureVerticesToPoints_management(temp_source_segments, endpoints, "DANGLE")
-    arcpy.MakeFeatureLayer_management(endpoints_count, lyr_endpoints_count, '''"ICOUNT" > 1''')
-    arcpy.Append_management([lyr_endpoints_count], endpoints, "NO_TEST")
-
-    arcpy.Near_analysis(endpoints, to_split, location=True, angle=True, method="PLANAR")
+    arcpy.AddMessage("Generating Near Points for Split")
+    endpoints = gis_tools.newGISDataset(temp_workspace, "Endpoints")
+    arcpy.FeatureVerticesToPoints_management(out_segments, endpoints, "BOTH_ENDS")
+    # todo Maybe not remove triple junctions
+    #endpoints_count = gis_tools.newGISDataset(temp_workspace, "Endpoints_Count")
+    #arcpy.CollectEvents_stats(endpoints_raw, endpoints_count)
+    #endpoints = gis_tools.newGISDataset(temp_workspace, "Endpoints_Final")
+    #arcpy.FeatureVerticesToPoints_management(out_segments, endpoints, "DANGLE")
+    #lyr_endpoints_count = gis_tools.newGISDataset("LAYER", "EndpointsCount")
+    #arcpy.MakeFeatureLayer_management(endpoints_count, lyr_endpoints_count, '''"ICOUNT" > 1''')
+    #arcpy.Append_management([lyr_endpoints_count], endpoints, "NO_TEST")
+    arcpy.AddXY_management(endpoints)
+    arcpy.Near_analysis(endpoints, vb_centerline, location=True, angle=True, method="PLANAR", search_radius=xy_dist)
     sr = arcpy.Describe(endpoints).spatialReference
+
     with arcpy.da.SearchCursor(endpoints, ["NEAR_X", "NEAR_Y"]) as sc:
-        splitpoints = [arcpy.PointGeometry(arcpy.Point(row[0],row[1]), sr) for row in sc]
+        splitpoints = [arcpy.PointGeometry(arcpy.Point(row[0],row[1]), sr) for row in sc if not row[0] == -1]
 
-    split_lines = gis_tools.newGISDataset(arcpy.Describe(outname).path,
-                                          arcpy.Describe(outname).name) if arcpy.Exists(outname) else outname
-    arcpy.SplitLineAtPoint_management(to_split, splitpoints, split_lines, search_radius=0.1)
+    split_lines = gis_tools.newGISDataset(temp_workspace, "SplitVB_Centerline")
+    arcpy.SplitLineAtPoint_management(vb_centerline, splitpoints, split_lines, search_radius=0.1)
 
-    lyr_all_endpoints = gis_tools.newGISDataset('LAYER', "AllEndpoints")
-    arcpy.MakeFeatureLayer_management(endpoints_raw, lyr_all_endpoints)
+    # Generate Selection Polygons
+    arcpy.AddMessage("Generating Selection Polygons")
+    lyr_xy_endpoints = gis_tools.newGISDataset("LAYER", "AllEndpoints")
+    arcpy.MakeFeatureLayer_management(endpoints, lyr_xy_endpoints, where_clause='''"NEAR_X" <> -1''')
+    xy_lines = gis_tools.newGISDataset(temp_workspace, "XYLines")
+    arcpy.XYToLine_management(lyr_xy_endpoints, xy_lines, "Point_X", "Point_Y", "NEAR_X", "NEAR_Y", )
+    selection_polys = gis_tools.newGISDataset(temp_workspace, "SelectionPolygons")
+    arcpy.FeatureToPolygon_management([xy_lines, out_segments, split_lines], selection_polys)
 
-    vb_endpoints = gis_tools.newGISDataset(temp_workspace, "vb_endpoints")
-    arcpy.FeatureVerticesToPoints_management(split_lines, vb_endpoints, "BOTH_ENDS")
+    # Find Lengths and Distances for Segments
+    arcpy.AddMessage("Adding Channel Lengths To Segments")
+    field_chanlength = gis_tools.resetField(out_segments, "_chanlen_", "DOUBLE")
+    arcpy.CalculateField_management(out_segments, field_chanlength, "!shape.length!", "PYTHON_9.3")
 
-    vb_endpoints_join = gis_tools.newGISDataset(temp_workspace, "vb_endpoints_join")
-    arcpy.SpatialJoin_analysis(vb_endpoints, lyr_all_endpoints, match_option="CLOSEST", out_feature_class=vb_endpoints_join)
+    arcpy.AddMessage("Adding Channel Distances and VB Lengths and Distances to Segments")
+    lyr_selection_polygons = gis_tools.newGISDataset("LAYER", "SelectionPolygons")
+    arcpy.MakeFeatureLayer_management(selection_polys, lyr_selection_polygons)
+    lyr_splitlines = gis_tools.newGISDataset("LAYER", "SplitLines")
+    arcpy.MakeFeatureLayer_management(split_lines, lyr_splitlines)
+    g_mp_vbcenterline = arcpy.Dissolve_management(vb_centerline, out_feature_class=arcpy.Geometry())
+
+    field_vblength = gis_tools.resetField(out_segments, "_vblen_", "DOUBLE")
+    field_chandist = gis_tools.resetField(out_segments, "_chandist_", "DOUBLE")
+    field_vbdist = gis_tools.resetField(out_segments, "_vbdist_", "DOUBLE")
+    field_vbsin = gis_tools.resetField(out_segments, "_sinvb_", "DOUBLE")
+    field_chansin = gis_tools.resetField(out_segments, "_sinchan_", "DOUBLE")
+
+    total_segments = int(arcpy.GetCount_management(out_segments).getOutput(0))
+    percents = [(total_segments / 10) * value for value in range(1, 10, 1)]
+    arcpy.AddMessage("Starting iteration of {} segments".format(total_segments))
+    with arcpy.da.UpdateCursor(out_segments, ["SHAPE@", field_vblength, field_chandist, field_vbdist]) as ucSegments:
+        i = 1
+        percent = 0
+        for segment in ucSegments:
+            segment_endpoints = [arcpy.PointGeometry(segment[0].firstPoint), arcpy.PointGeometry(segment[0].lastPoint)]
+            segment[2] = segment_endpoints[0].distanceTo(segment_endpoints[1])
+            valley_endpoints = [g_mp_vbcenterline[0].queryPointAndDistance(segment_endpoints[0])[0],
+                                g_mp_vbcenterline[0].queryPointAndDistance(segment_endpoints[1])[0]] # TODO Too Slow?
+            segment[3] = valley_endpoints[0].distanceTo(valley_endpoints[1])
+
+            # g_splitlines = arcpy.SplitLineAtPoint_management(g_mp_vbcenterline, valley_endpoints, arcpy.Geometry(), 0.1)
+            # g_selection_poly = arcpy.FeatureToPolygon_management([segment[0],
+            #                                                       g_mp_vbcenterline[0],
+            #                                                       arcpy.Polyline(arcpy.Array([segment[0].firstPoint,
+            #                                                                                   valley_endpoints[0].firstPoint])),
+            #                                                       arcpy.Polyline(arcpy.Array([segment[0].lastPoint,
+            #                                                                                   valley_endpoints[1].firstPoint]))],
+            #                                                       arcpy.Geometry())
+            # lyr_selection_polygon = gis_tools.newGISDataset("LAYER", "SelectionPolygon")
+            # arcpy.MakeFeatureLayer_management(g_selection_poly, lyr_selection_polygon)
+            # lyr_g_splitlines = gis_tools.newGISDataset("LAYER", "lyrgsplitlines")
+            # arcpy.MakeFeatureLayer_management(g_splitlines, lyr_g_splitlines)
+            arcpy.SelectLayerByLocation_management(lyr_selection_polygons, "SHARE_A_LINE_SEGMENT_WITH", segment[0])
+            arcpy.SelectLayerByLocation_management(lyr_splitlines, "SHARE_A_LINE_SEGMENT_WITH", lyr_selection_polygons)
+            with arcpy.da.SearchCursor(lyr_splitlines, ["SHAPE@LENGTH"]) as scSplitLines:
+                segment[1] = sum([line[0] for line in scSplitLines])
+            ucSegments.updateRow(segment)
+            if i in percents:
+                percent = percent + 10
+                arcpy.AddMessage("   {}% Complete: Segment {} out of {}".format(percent, i, total_segments))
+            i = i+1
+
+    arcpy.AddMessage("Calculating Planform Sinuosity")
+    fieldPlanformSinuosity = gis_tools.resetField(out_segments, "_SinPlan_", "DOUBLE")
+    codeblock = """def calculatePlanformSinuosity(channel, valley):
+        if valley == 0 or valley == -9999:
+            return -9999 
+        else:
+            return channel / valley """
+    arcpy.CalculateField_management(out_segments,
+                                    fieldPlanformSinuosity,
+                                    "calculatePlanformSinuosity(!_chanlen_!, !_vblen_!)",
+                                    "PYTHON_9.3",
+                                    codeblock)
+    arcpy.CalculateField_management(out_segments,
+                                    field_chansin,
+                                    "calculatePlanformSinuosity(!_chanlen_!, !_chandist_!)",
+                                    "PYTHON_9.3",
+                                    codeblock)
+    arcpy.CalculateField_management(out_segments,
+                                    field_vbsin,
+                                    "calculatePlanformSinuosity(!_vblen_!, !_vbdist_!)",
+                                    "PYTHON_9.3",
+                                    codeblock)
+
+    gis_tools.resetField(out_segments, "_QAsin_", "TEXT", TextLength=255)
 
 
 
-    vb_distance = gis_tools.newGISDataset(temp_workspace, "vb_distance")
-    arcpy.PointsToLine_management(vb_endpoints_join, vb_distance, "ORIG_FID")
 
+    return out_segments
 
-    # include: nearest to endpoints + vb_endpoints
+if __name__ == "__main__":
 
-    return split_lines
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('StreamNetwork', help='Input Segmented Stream Network')
+    parser.add_argument('ValleyCenterline', help="Input Valley Centerline", type=str)
+    parser.add_argument('OutSinuosity', help="Output Stream Network with Sinuosity")
+    parser.add_argument('--fieldFilter', help="(Optional) Field to filter for analysis. Default = None", default=None)
+    parser.add_argument('--TempWorkspace', help="(Optional) Specify Temporary Workspace. Default = in_memory workspace)", default="in_memory")
+    args = parser.parse_args()
 
-
-
-def associate_line_segments(dest_lines, source_lines, search_dist=None, temp_workspace=arcpy.env.workspace):
-
-    # Generate Join ID's?
-
-    centroids = gis_tools.newGISDataset(temp_workspace, "DestNetworkCentroids")
-    arcpy.FeatureVerticesToPoints_management(dest_lines, centroids, "MID")
-
-    centroids_join = gis_tools.newGISDataset(temp_workspace, "DestNetworkCentroids_Join")
-    arcpy.SpatialJoin_analysis(centroids, source_lines, "JOIN_ONE_TO_ONE", "KEEP_ALL",
-                               match_option="CLOSEST",
-                               out_feature_class=centroids_join)
+    main(args.StreamNetwork,
+         args.ValleyCenterline,
+         args.OutSinuosity,
+         temp_workspace=args.TempWorkspace,
+         )
 
 
 
 
 
-# straightline distances for
-# vb
-# segments
-
-# seglengths
-# vb lengths
