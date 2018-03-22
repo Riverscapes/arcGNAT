@@ -17,11 +17,11 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
 
-import sys
 import arcpy
 import gis_tools
 import Sinuosity
 import TransferAttributesToLine
+
 
 def main(fcChannelSinuosity,
          fcValleyCenterline,
@@ -101,3 +101,76 @@ def main(fcChannelSinuosity,
     #                            ["C_Sin", "Planform", "V_Sin"])
 
     return
+
+
+def split_line_near(source_segments, to_split, outname, temp_workspace=arcpy.env.workspace):
+    """ Geoprocccsing: split features in a line network by features in an adjacent line network"""
+
+    import gis_tools
+    temp_source_segments = gis_tools.newGISDataset(temp_workspace, "SourceSegments")
+    arcpy.Copy_management(source_segments, temp_source_segments)
+    fieldname_segments = gis_tools.addUniqueIDField(temp_source_segments, "SegSplitID")
+
+    # Generate points used to find near (split) points.
+    endpoints_raw = gis_tools.newGISDataset(temp_workspace, "Endpoints_raw")
+    endpoints_count = gis_tools.newGISDataset(temp_workspace, "Endpoints_Count")
+    endpoints = gis_tools.newGISDataset(temp_workspace, "Endpoints_Final")
+    arcpy.FeatureVerticesToPoints_management(temp_source_segments, endpoints_raw, "BOTH_ENDS")
+    arcpy.CollectEvents_stats(endpoints_raw, endpoints_count)
+    lyr_endpoints_count = gis_tools.newGISDataset("LAYER", "EndpointsCount")
+    arcpy.FeatureVerticesToPoints_management(temp_source_segments, endpoints, "DANGLE")
+    arcpy.MakeFeatureLayer_management(endpoints_count, lyr_endpoints_count, '''"ICOUNT" > 1''')
+    arcpy.Append_management([lyr_endpoints_count], endpoints, "NO_TEST")
+
+    arcpy.Near_analysis(endpoints, to_split, location=True, angle=True, method="PLANAR")
+    sr = arcpy.Describe(endpoints).spatialReference
+    with arcpy.da.SearchCursor(endpoints, ["NEAR_X", "NEAR_Y"]) as sc:
+        splitpoints = [arcpy.PointGeometry(arcpy.Point(row[0],row[1]), sr) for row in sc]
+
+    split_lines = gis_tools.newGISDataset(arcpy.Describe(outname).path,
+                                          arcpy.Describe(outname).name) if arcpy.Exists(outname) else outname
+    arcpy.SplitLineAtPoint_management(to_split, splitpoints, split_lines, search_radius=0.1)
+
+    lyr_all_endpoints = gis_tools.newGISDataset('LAYER', "AllEndpoints")
+    arcpy.MakeFeatureLayer_management(endpoints_raw, lyr_all_endpoints)
+
+    vb_endpoints = gis_tools.newGISDataset(temp_workspace, "vb_endpoints")
+    arcpy.FeatureVerticesToPoints_management(split_lines, vb_endpoints, "BOTH_ENDS")
+
+    vb_endpoints_join = gis_tools.newGISDataset(temp_workspace, "vb_endpoints_join")
+    arcpy.SpatialJoin_analysis(vb_endpoints, lyr_all_endpoints, match_option="CLOSEST", out_feature_class=vb_endpoints_join)
+
+
+
+    vb_distance = gis_tools.newGISDataset(temp_workspace, "vb_distance")
+    arcpy.PointsToLine_management(vb_endpoints_join, vb_distance, "ORIG_FID")
+
+
+    # include: nearest to endpoints + vb_endpoints
+
+    return split_lines
+
+
+
+def associate_line_segments(dest_lines, source_lines, search_dist=None, temp_workspace=arcpy.env.workspace):
+
+    # Generate Join ID's?
+
+    centroids = gis_tools.newGISDataset(temp_workspace, "DestNetworkCentroids")
+    arcpy.FeatureVerticesToPoints_management(dest_lines, centroids, "MID")
+
+    centroids_join = gis_tools.newGISDataset(temp_workspace, "DestNetworkCentroids_Join")
+    arcpy.SpatialJoin_analysis(centroids, source_lines, "JOIN_ONE_TO_ONE", "KEEP_ALL",
+                               match_option="CLOSEST",
+                               out_feature_class=centroids_join)
+
+
+
+
+
+# straightline distances for
+# vb
+# segments
+
+# seglengths
+# vb lengths

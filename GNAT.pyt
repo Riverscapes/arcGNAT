@@ -61,7 +61,7 @@ class Toolbox(object):
                       GenerateStreamOrderTool,
                       StreamBranchesTool,
                       FindBraidedNetworkTool,
-                      PlanformTool,
+                      SinuositySuiteTool,
                       SinuosityTool,
                       DividePolygonBySegmentsTool,
                       TransferLineAttributesTool,
@@ -1210,11 +1210,11 @@ class CalculateThreadednessTool(object):
             return
 
 
-class PlanformTool(object):
+class SinuositySuiteTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Valley Planform"
-        self.description = "Calculates a valley planform metric for the input stream network."
+        self.label = "Sinuosity Metrics"
+        self.description = "Calculates suite of sinuosity metrics for the stream network and valley."
         self.canRunInBackground = True
         self.category = strCatagoryGeomorphicAnalysis
 
@@ -1450,13 +1450,22 @@ class PlanformTool(object):
 class SinuosityTool(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Channel Sinuosity"
-        self.description = "Calculate channel sinuosity in a stream network polyline feature class"
+        self.label = "Sinuosity (simple)"
+        self.description = "Calculate Sinuosity for a polyline feature class"
         self.canRunInBackground = True
         self.category = strCatagoryGeomorphicAnalysis
 
     def getParameterInfo(self):
         """Define parameter definitions"""
+
+        param00 = arcpy.Parameter(
+            displayName="Type of Sinuosity",
+            name="SinuosityType",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+        param00.filter.list = ["Polyline"]
+
         param0 = arcpy.Parameter(
             displayName="Input segmented stream network polyline feature class",
             name="InputFCCenterline",
