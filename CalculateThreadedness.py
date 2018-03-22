@@ -7,15 +7,13 @@
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
-# Created:     2017-Oct-19                                                    #
+# Created:     2018-March-22                                                  #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #!/usr/bin/env python
 
-import sys
 import arcpy
 import gis_tools
-import FindBraidedNetwork
 
 
 # finds a specific field in a feature class
@@ -39,8 +37,7 @@ def nodeFieldMap(fcList):
 
 # main processing function
 def main(fcInputSegments,
-         fcInputFullNetwork,
-         fcOutputNodes,
+         fcInputAttrbNetwork,
          tempWorkspace):
 
     arcpy.env.overwriteOutput = True
@@ -51,9 +48,9 @@ def main(fcInputSegments,
 
     # Prep temporary files and layers
     arcpy.MakeFeatureLayer_management(fcInputSegments, "lyrInputSegments")
-    arcpy.MakeFeatureLayer_management(fcInputFullNetwork, "lyrInputFullNetwork")
-    fcInputFullNetworkTemp = gis_tools.newGISDataset(tempWorkspace, "fcInputFullNetworkTemp")
-    arcpy.CopyFeatures_management("lyrInputFullNetwork", fcInputFullNetworkTemp)
+    arcpy.MakeFeatureLayer_management(fcInputAttrbNetwork, "lyrInputAttrbNetwork")
+    fcInputAttrbNetworkTemp = gis_tools.newGISDataset(tempWorkspace, "fcInputAttrbNetworkTemp")
+    arcpy.CopyFeatures_management("lyrInputAttrbNetwork", fcInputAttrbNetworkTemp)
     fcBraidDslv = gis_tools.newGISDataset(tempWorkspace, "fcBraidDslv")
     fcSegmentDslv = gis_tools.newGISDataset(tempWorkspace, "fcSegmentDslv")
     fcNodeBraidToBraid = gis_tools.newGISDataset(tempWorkspace, "fcNodeBraidToBraid")
@@ -71,28 +68,27 @@ def main(fcInputSegments,
     tblNodeTCSummary = gis_tools.newGISDataset(tempWorkspace, "tblNodeTCSummary")
 
     # Check if the segmented stream network has a field named LineOID
-    if findField(fcInputSegments, "LineOID"):
-        LineOID = "LineOID"
+    if findField(fcInputSegments, "SegmentID"):
+        LineOID = "SegmentID"
         pass
     else:
-        arcpy.AddMessage("LineOID attribute field not found in input stream feature class. Using ObjectID field...")
+        arcpy.AddMessage("SegmentID attribute field not found in input stream feature class. Using ObjectID field...")
         LineOID = arcpy.Describe(fcInputSegments).OIDFieldName
-        #arcpy.AddError("LineOID attribute does not exist in segmented feature class input!")
-        #sys.exit(0)
 
-    # Check if the full stream network as been run through the Find Braided Network tool.
-    if findField(fcInputFullNetworkTemp, "IsBraided"):
+    # Check if the attributed network as been run through the Generate Network Attributes tool.
+    if findField(fcInputAttrbNetworkTemp, "_edgetype_"):
         pass
     else:
-        FindBraidedNetwork.main(fcInputFullNetworkTemp)
+        arcpy.AddError("The attributed network input is missing the '_edgetype_' field. Please run the "
+                       "network through the Generate Network Attributes tool before running this tool.")
 
     # Braid-to-braid nodes
     arcpy.AddMessage("GNAT CTT: Generating braid-to-braid nodes...")
-    arcpy.MakeFeatureLayer_management(fcInputFullNetworkTemp, "lyrInputFullNetworkTemp")
-    arcpy.SelectLayerByAttribute_management("lyrInputFullNetworkTemp","NEW_SELECTION", '"IsBraided" = 1')
-    arcpy.SelectLayerByLocation_management("lyrInputFullNetworkTemp", "HAVE_THEIR_CENTER_IN",
-                                           "lyrInputSegments", "#", "REMOVE_FROM_SELECTION")
-    arcpy.Dissolve_management("lyrInputFullNetworkTemp", fcBraidDslv, "#", "#", "SINGLE_PART")
+    arcpy.MakeFeatureLayer_management(fcInputAttrbNetworkTemp, "lyrInputAttrbNetworkTemp")
+    arcpy.SelectLayerByAttribute_management("lyrInputAttrbNetworkTemp","NEW_SELECTION", """ "_edgetype_" = 'braid' """)
+    #arcpy.SelectLayerByLocation_management("lyrInputAttrbNetworkTemp", "HAVE_THEIR_CENTER_IN",
+    #                                       "lyrInputSegments", "#", "REMOVE_FROM_SELECTION")
+    arcpy.Dissolve_management("lyrInputAttrbNetworkTemp", fcBraidDslv, "#", "#", "SINGLE_PART")
     arcpy.Intersect_analysis([fcBraidDslv], fcNodeBraidToBraid, "ONLY_FID", "#", "POINT")
     arcpy.MakeFeatureLayer_management(fcNodeBraidToBraid, "lyrNodeBraidToBraid")
     arcpy.MultipartToSinglepart_management("lyrNodeBraidToBraid", fcNodeBraidToBraidSingle)
@@ -131,9 +127,6 @@ def main(fcInputSegments,
     # Spatial join nodes to segmented stream network
     arcpy.SpatialJoin_analysis("lyrInputSegments", "lyrNodesAll", fcNodesToSegments, "JOIN_ONE_TO_MANY",
                                "KEEP_COMMON", "#", "INTERSECT")
-    # Save merged nodes to disk
-    arcpy.MakeFeatureLayer_management(fcNodesAll, "lyrNodesAll")
-    arcpy.CopyFeatures_management("lyrNodesAll", fcOutputNodes)
     # Summarize each node type by attribute field LineOID
     arcpy.AddMessage("GNAT CTT: Summarize nodes per stream segments...")
     arcpy.MakeFeatureLayer_management(fcNodesToSegments, "lyrNodesToSegments")

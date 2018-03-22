@@ -43,7 +43,13 @@ GNAT is provided as a zip file containing a .pyt file and supporting Python scri
 
 # Downloads
 
-## Version 2.5.2
+## Version 2.5.3
+**[Version 2.5.3](Downloads/arcGNAT_2.5.3.zip)** 2018-MARCH-22
+```markdown
+* Refactored Calculate Threadedness tool to work with new data schema.
+```
+
+
 **[Version 2.5.2](Downloads/arcGNAT_2.5.2.zip)** 2018-MARCH-5
 ```markdown
 * 'From' line buffer now has its geometry repaired by default, to deal with potential topology issues.

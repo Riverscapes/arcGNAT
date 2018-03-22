@@ -10,9 +10,9 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.5.2                                                          #
-# Revised:     2018-Mar-5                                                     #
-# Released:    2018-Mar-5                                                     #
+# Version:     2.5.3                                                          #
+# Revised:     2018-Mar-21                                                     #
+# Released:    2018-Mar-22                                                     #
 #                                                                             #
 # License:     MIT License                                                    #
 #                                                                             #
@@ -38,7 +38,7 @@ import Segmentation
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.5.2"
+GNAT_version = "2.5.3"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -1050,7 +1050,7 @@ class CalculateThreadednessTool(object):
             param0.filter.list = ["Polyline"]
 
             param1= arcpy.Parameter(
-                displayName="Input multi-threaded stream network feature class",
+                displayName="Input attributed stream network feature class",
                 name="InputFullNetwork",
                 datatype="DEShapefile",
                 parameterType="Required",
@@ -1058,13 +1058,6 @@ class CalculateThreadednessTool(object):
             param1.filter.list = ["Polyline"]
 
             param2 = arcpy.Parameter(
-                displayName="Output node feature class",
-                name="OutputNodes",
-                datatype="DEShapefile",
-                parameterType="Required",
-                direction="Output")
-
-            param3 = arcpy.Parameter(
                 displayName="Scratch workspace",
                 name="scratchWorkspace",
                 datatype="DEWorkspace",
@@ -1074,12 +1067,11 @@ class CalculateThreadednessTool(object):
             return [param0,
                     param1,
                     param2,
-                    param3,
-                    paramRiverscapesBool,
-                    paramProjectXML,
-                    paramRealization,
-                    paramSegmentAnalysisName,
-                    paramAttributeAnalysisName]
+                    paramRiverscapesBool, # 4 -> 3
+                    paramProjectXML, # 5 -> 4
+                    paramRealization, # 6 -> 5
+                    paramSegmentAnalysisName, # 7 -> 6
+                    paramAttributeAnalysisName] # 8 -> 7
 
         def isLicensed(self):
             """Set whether tool is licensed to execute."""
@@ -1094,11 +1086,11 @@ class CalculateThreadednessTool(object):
             inSegmentedStreamNetwork = p[0]
 
             # Riverscapes project variables
-            paramRiverscapesBool = p[4]
-            paramProjectXML = p[5]
-            paramRealization = p[6]
-            paramSegmentAnalysis = p[7]
-            paramAttributeAnalysis = p[8]
+            paramRiverscapesBool = p[3]
+            paramProjectXML = p[4]
+            paramRealization = p[5]
+            paramSegmentAnalysis = p[6]
+            paramAttributeAnalysis = p[7]
 
             if paramRiverscapesBool.value == True:
                 paramProjectXML.enabled = True
@@ -1136,7 +1128,6 @@ class CalculateThreadednessTool(object):
         def updateMessages(self, parameters):
             """Modify the messages created by internal validation for each tool
             parameter. This method is called after internal validation."""
-            # todo Check if analysis name already exists
             testProjected(parameters[0])
             return
 
@@ -1148,15 +1139,14 @@ class CalculateThreadednessTool(object):
             # Tool input variables
             inSegmentedStreamNetwork = p[0].valueAsText
             inFullThreadNetwork = p[1].valueAsText
-            outNodes = p[2].valueAsText
-            scratchWorkspace = p[3].valueAsText
+            scratchWorkspace = p[2].valueAsText
 
             # Riverscapes project variables
-            paramRiverscapesBool = p[4]
-            paramProjectXML = p[5].valueAsText
-            paramRealization = p[6].valueAsText
-            paramSegmentAnalysis = p[7].valueAsText
-            paramAttributeAnalysis = p[8].valueAsText
+            paramRiverscapesBool = p[3]
+            paramProjectXML = p[4].valueAsText
+            paramRealization = p[5].valueAsText
+            paramSegmentAnalysis = p[6].valueAsText
+            paramAttributeAnalysis = p[7].valueAsText
 
             # Where the tool output data will be stored
             if paramRiverscapesBool.value == True:
@@ -1181,7 +1171,6 @@ class CalculateThreadednessTool(object):
             # Main tool module
             CalculateThreadedness.main(inSegmentedStreamNetwork,
                                        inFullThreadNetwork,
-                                       outNodes,
                                        scratchWorkspace)
 
             # Add results of tool processing to the Riverscapes project XML
@@ -1198,12 +1187,6 @@ class CalculateThreadednessTool(object):
                                                 os.path.basename(inFullThreadNetwork)))
                         inThreadedNetworkDS.id = "InputThreadedNetwork"
 
-                        outNodesDS = Riverscapes.Dataset()
-                        outNodesDS.create(os.path.basename(outNodes),
-                                                os.path.join(relativeDir, "Outputs",
-                                                os.path.basename(outNodes)))
-                        outNodesDS.id = "OutputNodes"
-
                         GNATProject = Riverscapes.Project(paramProjectXML)
 
                         realization = GNATProject.Realizations.get(paramRealization)
@@ -1213,8 +1196,7 @@ class CalculateThreadednessTool(object):
                                                          "NODES_BB",
                                                          "NODES_TC",
                                                          inThreadedNetworkDS,
-                                                         "SegmentNetwork",
-                                                         outNodesDS)
+                                                         "SegmentNetwork")
 
                         realization.analyses[paramSegmentAnalysis] = analysis
                         GNATProject.Realizations[paramRealization] = realization
