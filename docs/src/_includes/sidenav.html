@@ -1,46 +1,31 @@
-<!--{% if page.url != "/" %}-->
-<!--<div id="toc"></div>-->
-<!--{% endif %}-->
+{% if site.settings.autoPageContents.active %}
+	{% if page.url != "/" or site.settings.autoPageContents.onHome %}
+	<div class="title-bar">
+		<div class="title-bar-title"><i class="fa fa-file-text"></i> Page Contents</div>		
+	</div>
+	<div id="toc"></div>
+	{% endif %}
+{% endif %}
 
+<div class="title-bar">
+	<div class="title-bar-title"><i class="fa fa-sitemap"></i> Site Contents
+		<div id="menuCtls" class="button-group tiny show-for-medium">
+				<span id="expand" class="button primary fa fa-plus has-tip top" data-tooltip title="Expand all items" aria-haspopup="true" data-disable-hover="false" ></span>
+				<span id="contract" class="button primary fa fa-minus has-tip top" data-tooltip title="Contract all items" aria-haspopup="true" data-disable-hover="false" ></span>
+			</div>	
+	</div>
+</div>
 <div id="sidenav">
-    <h3><a href="index">Home</a></h3>
+	{% capture html %}
 
-    <h3><a href="releases">Download and Installation</a></h3>
+	{% assign entries = site.pages | sort: "path" %}
+	<ul id='HTMLOnlyNav'>
+	{% for entry in entries %}
+		{% capture slug    %}{{ entry.url | split: "/"   | last                       }}{% endcapture %}
+		{% capture current %}{{ entry.url | remove: slug | remove: "//" | append: "/" }}{% endcapture %}
+		<li><a href='{{ site.baseurl }}{{ entry.url }}'>{{entry.title}}</a></li>
+	{% endfor %}
+	</ul>
 
-    <h3>Analyze Network Attributes</h3>
-        <h4>Step 1 - <a href="Stream-Network-Prep">Stream Network Preparation</a></h4>
-        <ul>
-            <li><a href="Find-Subnetworks">Find Subnetworks</a></li>
-            <li><a href="Generate-Network-Attributes">Generate Network Attributes</a></li>
-            <li><a href="Generate-Stream-Order">Generate Stream Order</a></li>
-            <li><a href="Generate-Stream-Branches">Generate Stream Branches</a></li>
-        </ul>
-        <h4>Step 2 - Stream Network Segmentation</h4>
-        <ul>
-            <li><a href="Segment-Stream-Network">Segment Stream Network</a></li>
-        </ul>
-        <h4>Step 3 - Geomorphic Attributes</h4>
-        <ul>
-            <li><a href="Stream-Sinuosity-and-Planform">Stream Sinuosity and Planform</a></li>
-            <li><a href="Calculate-Gradient">Calculate Gradient</a></li>
-            <li><a href="Calculate-Threadedness">Calculate Threadedness</a></li>
-        </ul>
-
-    <h3>Riverscapes Project Management</h3>
-        <h4><a href="About-GNAT-Projects">About GNAT Projects</a></h4>
-        <ul>
-            <li><a href="Project_CommitRealization">Commit Stream Network</a></li>
-            <li><a href="Project_NewGNATProject">Create New GNAT Project</a></li>
-            <li><a href="Project_LoadNetwork">Load Input Datasets</a></li>
-        </ul>
-
-    <h3>Utilities</h3>
-        <ul>
-            <li><a href="Centerline-Tool">Centerline Tool</a></li>
-            <li><a href="CombineAttributes">Combine Attributes</a></li>
-            <li><a href="Divide-Polygon-by-Segments">Divide Polygon by Segments</a></li>
-            <li><a href="Find-Braids-in-Stream-Network">Find Braids in Stream Network</a></li>
-            <li><a href="Sinuosity-by-Segment">Sinousity by Stream Segment</a></li>
-            <li><a href="Transfer-Line-Attributes">Transfer Line Attributes</a></li>
-        </ul>
+	{% endcapture %}{{ html | strip_newlines | replace:'    ','' | replace:'    ','' | replace:'  ',' ' }}
 </div>

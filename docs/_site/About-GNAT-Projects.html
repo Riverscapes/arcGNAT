@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="utf-8">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>GNAT</title>
+
+      <meta name="viewport" content="width=device-width">
+      <link rel="stylesheet" href="/assets/css/app.css">
+      <link rel="stylesheet" href="/assets/css/custom.css">
+      <script src="https://use.fontawesome.com/586b1e1322.js"></script>
+
+      <link rel="apple-touch-icon" sizes="57x57" href="/assets/images/favicons/apple-icon-57x57.png">
+      <link rel="apple-touch-icon" sizes="60x60" href="/assets/images/favicons/apple-icon-60x60.png">
+      <link rel="apple-touch-icon" sizes="72x72" href="/assets/images/favicons/apple-icon-72x72.png">
+      <link rel="apple-touch-icon" sizes="76x76" href="/assets/images/favicons/apple-icon-76x76.png">
+      <link rel="apple-touch-icon" sizes="114x114" href="/assets/images/favicons/apple-icon-114x114.png">
+      <link rel="apple-touch-icon" sizes="120x120" href="/assets/images/favicons/apple-icon-120x120.png">
+      <link rel="apple-touch-icon" sizes="144x144" href="/assets/images/favicons/apple-icon-144x144.png">
+      <link rel="apple-touch-icon" sizes="152x152" href="/assets/images/favicons/apple-icon-152x152.png">
+      <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/favicons/apple-icon-180x180.png">
+      <link rel="icon" type="image/png" sizes="192x192"  href="/assets/images/favicons/android-icon-192x192.png">
+      <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicons/favicon-32x32.png">
+      <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicons/favicon-96x96.png">
+      <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/favicons/favicon-16x16.png">
+      <link rel="manifest" href="/assets/images/favicons/manifest.json">
+      <meta name="msapplication-TileColor" content="#ffffff">
+      <meta name="msapplication-TileImage" content="/assets/images/favicons/ms-icon-144x144.png">
+      <meta name="theme-color" content="#ffffff">
+
+      <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+      <![endif]-->
+  </head>
+
+  <body>
+
+  <header>
+    <div id="topbarnav"></div>
+    <div id="headcallout" class="text-center callout large">
+      
+
+      
+      <h4 class="subheader show-for-medium"><a href="/">GNAT</a></h4>   
+      <h1>Riverscapes Projects</h1>
+            
+      
+    </div>
+  </header>
+
+  <div id="inner-wrapper">
+    <div id="inner" class="row">
+      <div id="main" class="large-8 columns large-push-4">
+        <section><p>GNAT tools are designed to enable the creation and organization of a <a href="https://github.com/riverscapes">Riverscapes</a> 
+project. The tools allow the user to organize project data and structure multiple versions of model outputs.</p>
+
+<h3 id="general-gnat-project-structure">General GNAT Project Structure</h3>
+
+<p>The GNAT project consists of a <code class="highlighter-rouge">project.rs.xml</code> file that sits at the base of the folder.</p>
+
+<h4 id="project-metadata">Project MetaData</h4>
+
+<p>At a minimum, a GNAT Riverscapes project contains at least the following metadata elements:</p>
+
+<ul>
+  <li>Region</li>
+  <li>Watershed</li>
+  <li>User/Operator</li>
+</ul>
+
+<h4 id="inputs">Inputs</h4>
+
+<p>The primary input for a GNAT Riverscapes project is the original stream network dataset used for the project, though 
+additional inputs such as valley bottom polygons, DEM raster datasets, or centerlines may be included depending on the 
+geomorphic and attribute analyses that are generated.</p>
+
+<p><strong>Folder Structure</strong> <code class="highlighter-rouge">/Inputs/StreamNetworks/StreamNetwork###/</code></p>
+
+<h4 id="realization">Realization</h4>
+
+<p>A GNAT realization represents steps 1 and 2 in the current GNAT <em>Analyze Network Attributes</em> workflow.</p>
+
+<ol>
+  <li>Initial network topology table is generated.</li>
+  <li>Network features and errors are identified.</li>
+  <li>Network topology errors are fixed manually in ArcGIS (or QGIS, gvSIG, etc.).</li>
+  <li>Return to step 1 and repeat as needed.</li>
+  <li>Once the network data is cleaned, it may be ‘committed’ to a realization, from which network analyses can be 
+generated. If the network needs further editing or revising, a new committed network realization must be generated 
+(networks that are committed to a realization should not be edited to maintain data workflow integrity).</li>
+</ol>
+
+<p><strong>Folder Structure</strong> <code class="highlighter-rouge">/Outputs/RealizationName</code></p>
+
+<p><strong><em>Realization Metadata</em></strong></p>
+
+<ul>
+  <li>Editing Notes: Manually entered text provided by the user.</li>
+</ul>
+
+<p><strong>Reazlation Outputs</strong>*</p>
+
+<ul>
+  <li>GNAT network polyline feature class</li>
+  <li>GNAT network topology table</li>
+</ul>
+
+<h3 id="network-analyses">Network Analyses</h3>
+
+<p>An <em>Analysis</em> represents a segmented or stream branch processed network. These can be input into other geomorphic 
+attribute projects as inputs. Several <em>Analyses</em> can be associated with a <em>Realization</em>, but if the <em>Realization</em> 
+changes or is updated, new analyses must be generated for that <em>Realization</em>.</p>
+
+<p><strong>Folder Structure</strong> <code class="highlighter-rouge">/Outputs/RealizationName/Analyses/AnalysisName</code></p>
+
+<h4 id="segmented-network">Segmented Network</h4>
+
+<p>Network polyline feature class split by segments with original attributes retained. Segmentation is identified by a 
+<code class="highlighter-rouge">SegmentID</code> attribute field.</p>
+
+<p><strong><em>Parameters</em></strong></p>
+
+<ul>
+  <li>SegID Field</li>
+  <li>Pre-Segmentation dissolve options (None, Stream Branches)</li>
+  <li>Segmentation distance</li>
+  <li>Segmentation direction (“Move Upstream”, “Move Downstream”)</li>
+  <li>Segmentation remainder option (“End”,”Proportional”)</li>
+</ul>
+
+<p><strong><em>Outputs</em></strong></p>
+
+<ul>
+  <li>Segmented GNAT network polyline feature class</li>
+  <li>GNAT network table</li>
+</ul>
+
+<h4 id="stream-branch">Stream Branch</h4>
+
+<p>Network polyline feature class with a stream branch ID field applied. Original attributes are retained.</p>
+
+<ul>
+  <li>GNAT network polyline feature class with stream branch identifiers</li>
+  <li>GNAT network table</li>
+</ul>
+
+<h3 id="attribute-analyses">Attribute Analyses</h3>
+
+<p>A further set of analyses can be generated from a Network Analysis, which represent geomorphic or network metrics 
+calculated from the Network.</p>
+
+<p><strong>Folder Structure</strong> <code class="highlighter-rouge">/Outputs/RealizationName/Analyses/AnalysisName</code> (Attributes are added to the existing segmented 
+network feature class, so no additional files are generated)</p>
+
+<h4 id="sinuosity-analysis">Sinuosity Analysis</h4>
+<p>Adds a sinuosity calculation in an attribute field named <code class="highlighter-rouge">C_Sin</code> to Network Analysis dataset.</p>
+
+<h4 id="planform-analysis">Planform Analysis</h4>
+<p>Adds a planform calculation in an attribute field named <code class="highlighter-rouge">V_Plan</code> to Network Analysis dataset.</p>
+
+<h4 id="gradient-analysis">Gradient Analysis</h4>
+<p>Adds a gradient calculation in an attribute field named <code class="highlighter-rouge">GRADIENT</code> to Network Anaysis dataset.</p>
+
+<h4 id="threadedness-analysis">Threadedness Analysis</h4>
+<p>Adds a threadedness calculation, consisting of multiple attribute fields to the Network Analysis dataset.</p>
+
+<h3 id="project-workflow">Project Workflow</h3>
+<p>The following is a proposed workflow for using GNAT in Riverscapes project mode. Note that the Network Prep step has 
+some cyclical and manual processing, so a <em>Realization</em> does not appear until the user commits the updates.</p>
+
+<ol>
+  <li>Project Management (Toolset level)
+    <ol>
+      <li>New GNAT Project
+        <ul>
+          <li>Creates XML</li>
+          <li>Project metadata</li>
+        </ul>
+      </li>
+      <li>Load Raw Network to Project
+        <ul>
+          <li>Copies line network to inputs</li>
+        </ul>
+      </li>
+    </ol>
+  </li>
+  <li>Main/Step 1 - Network Prep
+    <ol>
+      <li>Generate Topology Table
+        <ul>
+          <li>Generates companion topology table</li>
+          <li><strong>Does not output to Realization</strong></li>
+        </ul>
+      </li>
+      <li>Generate Network Features/Errors
+        <ul>
+          <li>Uses table and network geometry to find attributes</li>
+          <li><strong>Does not output to Realization</strong></li>
+        </ul>
+      </li>
+      <li>(Manual) Repair network errors
+        <ul>
+          <li>Manual step</li>
+          <li>Repeat step 1 and 2 after this</li>
+        </ul>
+      </li>
+      <li>Commit Network
+        <ul>
+          <li>User Names Realization</li>
+          <li>Copies network and table to Realization level of project (Outputs/RealizationName/Network)</li>
+        </ul>
+      </li>
+    </ol>
+  </li>
+  <li>Step 2 - Network Segments
+    <ol>
+      <li>Segmentation Tool
+        <ul>
+          <li>Applies segmentation to network (as segID)</li>
+          <li>Keeps original attributes (need to retain some type of original ReachID)</li>
+          <li>Save at Analysis level (Outputs/RealizationName/Analyses/AnalysisName)</li>
+        </ul>
+      </li>
+    </ol>
+  </li>
+  <li>Step 3 - Geomorphic Attributes
+    <ul>
+      <li>Calculate Gradient</li>
+      <li>Calculate Threadedness</li>
+      <li>Channel Sinuosity</li>
+      <li>Valley Planform</li>
+    </ul>
+  </li>
+</ol>
+
+<h4 id="example-project-file">Example Project File</h4>
+
+<p><a href="https://gist.github.com/KellyMWhitehead/8a198d59ed3e1df69c4c39733e865327">Example XML</a></p>
+</section>
+      </div>
+      <div id="sidebar" class="large-4 columns large-pull-8">
+          
+	
+	<div class="title-bar">
+		<div class="title-bar-title"><i class="fa fa-file-text"></i> Page Contents</div>		
+	</div>
+	<div id="toc"></div>
+	
+
+
+<div class="title-bar">
+	<div class="title-bar-title"><i class="fa fa-sitemap"></i> Site Contents
+		<div id="menuCtls" class="button-group tiny show-for-medium">
+				<span id="expand" class="button primary fa fa-plus has-tip top" data-tooltip title="Expand all items" aria-haspopup="true" data-disable-hover="false" ></span>
+				<span id="contract" class="button primary fa fa-minus has-tip top" data-tooltip title="Contract all items" aria-haspopup="true" data-disable-hover="false" ></span>
+			</div>	
+	</div>
+</div>
+<div id="sidenav">
+			<ul id='HTMLOnlyNav'>							<li><a href='/About-GNAT-Projects.html'>Riverscapes Projects</a></li>							<li><a href='/Build-Network-Topology-Table.html'>Build Network Topology Table</a></li>							<li><a href='/Calculate-Gradient.html'>Calculate Gradient</a></li>							<li><a href='/Calculate-Threadedness.html'>Calculate Threadedness</a></li>							<li><a href='/Centerline-Tool.html'>Centerline Tool</a></li>							<li><a href='/CombineAttributes.html'>Combine Attributes</a></li>							<li><a href='/Divide-Polygon-by-Segments.html'>Divide Polygons by Segments</a></li>							<li><a href='/Find-Braids-in-Stream-Network.html'>Find Braids in Stream Network</a></li>							<li><a href='/Find-Subnetworks.html'>Find Subnetworks</a></li>							<li><a href='/Generate-Network-Attributes.html'>Generate Network Attributes</a></li>							<li><a href='/Generate-Stream-Branches.html'>Generate Stream Branches</a></li>							<li><a href='/Generate-Stream-Order.html'>Generate Stream Order</a></li>							<li><a href='/Project_CommitRealization.html'>Commit Realization</a></li>							<li><a href='/Project_LoadNetwork.html'>Load Input Datsets</a></li>							<li><a href='/Project_NewGNATProject.html'>Create a New GNAT Project</a></li>							<li><a href='/Segment-Stream-Network.html'>Segment Stream Network</a></li>							<li><a href='/Sinuosity-by-Segment.html'>Sinousity by Segment</a></li>							<li><a href='/Stream-Network-Prep.html'>Stream Network Preparation</a></li>							<li><a href='/Stream-Sinuosity-and-Planform.html'>Stream Sinousity and Planform</a></li>							<li><a href='/Transfer-Line-Attributes.html'>Transfer Line Attributes</a></li>							<li><a href='/'>Home</a></li>		</ul>	
+</div>
+
+        </div>
+    </div>
+  </div>
+
+
+    <footer id="footer" class="row">
+<div id="rightslogo">
+    <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank">
+        <img src="/assets/images/cc-watermarks-riverscapes_orig.png" alt="Picture">
+    </a>
+</div>
+</footer>
+    <script type="text/javascript">var NAVTitle = "GNAT";var NAVHome = "";var NAVPages = [{url: "/About-GNAT-Projects.html",absurl: "/About-GNAT-Projects.html",slug: "About-GNAT-Projects.html",title: "Riverscapes Projects",weight: ""},{url: "/Build-Network-Topology-Table.html",absurl: "/Build-Network-Topology-Table.html",slug: "Build-Network-Topology-Table.html",title: "Build Network Topology Table",weight: ""},{url: "/Calculate-Gradient.html",absurl: "/Calculate-Gradient.html",slug: "Calculate-Gradient.html",title: "Calculate Gradient",weight: ""},{url: "/Calculate-Threadedness.html",absurl: "/Calculate-Threadedness.html",slug: "Calculate-Threadedness.html",title: "Calculate Threadedness",weight: ""},{url: "/Centerline-Tool.html",absurl: "/Centerline-Tool.html",slug: "Centerline-Tool.html",title: "Centerline Tool",weight: ""},{url: "/CombineAttributes.html",absurl: "/CombineAttributes.html",slug: "CombineAttributes.html",title: "Combine Attributes",weight: ""},{url: "/Divide-Polygon-by-Segments.html",absurl: "/Divide-Polygon-by-Segments.html",slug: "Divide-Polygon-by-Segments.html",title: "Divide Polygons by Segments",weight: ""},{url: "/Find-Braids-in-Stream-Network.html",absurl: "/Find-Braids-in-Stream-Network.html",slug: "Find-Braids-in-Stream-Network.html",title: "Find Braids in Stream Network",weight: ""},{url: "/Find-Subnetworks.html",absurl: "/Find-Subnetworks.html",slug: "Find-Subnetworks.html",title: "Find Subnetworks",weight: ""},{url: "/Generate-Network-Attributes.html",absurl: "/Generate-Network-Attributes.html",slug: "Generate-Network-Attributes.html",title: "Generate Network Attributes",weight: ""},{url: "/Generate-Stream-Branches.html",absurl: "/Generate-Stream-Branches.html",slug: "Generate-Stream-Branches.html",title: "Generate Stream Branches",weight: ""},{url: "/Generate-Stream-Order.html",absurl: "/Generate-Stream-Order.html",slug: "Generate-Stream-Order.html",title: "Generate Stream Order",weight: ""},{url: "/Project_CommitRealization.html",absurl: "/Project_CommitRealization.html",slug: "Project_CommitRealization.html",title: "Commit Realization",weight: ""},{url: "/Project_LoadNetwork.html",absurl: "/Project_LoadNetwork.html",slug: "Project_LoadNetwork.html",title: "Load Input Datsets",weight: ""},{url: "/Project_NewGNATProject.html",absurl: "/Project_NewGNATProject.html",slug: "Project_NewGNATProject.html",title: "Create a New GNAT Project",weight: ""},{url: "/Segment-Stream-Network.html",absurl: "/Segment-Stream-Network.html",slug: "Segment-Stream-Network.html",title: "Segment Stream Network",weight: ""},{url: "/Sinuosity-by-Segment.html",absurl: "/Sinuosity-by-Segment.html",slug: "Sinuosity-by-Segment.html",title: "Sinousity by Segment",weight: ""},{url: "/Stream-Network-Prep.html",absurl: "/Stream-Network-Prep.html",slug: "Stream-Network-Prep.html",title: "Stream Network Preparation",weight: ""},{url: "/Stream-Sinuosity-and-Planform.html",absurl: "/Stream-Sinuosity-and-Planform.html",slug: "Stream-Sinuosity-and-Planform.html",title: "Stream Sinousity and Planform",weight: ""},{url: "/Transfer-Line-Attributes.html",absurl: "/Transfer-Line-Attributes.html",slug: "Transfer-Line-Attributes.html",title: "Transfer Line Attributes",weight: ""},{url: "/",absurl: "/",slug: "",title: "Home",weight: ""},];var SiteSettings = {"autoPageContents":{"active":true,"onHome":false},"sideMenu":{"homeItem":true,"startExpanded":false},"topmenu":[{"title":"Riverscapes","childern":[{"title":"Model Home","url":"index"},{"title":"Riverscapes Home","url":"http://riverscapes.xyz"},{"title":"About Riverscapes","url":"http://riverscapes.xyz/about.html"},{"title":"Who We Are","url":"http://riverscapes.xyz/who-we-are.html"},{"title":"News","url":"http://riverscapes.xyz/news.html"}]},{"title":"RC Tools","url":"http://riverscapes.xyz/rc-tools.html"},{"title":"RC Science","url":"http://riverscapes.xyz/rc-science.html"},{"title":"RC Data","url":"http://riverscapes.xyz/rc-data.html"},{"title":"RC Help","url":"http://riverscapes.xyz/rc-help.html"}]};</script>
+
+    <script src="/assets/js/dist.js"></script>
+
+  </body>
+
+</html>

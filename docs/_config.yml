@@ -1,14 +1,22 @@
-# Site settings
+# Site title will be used everywhere
 title: GNAT
 description: > # this means to ignore newlines until "baseurl:"
-  Online help and documentation site for the Geomorphic Network Analysis Toolbox (GNAT)
-url: https://gnat.riverscapes.xyz
-baseurl: ""
+  Online help and documentation site for the site
+
+# Final root url of the site. No ending slash. No subdirectory
+url: https://riverscapes.github.io
+# If the site is in a subdirectory you should do it like this: "/subdirectory". Otherwise ""
+baseurl:
+# When serving locally what port should we use:
 port: 4001
-# Build settings
+
+# Markdown style
 markdown: kramdown
+# Syntax highlighter.
 highlighter: rouge
 
+# Choosing "default" layout means we don't need a "layout:default" in all our 
+# front matter
 defaults:
   -
     scope:
@@ -16,15 +24,16 @@ defaults:
     values:
       layout: "default"
 
-
-layouts_dir:  src/_layouts
-includes_dir: src/_includes
-
+# Files/Folders to exclude from publishing
 exclude:
   - src
   - LICENSE
   - README.md
   - _config.yml
+
+# Where our layouts and templates are stored
+layouts_dir:  src/_layouts
+includes_dir: src/_includes
 
 # These are theme settings that will be used to turn features on and off
 # They are not part of Jekyll, they are entirely custom.
@@ -32,8 +41,32 @@ settings:
   # Turn the automatically generated page contents on and off
   autoPageContents:
     active: true
-    onHome: true
-  # Options for the sidebar menu
+    onHome: false
+  # Options for the sidebar menu      
   sideMenu:
     homeItem: true
-    startExpanded: true
+    startExpanded: false
+  # Arbitrary multi-level topbar menu
+  # IF you don't need this just comment out everything below
+  # ----------------------------------
+  topmenu:
+    - title: "Riverscapes"
+      childern:
+        - title: "Model Home"
+          url: index
+        - title: "Riverscapes Home"
+          url: http://riverscapes.xyz
+        - title: "About Riverscapes"
+          url: http://riverscapes.xyz/about.html
+        - title: "Who We Are"
+          url: http://riverscapes.xyz/who-we-are.html
+        - title: "News"
+          url: http://riverscapes.xyz/news.html
+    - title: "RC Tools"
+      url: http://riverscapes.xyz/rc-tools.html
+    - title: "RC Science"
+      url: http://riverscapes.xyz/rc-science.html
+    - title: "RC Data"
+      url: http://riverscapes.xyz/rc-data.html
+    - title: "RC Help"
+      url: http://riverscapes.xyz/rc-help.html
