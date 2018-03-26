@@ -43,12 +43,16 @@ GNAT is provided as a zip file containing a .pyt file and supporting Python scri
 
 # Downloads
 
-## Version 2.5.3
+## Version 2.5.4
+**[Version 2.5.4](Downloads/arcGNAT_2.5.4.zip)** 2018-MARCH-26
+```markdown
+* Calculate Threadedness now counts braid-to-braid nodes too.
+```
+
 **[Version 2.5.3](Downloads/arcGNAT_2.5.3.zip)** 2018-MARCH-22
 ```markdown
 * Refactored Calculate Threadedness tool to work with new data schema.
 ```
-
 
 **[Version 2.5.2](Downloads/arcGNAT_2.5.2.zip)** 2018-MARCH-5
 ```markdown
