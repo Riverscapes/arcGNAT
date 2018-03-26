@@ -1,3 +1,6 @@
+---
+title: Home
+---
 The **Geomorphic Network and Analysis Toolbox (GNAT)** is a set of ArcGIS geoprocessing scripts used to generate 
 geomorphic attributes for a spatially-explicit stream network dataset, and is designed specifically to work with the
 [USGS National Hydrography Dataset (NHD)](https://nhd.usgs.gov).  GNAT is written in Python as an 

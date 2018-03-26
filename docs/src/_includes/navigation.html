@@ -19,7 +19,6 @@
         },
         {% endfor %}
     ];
+    var SiteSettings = {{ site.settings | jsonify }};
 </script>
-
-
 {% endcapture %}{{ html | strip_newlines | replace:'    ','' | replace:'    ','' | replace:'  ',' ' }}
