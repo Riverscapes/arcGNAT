@@ -32,7 +32,7 @@ are not currently supported.
 
 ### Input Parameters
 
-![network_attrb_form]({{site.baseurl}}/images/network_attrb_form.PNG)
+![network_attrb_form]({{site.baseurl}}assets/images/network_attrb_form.PNG)
 
 **Input stream network shapefile**
 
@@ -85,7 +85,7 @@ throughout the workflow, until being converted back into a shapefile.
 
 ### Post-processing
 
-![network_attrb_edges]({{site.baseurl}}/images/network_attrb_edges.PNG)
+![network_attrb_edges]({{site.baseurl}}assets/images/network_attrb_edges.PNG)
 
 The **Generate Network Attributes** tool is the second step in GNAT Toolbox's *Stream Network Preparation* workflow. We
 recommend running the **Generate Stream Order** tool next.

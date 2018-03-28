@@ -14,7 +14,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-![commit_stream_example]({{site.baseurl}}/images/commit_stream_form.PNG)
+![commit_stream_example]({{site.baseurl}}assets/images/commit_stream_form.PNG)
 
 **Realization Name**
 

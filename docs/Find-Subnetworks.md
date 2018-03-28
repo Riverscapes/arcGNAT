@@ -16,9 +16,9 @@ input network, including:
 
 | Error   Type      | Example                                                     |
 | ------------------| :-----------------------------------------------------------|
-| Duplicate reaches | ![error_duplicate]({{site.baseurl}}/images/error_dupe.png)  |
-| Confluence errors | ![error_confluence]({{site.baseurl}}/images/error_conf.png) |
-| Multiple outflows | ![error_outflow]({{site.baseurl}}/images/error_out.png)     |
+| Duplicate reaches | ![error_duplicate]({{site.baseurl}}assets/images/error_dupe.png)  |
+| Confluence errors | ![error_confluence]({{site.baseurl}}assets/images/error_conf.png) |
+| Multiple outflows | ![error_outflow]({{site.baseurl}}assets/images/error_out.png)     |
 
 
 ## Usage
@@ -36,7 +36,7 @@ are not currently supported.
 
 ### Input Parameters
 
-![find_subnetworks_form]({{site.baseurl}}/images/find_subnetworks_form.PNG)
+![find_subnetworks_form]({{site.baseurl}}assets/images/find_subnetworks_form.PNG)
 
 **Input stream network shapefile**
 
@@ -77,7 +77,7 @@ how the file is then processed throughout the workflow, until being converted ba
 
 ### Post-processing
 
-![find_subnetworks_output]({{site.baseurl}}/images/find_subnetworks_output.PNG)
+![find_subnetworks_output]({{site.baseurl}}assets/images/find_subnetworks_output.PNG)
 
 After the **Find Subnetworks** tool is finished processing, the user can decide which subnets should remain disconnected
 from the main network, and which should be edited so that they are connected. Subnetworks can be visualized in ArcMap 

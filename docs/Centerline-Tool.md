@@ -18,7 +18,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-![centerline_form]({{site.baseurl}}/images/centerline_form.PNG)
+![centerline_form]({{site.baseurl}}assets/images/centerline_form.PNG)
 
 **Valley bottom polygon feature class**
 

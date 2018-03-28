@@ -14,7 +14,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-![combine_attributes_form]({{site.baseurl}}/images/combine_attributes_frm.png)
+![combine_attributes_form]({{site.baseurl}}assets/images/combine_attributes_frm.png)
 
 **Input polyline feature classes**
 

@@ -5,7 +5,7 @@ title: Find Braids in Stream Network
 
 The **Find Braids in Stream Network** tool determines if stream reaches are part of a braided section of a stream network polyline feature class. Stream reach features that are braids can then be identified by selecting all records where "IsBraidedReach" == 1. This is useful for data validation and repair of the polyline feature class, and is incorporated into the processing workflow of the [Find Network Errors](http://gnat.riverscapes.xyz/Find-Network-Features) tool. 
 
-![braids_example]({{site.baseurl}}/images/braids_example.png)
+![braids_example]({{site.baseurl}}assets/images/braids_example.png)
 
 _______________________________________________________________
 ## Usage
@@ -16,7 +16,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-![braids_form]({{site.baseurl}}/images/braids_form.PNG)
+![braids_form]({{site.baseurl}}assets/images/braids_form.PNG)
 
 
 **Input Stream Network**

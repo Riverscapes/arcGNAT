@@ -8,7 +8,7 @@ horizontal distance. The **Calculate Gradient** tool calculates stream gradient 
 Specifically, the tool calculates gradient by measuring the difference in elevation between the start and end nodes
 of each stream feature (i.e. reach or segment) within the network, then dividing by the reach length value.
 
-![gradient_example]({{site.baseurl}}/images/gradient_example.png)
+![gradient_example]({{site.baseurl}}assets/images/gradient_example.png)
 
 _______________________________________________________________
 

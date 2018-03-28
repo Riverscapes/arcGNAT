@@ -8,12 +8,12 @@ create stream branches in the stream network polyline feature class. The resulti
 by the [Segment Stream Network](http://gnat.riverscapes.xyz/Segment-Stream-Network) tool for splitting the stream 
 network by the longest, continuous stretches of stream.
 
-![example]({{site.baseurl}}/images/branchID_example.png)
+![example]({{site.baseurl}}assets/images/branchID_example.png)
 
 _______________________________________________________________
 ## Usage
 
-![form]({{site.baseurl}}/images/branchID_form.PNG)
+![form]({{site.baseurl}}assets/images/branchID_form.PNG)
 
 ### Input Parameters
  

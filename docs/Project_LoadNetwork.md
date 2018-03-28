@@ -14,7 +14,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-![load_network_example]({{site.baseurl}}/images/load_network_form.PNG)
+![load_network_example]({{site.baseurl}}assets/images/load_network_form.PNG)
 
 **Input stream network feature class**
 

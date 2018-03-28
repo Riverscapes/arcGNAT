@@ -8,7 +8,7 @@ Sinuosity is a ratio of the sinuous length of stream or valley reach the to stra
 and Planform** tool calculates sinuosity (per polyline feature) for valley centerline and stream network features. The 
 tool also transfers the valley sinuosity to the stream network and calculates river planform attribute.
 
-![sinuosity_example]({{site.baseurl}}/images/sinuosity_example.png)
+![sinuosity_example]({{site.baseurl}}assets/images/sinuosity_example.png)
 
 _______________________________________________________________
 ## Usage
@@ -20,7 +20,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-![sinuosityplanform_form]({{site.baseurl}}/images/sinuosityplanform_form.png)
+![sinuosityplanform_form]({{site.baseurl}}assets/images/sinuosityplanform_form.png)
 
 **Input Segmented Stream Network**
 

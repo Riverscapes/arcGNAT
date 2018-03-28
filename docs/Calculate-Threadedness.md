@@ -13,7 +13,7 @@ including:
 * braid-to-mainstem
 * tributary confluences
 
-![threadedness_example]({{site.baseurl}}/images/threadedness_example.png)
+![threadedness_example]({{site.baseurl}}assets/images/threadedness_example.png)
 
 _______________________________________________________________
 

@@ -12,7 +12,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-![create_project_example]({{site.baseurl}}/images/create_project_form.PNG)
+![create_project_example]({{site.baseurl}}assets/images/create_project_form.PNG)
 
 **Project Name**
 

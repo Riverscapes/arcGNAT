@@ -10,7 +10,7 @@ and junction points representing confluences for stream reaches with the same
 stream order value. 
 
 The tool offers three segmentation methods for handling the 'leftover' or 'slivers' of stream length that occur when a stream reach is not equally divisible by the user-provided segmentation length.  (see Segmentation Method section below).
-![methods]({{site.baseurl}}/images/seg_methods.png)
+![methods]({{site.baseurl}}assets/images/seg_methods.png)
 
 _______________________________________________________________
 ## Tool Usage
@@ -49,7 +49,7 @@ The segmentation tool can be used in either a GNAT Project or as a stand-alone t
 
 9. Click OK to run the tool.
 
-![form]({{site.baseurl}}/images/seg_form.PNG)
+![form]({{site.baseurl}}assets/images/seg_form.PNG)
 
 ### Non-Project Mode
 

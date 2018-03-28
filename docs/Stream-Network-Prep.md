@@ -46,7 +46,7 @@ random color for each `_netid_` value. This will highlight all of the disconnect
 must now decide which subnetworks are disconnected erroneously, and which subnetworks should stay disconnected (or be 
 discarded entirely). Erroneously disconnected networks should be connected manually using ArcMap editing tools.
 
-![find_subnetworks_output.PNG]({{site.baseurl}}/images/find_subnetworks_output.PNG)
+![find_subnetworks_output.PNG]({{site.baseurl}}assets/images/find_subnetworks_output.PNG)
 
 6. Rerun the **Find Subnetworks** tool again with the edited shapefile as input, but this time select the 
 `Find topology errors` option.
@@ -82,7 +82,7 @@ subnetwork.
     In addition, the **Generate Network Attributes** tool also generates a new point shapefile, which represents network 
     nodes.
 
-![network_attrb_edges.PNG]({{site.baseurl}}/images/network_attrb_edges.PNG)
+![network_attrb_edges.PNG]({{site.baseurl}}assets/images/network_attrb_edges.PNG)
 
 11. After processing is finished, the edge type classification of output shapefile should be reviewed in ArcMap, with 
 symbolization based on the `_edgetype_` attribute field.

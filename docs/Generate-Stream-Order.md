@@ -8,7 +8,7 @@ and calculates the [Strahler stream order](https://en.wikipedia.org/wiki/Strahle
 within the network. If there are subnetworks found within the input stream network shapefile, stream order values are
 calculated separately for each subnetwork.
 
-![stream_order_example]({{site.baseurl}}/images/stream_order_example.png)
+![stream_order_example]({{site.baseurl}}assets/images/stream_order_example.png)
 
 
 ## Usage
@@ -26,7 +26,7 @@ are not currently supported.
 
 ### Input Parameters
 
-![stream_order_form]({{site.baseurl}}/images/stream_order_form.PNG)
+![stream_order_form]({{site.baseurl}}assets/images/stream_order_form.PNG)
 
 **Input stream network shapefile**
 
