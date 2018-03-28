@@ -15,7 +15,7 @@ tool which can be used to find topology errors in the stream network.
 If stream networks are not connected, stream reaches within the disconnected networks will not be included in the resulting network table. The 
 [Find Network Features](http://gnat.riverscapes.xyz/Find-Network-Features) tool can explicitly identify these disconnected networks.
 
-![buildNetworkTable_example]({{site.baseurl}}/images/buildNetworkTable_example.PNG)
+![buildNetworkTable_example]({{site.baseurl}}assets/images/buildNetworkTable_example.PNG)
 
 _______________________________________________________________
 ## Usage
@@ -24,7 +24,7 @@ _______________________________________________________________
 * We recommend that the tool be run using 64-bit python geoprocessing.
 * Disable Z and M geometry in the stream network Shape field.
 
-![buildNetworkTable_form]({{site.baseurl}}/images/buildNetworkTable_form.PNG)
+![buildNetworkTable_form]({{site.baseurl}}assets/images/buildNetworkTable_form.PNG)
 
 ### Input Parameters
 **Input Stream Network**
