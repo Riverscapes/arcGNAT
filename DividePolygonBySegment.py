@@ -108,13 +108,13 @@ def main(fcInputCenterline,
     arcpy.Merge_management([fcTribToMidLines, fcThiessanEdges, fcCenterline],
                            fcAllEdges)  # include fcCenterline if needed
 
-    fcAllEdgesPolygons = gis_tools.newGISDataset(r"C:\GIS\GNAT\Sinuosity_Planform\Version01\Temp", "GNAT_DPS_AllEdgesPolygons")
+    fcAllEdgesPolygons = gis_tools.newGISDataset(workspaceTemp, "GNAT_DPS_AllEdgesPolygons")
     arcpy.FeatureToPolygon_management(fcAllEdges, fcAllEdgesPolygons)
 
-    fcAllEdgesPolygonsClip = gis_tools.newGISDataset(r"C:\GIS\GNAT\Sinuosity_Planform\Version01\Temp", "GNAT_DPS_AllEdgesPolygonsClip")
+    fcAllEdgesPolygonsClip = gis_tools.newGISDataset(workspaceTemp, "GNAT_DPS_AllEdgesPolygonsClip")
     arcpy.Clip_analysis(fcAllEdgesPolygons, fcInputPolygon, fcAllEdgesPolygonsClip)
 
-    fcPolygonsJoinCenterline = gis_tools.newGISDataset(r"C:\GIS\GNAT\Sinuosity_Planform\Version01\Temp",
+    fcPolygonsJoinCenterline = gis_tools.newGISDataset(workspaceTemp,
                                                        "GNAT_DPS_PolygonsJoinCenterline")
     arcpy.SpatialJoin_analysis(fcAllEdgesPolygonsClip,
                                fcCenterline,
@@ -123,16 +123,16 @@ def main(fcInputCenterline,
                                "KEEP_ALL",
                                match_option="SHARE_A_LINE_SEGMENT_WITH")
 
-    fcPolygonsDissolved = gis_tools.newGISDataset(r"C:\GIS\GNAT\Sinuosity_Planform\Version01\Temp",
+    fcPolygonsDissolved = gis_tools.newGISDataset(workspaceTemp,
                                                   "GNAT_DPS_PolygonsDissolved")
     arcpy.Dissolve_management(fcPolygonsJoinCenterline,
                               fcPolygonsDissolved,
-                              "InputID", #"FromID",
+                              "FromID",
                               multi_part="SINGLE_PART")
 
     lyrPolygonsDissolved = gis_tools.newGISDataset("Layer", "lyrPolygonsDissolved")
     arcpy.MakeFeatureLayer_management(fcPolygonsDissolved, lyrPolygonsDissolved)
-    arcpy.SelectLayerByAttribute_management(lyrPolygonsDissolved, "NEW_SELECTION", """ "InputID" IS NULL """)
+    arcpy.SelectLayerByAttribute_management(lyrPolygonsDissolved, "NEW_SELECTION", """ "FromID" IS NULL """)
 
     arcpy.Eliminate_management(lyrPolygonsDissolved, fcSegmentedPolygons, "LENGTH")
 
