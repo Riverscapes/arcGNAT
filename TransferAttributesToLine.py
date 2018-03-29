@@ -69,7 +69,7 @@ def main(fcFromLine,
     lyrFromLineTemp = gis_tools.newGISDataset("Layer", "lyrFromLineTemp")
     arcpy.MakeFeatureLayer_management(fcFromLineTemp, lyrFromLineTemp)
     arcpy.Snap_edit(lyrFromLineTemp,
-                    [[fcToLine, "EDGE", "{0} Meters".format(searchDistance/2)],[fcToLine, "END", "{0} Meters".format(searchDistance)]])
+                    [[fcToLine, "END", "{0} Meters".format(searchDistance)]])
 
     # Make bounding polygon for "From" line feature class
     arcpy.AddMessage("GNAT TLA: Create buffer polygon around 'From' network")
