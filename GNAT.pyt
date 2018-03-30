@@ -10,7 +10,7 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.5.4                                                          #
+# Version:     2.5.5                                                          #
 # Revised:     2018-Mar-26                                                    #
 # Released:    2018-Mar-26                                                    #
 #                                                                             #
@@ -38,7 +38,7 @@ import Segmentation
 import CalculateGradient
 import CalculateThreadedness
 
-GNAT_version = "2.5.4"
+GNAT_version = "2.5.5"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
