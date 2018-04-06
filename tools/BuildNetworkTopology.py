@@ -24,8 +24,7 @@ import arcpy
 import os
 import sys
 import FindBraidedNetwork as braid
-import ClearInMemory as in_mem
-import gis_tools
+from lib import ClearInMemory as in_mem, gis_tools
 
 sys.setrecursionlimit(1500)
 

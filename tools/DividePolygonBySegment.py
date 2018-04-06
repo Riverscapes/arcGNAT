@@ -18,8 +18,7 @@
 # # Import Modules # #
 import sys
 import arcpy
-import gis_tools
-import geometry_functions
+from lib import gis_tools, geometry_functions
 
 
 # # Main Function # #
@@ -63,7 +62,7 @@ def main(fcInputCenterline,
     arcpy.MakeFeatureLayer_management(fcInputPolygon, lyrInputPolygon)
     arcpy.RepairGeometry_management(lyrInputPolygon, "KEEP_NULL")
 
-    fcThiessanPolyClip = gis_tools.newGISDataset(workspaceTemp,"GNAT_DPS_TheissanPolyClip")
+    fcThiessanPolyClip = gis_tools.newGISDataset(workspaceTemp, "GNAT_DPS_TheissanPolyClip")
     arcpy.Clip_analysis(fcThiessanPoly,lyrInputPolygon,fcThiessanPolyClip)
 
     # Split the junction Thiessan polygons

@@ -28,6 +28,18 @@ def resetData(inputDataset):
 
     return
 
+def newGISTable(workspace, inputDatasetName):
+    """ workspace = "LAYER", "in_memory", folder or gdb"""
+    if arcpy.Exists(workspace):
+        ext = "" if arcpy.Describe(workspace).workspaceType in ["LocalDatabase", "in_memory"] else "dbf"
+        inputDataset = r"{}\{}.{}".format(workspace, inputDatasetName, ext)
+        if arcpy.Exists(inputDataset):
+            arcpy.Delete_management(inputDataset)
+        return inputDataset
+    else:
+        return None
+
+
 def newGISDataset(workspace, inputDatasetName):
     """ workspace = "LAYER", "in_memory", folder or gdb"""
     if arcpy.Exists(workspace):
@@ -57,25 +69,22 @@ def getGISDataset(workspace,inputDatasetName):
         if arcpy.Exists(inputDataset):
             return inputDataset
 
-def resetField(inTable,FieldName,FieldType,TextLength=0):
+def resetField(inTable, FieldName, FieldType, TextLength=0):
     """clear or create new field.  FieldType = TEXT, FLOAT, DOUBLE, SHORT, LONG, etc."""
-    
-    if arcpy.Describe(inTable).dataType == "ShapeFile":
-        FieldName = FieldName[:10]
 
-    if len(arcpy.ListFields(inTable,FieldName))==1:
-        if FieldType == "TEXT":
-            arcpy.CalculateField_management(inTable,FieldName,"''","PYTHON")
-        else:
-            arcpy.CalculateField_management(inTable,FieldName,"0","PYTHON")
+    FieldName = FieldName[:10] if arcpy.Describe(inTable).dataType == "ShapeFile" else FieldName
+
+    if FieldName in arcpy.ListFields(inTable, FieldName):
+        value = "''" if FieldType == "TEXT" else "0"
+        arcpy.CalculateField_management(inTable, FieldName, value ,"PYTHON")
         #arcpy.DeleteField_management(inTable,FieldName) #lots of 999999 errors 
     
     else: #Create Field if it does not exist
         if FieldType == "TEXT":
-            arcpy.AddField_management(inTable,FieldName,"TEXT",field_length=TextLength)
+            arcpy.AddField_management(inTable, FieldName, "TEXT", field_length=TextLength)
         else:
-            arcpy.AddField_management(inTable,FieldName,FieldType)
-    return str(FieldName) 
+            arcpy.AddField_management(inTable, FieldName, FieldType)
+    return FieldName
 
 def addUniqueIDField(fcInputFeatureClass,fieldName):
 
@@ -94,10 +103,9 @@ def UniqueID():
 
 def unique_values(table, field):
     """returns a sorted list of unique values in a field
-    
-    Reference: https://arcpy.wordpress.com/2012/02/01/create-a-list-of-unique-field-values/
     """
 
+    # Reference: https://arcpy.wordpress.com/2012/02/01/create-a-list-of-unique-field-values/
     with arcpy.da.SearchCursor(table, [field]) as cursor:
         return sorted({row[0] for row in cursor})
 

@@ -19,9 +19,8 @@
 # # Import Modules # #
 import os
 import arcpy
-import gis_tools
-import def__SLEM as dS
-import ClearInMemory
+from tools.FCT import def__SLEM as dS
+from lib import ClearInMemory, gis_tools
 from decimal import *
 
 listStrSegMethod = ["Remaining segment at inflow (top) of stream branch",
@@ -184,14 +183,14 @@ def segOptionBC(fcDissolvedStreamBranch,
                     dblProportionalPosition = float(intPosition)/intNumberOfPositions
                     listPoints.append(gLine.positionAlongLine(dblProportionalPosition,True))
 
-    fcSplitPoints = gis_tools.newGISDataset(scratchWorkspace,"GNAT_SEG_SplitPoints")
+    fcSplitPoints = gis_tools.newGISDataset(scratchWorkspace, "GNAT_SEG_SplitPoints")
     arcpy.CreateFeatureclass_management(scratchWorkspace,"GNAT_SEG_SplitPoints","POINT",spatial_reference=fcDissolvedStreamBranch)
 
     with arcpy.da.InsertCursor(fcSplitPoints,["SHAPE@"]) as icSplitPoints:
         for point in listPoints:
             icSplitPoints.insertRow([point])
     arcpy.SplitLineAtPoint_management(fcDissolvedStreamBranch,fcSplitPoints,fcTempStreamNetwork,"1 Meters")
-    gis_tools.addUniqueIDField(fcTempStreamNetwork,outSegmentIDField)
+    gis_tools.addUniqueIDField(fcTempStreamNetwork, outSegmentIDField)
 
     # Remove unnecessary fields
     fieldObjects = arcpy.ListFields(fcTempStreamNetwork)

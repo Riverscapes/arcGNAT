@@ -20,7 +20,7 @@
 # Import modules
 import arcpy
 import networkx as nx
-import network as net
+from lib import network as net
 
 import_msg = "{0} module not installed. Please install {0} before executing the {1} tool."\
     .format('ogr', "Generate Network Attributes")

@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 2.7.2 (C:\Python27\ArcGIS10.1\python.exe)" project-jdk-type="Python SDK" />
-  <component name="PyConsoleOptionsProvider">
-    <option name="myPythonConsoleState">
-      <console-settings sdk-home="C:\Python27\ArcGIS10.1\python.exe">
-        <option name="mySdkHome" value="C:\Python27\ArcGIS10.1\python.exe" />
-      </console-settings>
-    </option>
-  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 2.7 [ArcGIS 10.6]" project-jdk-type="Python SDK" />
   <component name="TerminalProjectOptionsProvider">
     <option name="myStartingDirectory" value="C:\dev" />
   </component>

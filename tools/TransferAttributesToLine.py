@@ -16,8 +16,8 @@
 
 
 import arcpy
-import gis_tools
-import DividePolygonBySegment
+from lib import gis_tools
+from tools import DividePolygonBySegment
 
 
 def empty_attributes(fc, to_fields):
@@ -73,7 +73,7 @@ def main(fcFromLine,
 
     # Make bounding polygon for "From" line feature class
     arcpy.AddMessage("GNAT TLA: Create buffer polygon around 'From' network")
-    fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_FromLineBuffer")
+    fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBuffer")
     arcpy.Buffer_analysis(fcFromLineTemp,fcFromLineBuffer,"{0} Meters".format(searchDistance * 3), "FULL", "ROUND", "ALL")
     fcFromLineBufDslv = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBUfDslv")
     arcpy.AddMessage("GNAT TLA: Dissolve buffer")
@@ -94,7 +94,7 @@ def main(fcFromLine,
 
     # Segment "From" line buffer polygon
     arcpy.AddMessage("GNAT TLA: Segmenting 'From' line buffer polygon")
-    fcSegmentedBoundingPolygons = gis_tools.newGISDataset(tempWorkspace,"GNAT_TLA_SegmentedBoundingPolygons")
+    fcSegmentedBoundingPolygons = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_SegmentedBoundingPolygons")
     DividePolygonBySegment.main(fcFromLineTemp, fcFromLineBuffer, fcSegmentedBoundingPolygons, 10.0, 150.0)
 
     # Split points of "To" line at intersection of polygon segments

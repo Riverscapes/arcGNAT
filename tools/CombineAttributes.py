@@ -14,8 +14,6 @@
 #!/usr/bin/env python
 
 # # Import Modules # #
-import sys
-import arcpy
 import TransferAttributesToLine
 
 def main(fcList, fcBndPoly, boolSeg, fcOutCombine):

@@ -19,10 +19,9 @@ import os
 import gc
 import arcpy
 import networkx as nx
-import gis_tools
+from lib import gis_tools, network as net
 import FindSubnetworks
 import GenerateNetworkAttributes
-import network as net
 
 arcpy.env.overwriteOutput = True
 

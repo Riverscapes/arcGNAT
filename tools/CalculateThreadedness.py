@@ -13,7 +13,7 @@
 #!/usr/bin/env python
 
 import arcpy
-import gis_tools
+from lib import gis_tools
 
 
 # finds a specific field in a feature class

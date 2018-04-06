@@ -18,7 +18,7 @@
 #!/usr/bin/env python
 
 import arcpy
-import gis_tools
+from lib import gis_tools
 from collections import defaultdict
 
 __version__ = "2.0.01"

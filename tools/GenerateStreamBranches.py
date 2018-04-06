@@ -17,7 +17,7 @@
 
 # # Import Modules # #
 import arcpy
-import gis_tools
+from lib import gis_tools
 
 arcpy.env.overwriteOutput = True
 
@@ -85,13 +85,13 @@ def main(
     test_field(fcLineNetwork, "_strmordr_")
 
     # Make Feature Layer for 
-    lyrStreamSelection = gis_tools.newGISDataset("LAYER","GNAT_BRANCHES_SelectByName")
+    lyrStreamSelection = gis_tools.newGISDataset("LAYER", "GNAT_BRANCHES_SelectByName")
     arcpy.MakeFeatureLayer_management(fcLineNetwork,lyrStreamSelection)
     
     # Dissolve by Stream (GNIS) Name
     where = arcpy.AddFieldDelimiters(fcLineNetwork,fieldStreamName) + " <> '' "
     arcpy.SelectLayerByAttribute_management(lyrStreamSelection,"NEW_SELECTION",where)
-    fcDissolveByName = gis_tools.newGISDataset(tempWorkspace,"GNAT_BRANCHES_DissolveByName")
+    fcDissolveByName = gis_tools.newGISDataset(tempWorkspace, "GNAT_BRANCHES_DissolveByName")
     arcpy.Dissolve_management(lyrStreamSelection, fcDissolveByName, fieldStreamName,multi_part="SINGLE_PART",unsplit_lines="DISSOLVE_LINES")
     listfcMerge.append(fcDissolveByName)
 
@@ -105,28 +105,28 @@ def main(
 
     if fieldStreamOrder:
         if len(arcpy.ListFields(fcLineNetwork,fieldStreamOrder)) == 1:
-            fcDissolveByStreamOrder = gis_tools.newGISDataset(tempWorkspace,"GNAT_BRANCHES_DissolveByStreamOrder")
+            fcDissolveByStreamOrder = gis_tools.newGISDataset(tempWorkspace, "GNAT_BRANCHES_DissolveByStreamOrder")
             arcpy.Dissolve_management(lyrStreamSelection,fcDissolveByStreamOrder,fieldStreamOrder,multi_part="SINGLE_PART",unsplit_lines="DISSOLVE_LINES")
 
     # Split Stream Order Junctions
         if arcpy.Exists(fcNodesTC):
-            fcDissolveByStreamOrderSplit = gis_tools.newGISDataset(tempWorkspace,"GNAT_BRANCHES_DissolveByStreamOrderSplit")
+            fcDissolveByStreamOrderSplit = gis_tools.newGISDataset(tempWorkspace, "GNAT_BRANCHES_DissolveByStreamOrderSplit")
             arcpy.SplitLineAtPoint_management(fcDissolveByStreamOrder,fcNodesTC,fcDissolveByStreamOrderSplit,"1 METER")
             listfcMerge.append(fcDissolveByStreamOrderSplit)
         else:
             listfcMerge.append(fcDissolveByStreamOrder)
     else:
-        fcNoStreamOrder = gis_tools.newGISDataset(tempWorkspace,"GNAT_BRANCHES_NoStreamOrderOrStreamName")
+        fcNoStreamOrder = gis_tools.newGISDataset(tempWorkspace, "GNAT_BRANCHES_NoStreamOrderOrStreamName")
         arcpy.Dissolve_management(lyrStreamSelection,fcNoStreamOrder,multi_part="SINGLE_PART")
         listfcMerge.append(fcNoStreamOrder)
     
     # Merge Dissolved Networks
-    fcMerged = gis_tools.newGISDataset(tempWorkspace,"GNAT_BRANCHES_MergedDissolvedNetworks")
+    fcMerged = gis_tools.newGISDataset(tempWorkspace, "GNAT_BRANCHES_MergedDissolvedNetworks")
     arcpy.Merge_management(listfcMerge,fcMerged)
 
     # Add Branch ID
     arcpy.AddField_management(fcMerged,"BranchID","LONG")
-    gis_tools.addUniqueIDField(fcMerged,"BranchID")
+    gis_tools.addUniqueIDField(fcMerged, "BranchID")
 
 
     # Final Output

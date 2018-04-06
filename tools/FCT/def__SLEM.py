@@ -27,7 +27,6 @@ Last update on 07 fev. 2014
 # Import of required librairies
 import arcpy
 import def__UpToDateShapeLengthField as UPD_SL
-import def__Export as Ext
 
 # Allow the temporary outputs overwrite
 arcpy.env.overwriteOutput = True

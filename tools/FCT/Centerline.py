@@ -25,9 +25,9 @@ Update on 2015-Apr-09 by Kelly Whitehead (kelly@southforkresearch.org) to fix is
 # Import of required libraries
 import arcpy
 import os
-import def__SLEM as dS
-import def__UpToDateShapeLengthField as UPD_SL
-import ClearInMemory
+from tools.FCT import def__SLEM as dS, def__UpToDateShapeLengthField as UPD_SL
+from lib import ClearInMemory
+
 
 # Polygon = r"C:\JL\Testing\GNAT\Issue9\shp\Entiat_ValleyBottom.shp"
 # Polyline = r"C:\JL\Testing\GNAT\Issue9\shp\Entiat_EP.shp"

@@ -21,7 +21,7 @@
 #Import modules
 import arcpy
 import networkx as nx
-import network as net
+from lib import network as net
 
 error_msg = "{0} module not installed. Please install {0} before executing the {1} tool."\
     .format('ogr', "Find Subnetworks")

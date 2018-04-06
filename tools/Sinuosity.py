@@ -19,7 +19,7 @@
 
 import sys
 import arcpy
-import gis_tools
+from lib import gis_tools
 
 arcpy.env.qualifiedFieldNames = False
 arcpy.env.overwriteOutput = True
@@ -56,7 +56,7 @@ def main(fcInput, fieldName = "Sin", workspaceTmp = "in_memory"):
     arcpy.CalculateField_management(fcSegmentDistances, fieldDistance, "!shape.length!", "PYTHON_9.3")
 
     # Join straight line distance feature class
-    lyrInputTmp = gis_tools.newGISDataset("Layer","lyrInputTmp")
+    lyrInputTmp = gis_tools.newGISDataset("Layer", "lyrInputTmp")
     arcpy.MakeFeatureLayer_management(fcInputTmp, lyrInputTmp)
     fieldTmpID = gis_tools.resetField(fcSegmentDistances, "TmpID", "DOUBLE")
     arcpy.CalculateField_management(fcSegmentDistances, fieldTmpID, "!InputID!", "PYTHON_9.3")

@@ -24,10 +24,9 @@ Last update on 07 fev. 2014
 
 # Import of required librairies
 import arcpy
-from arcpy import env
 import collections
 import def__ScratchWPathName as SWPN
-import def__Export as Exp
+from tools.FCT import def__Export as Exp
 
 # Allow the temporary outputs overwrite
 arcpy.env.overwriteOutput = True
