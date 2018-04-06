@@ -128,12 +128,12 @@ def main(source_segments,
 
     arcpy.CalculateField_management(out_segments,
                                     fieldPlanformSinuosity,
-                                    "calculate_sinuosity(!{}!, !{}!)".format(field_chanlength, field_vblength),
+                                    "calculate_sinuosity(!{}!, !{}!)".format(field_chanlength, field_chandist),
                                     "PYTHON_9.3",
                                     codeblock)
     arcpy.CalculateField_management(out_segments,
                                     field_chansin,
-                                    "calculate_sinuosity(!{}!, !{}!)".format(field_chanlength, field_chandist),
+                                    "calculate_sinuosity(!{}!, !{}!)".format(field_chanlength, field_vblength),
                                     "PYTHON_9.3",
                                     codeblock)
     arcpy.CalculateField_management(out_segments,

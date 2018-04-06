@@ -1,6 +1,6 @@
 """Moving Window for GNAT"""
 
-import math
+from math import sqrt
 import arcpy
 from lib import gis_tools
 
@@ -130,7 +130,7 @@ def main(fcLineNetwork,
                     max_vals = max(vals)
                     min_vals = min(vals)
                     range_vals = max_vals - min_vals
-                    sd_vals = math.sqrt(sum([abs(float(x) - float(ave_vals))**2 for x in vals]) / float(count_vals))
+                    sd_vals = sqrt(sum([abs(float(x) - float(ave_vals))**2 for x in vals]) / float(count_vals))
                     wave_vals = sum([val / slen for val, slen in zip(vals, seglen)])/ float(count_vals)
                     new_row.extend([count_vals, ave_vals, sum_vals, range_vals, min_vals, max_vals, sd_vals, wave_vals])
             ucSeedPoints.updateRow(new_row)

@@ -1,22 +1,17 @@
 ---
-title: Stream Sinousity and Planform
+title: Sinuosity Attributes Tool
 ---
 
+In general Sinuosity is a ratio of the sinuous length of stream or valley reach the to straight-line distance for that same reach. This tool generates three different sets of sinuosity attributes for each segment within a particular stream network and its associated valley centerline:
 
-Sinuosity is a ratio of the sinuous length of stream or valley reach the to straight-line distance for that same reach. 
- Planform is a ratio of the sinuosity of a stream reach to the length of the encompassing valley segment. The **Stream Sinuosity 
-and Planform** tool calculates sinuosity (per polyline feature) for valley centerline and stream network features. The 
-tool also transfers the valley sinuosity to the stream network and calculates river planform attribute.
+* `Planform Sinuosity`  ratio of channel segment length / channel segment dist
+* `Channel Sinuosity` ratio of channel segment length / Valley Bottom Length
+* `Valley Sinuosity` ratio of valley bottom segment length / valley bottom segment distance
 
 ![sinuosity_example]({{site.baseurl}}assets/images/sinuosity_example.png)
 
 _______________________________________________________________
 ## Usage
-
-### Geoprocessing Environments ###
-* All inputs must be in the same projected coordinate system.
-* We recommended running this tool with 64-bit python geoprocessing.
-* Disable Z and M geometry in the Shape field if topology errors are encountered.
 
 ### Input Parameters
 
@@ -25,27 +20,28 @@ _______________________________________________________________
 **Input Segmented Stream Network**
 
 Segmented stream network polyline feature class (i.e. flowline, centerline, etc). Stream sinuosity values will be 
-calculated for each segment.  New channel sinuosity, valley sinousity, and planform attribute fields will appended
+calculated for each segment.  New channel sinuosity, valley sinuosity, and planform sinuosity attribute fields will appended
 to this dataset on completion of the processing.
 
 **Input Segmented Valley Centerline**
 
 Segmented valley bottom centerline polyline feature class. Valley sinuosity values will be calculated for each segment.
 
-**Input Valley Bottom Polygon**
+**Segment ID Field**
 
-Valley bottom polygon feature class of the stream network. This can also serve as input to the 
-[Transfer Line Attribute](http://gnat.riverscapes.xyz/Transfer-Line-Attributes) tool.
+SegmentID field.
+
+**Temporary Workspace**
+
+Saves temporary processing files. Leave blank to use "in_memory" workspace.
+
+**(Optional) SegmentFilter Field**
+
+Use this parameter to filter lines to include in the calculation as an Integer field that will ignore lines with "0" and calculate lines with "1".
 
 ### Outputs
 
-**Output Valley Centerline with Sinuosity Attribute**
-
-Output polyline feature class includes calculated sinuosity as an attribute.
-
-*Please note*: If this analysis is part of Riverscapes project, the `Input Stream Network` will automatically
- be switched to the stream network feature class associated with the Realization Analysis found in the project.rs.xml
- file, which the user selects in the `Riverscape Project Management` parameters of this tool.
+***No Outputs. This tool modifies the original input data***
 
 ### Riverscapes Project Management
 
@@ -68,7 +64,7 @@ analysis will be assigned.
 
 **Attribute Analysis Name** (optional)
 
-* Name of the new Sinuosity and Planform analysis.
+* Name of the new Sinuosity Attribute analysis.
 
 _______________________________________________________________
 
@@ -76,10 +72,14 @@ _______________________________________________________________
 
 ### Calculation Method
 
-1. Use [Sinuosity By Segment Tool](http://gnat.riverscapes.xyz/Sinuosity-by-Segment) for stream and valley centerlines
-  * Convert segment ends to points
-  * Find straight-line distance
-  * Calculate sinuosity (segment distance/straight-line distance)
-2. Transfer valley bottom sinuosity to stream centerline using the 
-[Transfer Line Attributes](http://gnat.riverscapes.xyz/Transfer-Line-Attributes) tool
-3. Calculate the planform metric for each divided segment
+1. Find endpoints of the line segments
+2. Use Near Analysis to find points on valley bottom centerline nearest to the endpoints.
+3. Generate Valley Bottom centerline segments  and straight lines from near points.
+4. Generate Selection Polygons used to associate valley bottom segments with stream network segments.
+5. Generate length values and distances used in sinuosity calculations.
+6. Calculate the sinuosity metrics for each segment
+
+# Release Notes
+
+* `version 2.0.1` 2018-03-01
+  * Major rewrite of this tool, including new attribute definitions, and valley bottom centerline transfer method.
