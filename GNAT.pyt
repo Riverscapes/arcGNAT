@@ -1476,8 +1476,8 @@ class SinuosityAttributesTool(object):
             paramSegmentAnalysis.enabled = False
             paramAttributeAnalysis.value = ""
             paramAttributeAnalysis.enabled = False
-            p[0].value = ""
-            p[0].enabled = True
+            # p[0].value = ""
+            # p[0].enabled = True
 
         return
 
