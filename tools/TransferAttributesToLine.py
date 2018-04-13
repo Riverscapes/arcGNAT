@@ -58,6 +58,84 @@ def transfer_fields(fc):
     return listFieldNames, strFieldNames
 
 
+def plot_junction_points(line_lyr):
+    """
+    Dissolves a network polyline feature class into single part features, intersects the dissolved network
+    with itself, and returns a junction point (i.e. tributarty confluence) feature class.
+    :param fc: network polyine feature class
+    :return: point feature class
+    """
+    line_dslv = "line_dslv"
+    gis_tools.newGISDataset("in_memory", line_dslv)
+    arcpy.Dissolve_management(line_lyr, line_dslv, "#", "#", "SINGLE_PART")
+    pnt_junctions = "pnt_junctions"
+    gis_tools.newGISDataset("in_memory", pnt_junctions)
+    arcpy.Intersect_analysis(line_dslv, pnt_junctions, output_type="POINT")
+    return pnt_junctions
+
+
+def vertex_type(line_lyr):
+    """
+    Converts line vertices to points, assigns start and end node types as attribute field
+    :param line_lyr: network line layer
+    :return: point feature class with added node type attribute field
+    """
+    vrtx_all = "vrtx_all"
+    vrtx_all_lyr = "vrtx_all_lyr"
+    gis_tools.newGISDataset("in_memory", vrtx_all)
+    gis_tools.newGISDataset("LAYER", vrtx_all_lyr)
+    arcpy.FeatureVerticesToPoints_management(line_lyr, vrtx_all, point_location="ALL")
+    arcpy.MakeFeatureLayer_management(vrtx_all, vrtx_all_lyr)
+    arcpy.AddField_management(vrtx_all_lyr, "node_type", "TEXT", "#", "#", 5)
+    arcpy.FeatureVerticesToPoints_management(line_lyr, "vrtx_start", point_location="START")
+    arcpy.FeatureVerticesToPoints_management(line_lyr, "vrtx_end", point_location="END")
+    arcpy.SelectLayerByLocation_management(vrtx_all_lyr, "ARE_IDENTICAL_TO", "vrtx_start", "#", "NEW_SELECTION")
+    arcpy.CalculateField_management(vrtx_all_lyr, "node_type", "START")
+    arcpy.SelectLayerByLocation_management(vrtx_all_lyr, "ARE_IDENTICAL_TO", "vrtx_end", "#", "NEW_SELECTION")
+    arcpy.CalculateField_management(vrtx_all_lyr, "node_type", "END")
+    arcpy.SelectLayerByAttribute_management(vrtx_all_lyr, "CLEAR_SELECTION")
+    return vrtx_all_lyr
+
+
+def snap_junction_points(from_line_lyr, to_line_lyr, search_distance):
+    """
+    Shifts junction points (i.e. tributary confluences) in the 'From' network to same coordinates
+    of junction points in the 'To' network, found within a user-specified search distance.
+    :param from_line_lyr: polyline layer representing 'From' stream network
+    :param to_line_lyr: polyline layer representing 'To' stream network
+    :param search_distance: buffer distance around each 'To' junction point, in meters
+    :return:
+    """
+    arcpy.AddXY_management(from_line_lyr)
+    arcpy.AddXY_management(to_line_lyr)
+
+    list_field_objects = arcpy.ListFields(from_line_lyr)
+    list_from_fields = [f.name for f in list_field_objects if f.type != "OID" and f.type != "Geometry"]
+
+    # Plot junction points for 'From' and 'To' stream networks
+    from_junction_pnts = plot_junction_points(from_line_lyr)
+    to_junction_pnts = plot_junction_points(to_line_lyr)
+
+    from_line_oidfield = arcpy.Describe(from_line_lyr).OIDFieldName
+    from_fields = [from_line_oidfield, "POINT_X", "POINT_Y"]
+    with arcpy.da.UpdateCursor(from_junction_pnts, from_fields) as cursor:
+        for row in cursor:
+            arcpy.SelectLayerByLocation_management(from_line_lyr, "INTERSECT", row, "#", "NEW_SELECTION")
+            from_vrtx_lyr = vertex_type(from_line_lyr)
+            arcpy.Near_analysis(from_vrtx_lyr, to_junction_pnts, search_distance, "LOCATION")
+            arcpy.SelectLayerByLocation_management(from_vrtx_lyr, "ARE_IDENTICAL_TO", row, "#", "NEW_SELECTION")
+            # Update Point_X and Point_Y fields with coordinates of nearest "To" junction point
+            arcpy.CalculateField_management(from_vrtx_lyr, "POINT_X", "NEAR_X", "PYTHON_9.3")
+            arcpy.CalculateField_management(from_vrtx_lyr, "POINT_Y", "NEAR_Y", "PYTHON_9.3")
+            sel_from_line = "sel_from_line"
+            gis_tools.newGISDataset("in_memory", sel_from_line)
+            arcpy.PointsToLine_management(from_vrtx_lyr, sel_from_line, "ORIG_FID", "NO_CLOSE")
+            arcpy.JoinField_management(sel_from_line, "ORIG_FID", from_line_lyr, from_line_oidfield, list_from_fields)
+            arcpy.DeleteFeatures_management(from_line_lyr)
+            arcpy.Append_management(sel_from_line, from_line_lyr, "NO_TEST", list_from_fields)
+    return
+
+
 def main(fcFromLine,
          fcToLine,
          fcOutputLineNetwork,
@@ -81,6 +159,7 @@ def main(fcFromLine,
     arcpy.MakeFeatureLayer_management(fcFromLineTemp, lyrFromLineTemp)
     arcpy.Snap_edit(lyrFromLineTemp,
                     [[fcToLine, "END", "{0} Meters".format(searchDistance)]])
+    # TODO replace Snap_edit with new custom snapping function here
 
     # Make bounding polygon for "From" line feature class
     arcpy.AddMessage("GNAT TLA: Create buffer polygon around 'From' network")
