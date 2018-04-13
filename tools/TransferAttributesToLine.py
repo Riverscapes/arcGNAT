@@ -7,10 +7,10 @@
 #              South Fork Research, Inc                                       #
 #              Seattle, Washington                                            #
 #                                                                             #
-# Created:     2015-Jan-08                                                     #
-# Modified:    2017-Sep-15                                                     #
+# Created:     2015-Jan-08                                                    #
+# Modified:    2018-April-13                                                  #
 #                                                                             #
-# Copyright:   (c) South Fork Research, Inc. 2017                              #
+# Copyright:   (c) South Fork Research, Inc. 2018                             #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -21,6 +21,12 @@ from tools import DividePolygonBySegment
 
 
 def empty_attributes(fc, to_fields):
+    """
+    Adds default values to attribute fields for features present in the 'From' network and
+    not the 'To' network feature class
+    :param fc: network feature class
+    :param to_fields: attribute fields from the 'To' network feature class
+    """
     from_fields = [f for f in arcpy.ListFields(fc) if f.name not in to_fields]
     for field in from_fields:
         with arcpy.da.UpdateCursor(fc, [field.name]) as cursor:
@@ -41,6 +47,11 @@ def empty_attributes(fc, to_fields):
 
 
 def transfer_fields(fc):
+    """
+    Returns a list of fields names (minus the geometry and OID fields) to be transferred between networks
+    :param fc: network feature class
+    :return: list of field names, and string version of that list
+    """
     listFieldObjects = arcpy.ListFields(fc)
     listFieldNames = [f.name for f in listFieldObjects if f.type != "OID" and f.type != "Geometry"]
     strFieldNames = "; ".join(listFieldNames)
@@ -136,13 +147,3 @@ def main(fcFromLine,
     arcpy.AddMessage("GNAT TLA: Tool complete")
 
     return
-
-
-# if __name__ == "__main__":
-#     fcFrom = r'C:\JL\Testing\arcGNAT\Issue74\transfer_line_attrib\Asotin_Test\Test2a_NHD24k\Asotin_NHD_EP_20160906_RC.shp'
-#     fcTo   = r'C:\JL\Testing\arcGNAT\Issue74\transfer_line_attrib\Asotin_Test\Test2a_NHD24k\Asotin_NHDFlowline_20180207.shp'
-#     fcOutput = r'C:\JL\Testing\arcGNAT\Issue74\transfer_line_attrib\Asotin_Test\Test2a_NHD24k\Asotin_EPtoNHD_20180302.shp'
-#     searchDistance = 50
-#     tempWspace = r'C:\JL\Testing\arcGNAT\Issue74\transfer_line_attrib\Asotin_Test\Test2a_NHD24k\TLAscratch.gdb'
-#
-#     main(fcFrom, fcTo, fcOutput, searchDistance, tempWspace)
