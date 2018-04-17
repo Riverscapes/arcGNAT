@@ -58,19 +58,20 @@ def transfer_fields(fc):
     return listFieldNames, strFieldNames
 
 
-def plot_junction_points(line_lyr):
+def plot_junction_points(line_lyr, network_type):
     """
     Dissolves a network polyline feature class into single part features, intersects the dissolved network
     with itself, and returns a junction point (i.e. tributarty confluence) feature class.
     :param fc: network polyine feature class
     :return: point feature class
     """
-    line_dslv = "line_dslv"
+    line_dslv = "in_memory\\line_dslv"
     gis_tools.newGISDataset("in_memory", line_dslv)
     arcpy.Dissolve_management(line_lyr, line_dslv, "#", "#", "SINGLE_PART")
-    pnt_junctions = "pnt_junctions"
+    pnt_junctions = "in_memory\\{0}_pnt_junctions".format(network_type)
     gis_tools.newGISDataset("in_memory", pnt_junctions)
     arcpy.Intersect_analysis(line_dslv, pnt_junctions, output_type="POINT")
+    arcpy.AddXY_management(pnt_junctions)
     return pnt_junctions
 
 
@@ -80,21 +81,32 @@ def vertex_type(line_lyr):
     :param line_lyr: network line layer
     :return: point feature class with added node type attribute field
     """
-    vrtx_all = "vrtx_all"
-    vrtx_all_lyr = "vrtx_all_lyr"
-    gis_tools.newGISDataset("in_memory", vrtx_all)
-    gis_tools.newGISDataset("LAYER", vrtx_all_lyr)
+    temp_workspace = r'C:\JL\Testing\arcGNAT\TransferLineAttributes\scratch.gdb'
+    vrtx_all = gis_tools.newGISDataset(temp_workspace, "vrtx_all")
+    vrtx_start = gis_tools.newGISDataset(temp_workspace, "vrtx_start")
+    vrtx_end = gis_tools.newGISDataset(temp_workspace, "vrtx_end")
     arcpy.FeatureVerticesToPoints_management(line_lyr, vrtx_all, point_location="ALL")
+    arcpy.AddXY_management(vrtx_all)
+    vrtx_all_lyr = gis_tools.newGISDataset("Layer", "vrtx_all_lyr")
     arcpy.MakeFeatureLayer_management(vrtx_all, vrtx_all_lyr)
-    arcpy.AddField_management(vrtx_all_lyr, "node_type", "TEXT", "#", "#", 5)
-    arcpy.FeatureVerticesToPoints_management(line_lyr, "vrtx_start", point_location="START")
-    arcpy.FeatureVerticesToPoints_management(line_lyr, "vrtx_end", point_location="END")
-    arcpy.SelectLayerByLocation_management(vrtx_all_lyr, "ARE_IDENTICAL_TO", "vrtx_start", "#", "NEW_SELECTION")
-    arcpy.CalculateField_management(vrtx_all_lyr, "node_type", "START")
-    arcpy.SelectLayerByLocation_management(vrtx_all_lyr, "ARE_IDENTICAL_TO", "vrtx_end", "#", "NEW_SELECTION")
-    arcpy.CalculateField_management(vrtx_all_lyr, "node_type", "END")
+    arcpy.AddField_management(vrtx_all_lyr, "node_type", "TEXT", "#", "#", 6)
+    arcpy.FeatureVerticesToPoints_management(line_lyr, vrtx_start, point_location="START")
+    arcpy.FeatureVerticesToPoints_management(line_lyr, vrtx_end, point_location="END")
+    arcpy.SelectLayerByLocation_management(vrtx_all_lyr, "INTERSECT", vrtx_start, "#", "NEW_SELECTION")
+    arcpy.CalculateField_management(vrtx_all_lyr, "node_type", '"START"', "PYTHON_9.3")
+    arcpy.SelectLayerByAttribute_management(vrtx_all_lyr, "CLEAR_SELECTION")
+    arcpy.SelectLayerByLocation_management(vrtx_all_lyr, "INTERSECT", vrtx_end, "#", "NEW_SELECTION")
+    arcpy.CalculateField_management(vrtx_all_lyr, "node_type", '"END"', "PYTHON_9.3")
     arcpy.SelectLayerByAttribute_management(vrtx_all_lyr, "CLEAR_SELECTION")
     return vrtx_all_lyr
+
+
+def list_oids(in_fc, oid_field):
+    list_oid = []
+    with arcpy.da.SearchCursor(in_fc, oid_field) as cursor:
+        for row in cursor:
+            list_oid.append(row[0])
+    return list_oid
 
 
 def snap_junction_points(from_line_lyr, to_line_lyr, search_distance):
@@ -106,33 +118,42 @@ def snap_junction_points(from_line_lyr, to_line_lyr, search_distance):
     :param search_distance: buffer distance around each 'To' junction point, in meters
     :return:
     """
-    arcpy.AddXY_management(from_line_lyr)
-    arcpy.AddXY_management(to_line_lyr)
+    arcpy.AddMessage("GNAT TLA: snapping junction points in 'From' network to 'To' network")
 
     list_field_objects = arcpy.ListFields(from_line_lyr)
     list_from_fields = [f.name for f in list_field_objects if f.type != "OID" and f.type != "Geometry"]
 
     # Plot junction points for 'From' and 'To' stream networks
-    from_junction_pnts = plot_junction_points(from_line_lyr)
-    to_junction_pnts = plot_junction_points(to_line_lyr)
+    from_junction_pnts = plot_junction_points(from_line_lyr, "from")
+    to_junction_pnts = plot_junction_points(to_line_lyr, "to")
+
+    lyr_from_junc_pnts = gis_tools.newGISDataset("Layer", "lyr_from_junc_pnts")
+    arcpy.MakeFeatureLayer_management(from_junction_pnts, lyr_from_junc_pnts)
 
     from_line_oidfield = arcpy.Describe(from_line_lyr).OIDFieldName
-    from_fields = [from_line_oidfield, "POINT_X", "POINT_Y"]
-    with arcpy.da.UpdateCursor(from_junction_pnts, from_fields) as cursor:
-        for row in cursor:
-            arcpy.SelectLayerByLocation_management(from_line_lyr, "INTERSECT", row, "#", "NEW_SELECTION")
-            from_vrtx_lyr = vertex_type(from_line_lyr)
-            arcpy.Near_analysis(from_vrtx_lyr, to_junction_pnts, search_distance, "LOCATION")
-            arcpy.SelectLayerByLocation_management(from_vrtx_lyr, "ARE_IDENTICAL_TO", row, "#", "NEW_SELECTION")
-            # Update Point_X and Point_Y fields with coordinates of nearest "To" junction point
-            arcpy.CalculateField_management(from_vrtx_lyr, "POINT_X", "NEAR_X", "PYTHON_9.3")
-            arcpy.CalculateField_management(from_vrtx_lyr, "POINT_Y", "NEAR_Y", "PYTHON_9.3")
-            sel_from_line = "sel_from_line"
-            gis_tools.newGISDataset("in_memory", sel_from_line)
-            arcpy.PointsToLine_management(from_vrtx_lyr, sel_from_line, "ORIG_FID", "NO_CLOSE")
-            arcpy.JoinField_management(sel_from_line, "ORIG_FID", from_line_lyr, from_line_oidfield, list_from_fields)
-            arcpy.DeleteFeatures_management(from_line_lyr)
-            arcpy.Append_management(sel_from_line, from_line_lyr, "NO_TEST", list_from_fields)
+    list_from_oid = list_oids(lyr_from_junc_pnts, from_line_oidfield)
+
+    for oid in list_from_oid:
+        arcpy.SelectLayerByAttribute_management(lyr_from_junc_pnts, "NEW_SELECTION", """"{0}" = {1}""".format(from_line_oidfield, oid))
+        arcpy.SelectLayerByLocation_management(from_line_lyr, "INTERSECT", lyr_from_junc_pnts, "#", "NEW_SELECTION")
+        arcpy.CopyFeatures_management(from_line_lyr, temp_wspace + "\\sel_line") #TEST
+        from_vrtx_lyr = vertex_type(from_line_lyr)
+        arcpy.Near_analysis(from_vrtx_lyr, to_junction_pnts, search_distance, "LOCATION")
+        arcpy.SelectLayerByLocation_management(from_vrtx_lyr, "INTERSECT", lyr_from_junc_pnts, "#", "NEW_SELECTION")
+        # Update Point_X and Point_Y fields with coordinates of nearest "To" junction point
+        arcpy.CalculateField_management(from_vrtx_lyr, "POINT_X", "!NEAR_X!", "PYTHON_9.3")
+        arcpy.CalculateField_management(from_vrtx_lyr, "POINT_Y", "!NEAR_Y!", "PYTHON_9.3")
+        arcpy.MakeXYEventLayer_management(from_vrtx_lyr, "POINT_X", "POINT_Y", "xy_events", from_vrtx_lyr)
+        xy_events_pnt = gis_tools.newGISDataset("in_memory", "xy_events_pnt")
+        arcpy.CopyFeatures_management("xy_events", xy_events_pnt)
+        xy_events_lyr = gis_tools.newGISDataset("Layer", "xy_events_lyr")
+        arcpy.MakeFeatureLayer_management(xy_events_pnt, xy_events_lyr)
+        adj_from_line = gis_tools.newGISDataset("in_memory", "adj_from_line")
+        arcpy.PointsToLine_management("xy_events", adj_from_line, "ORIG_FID")
+        arcpy.JoinField_management(adj_from_line, "ORIG_FID", from_line_lyr, from_line_oidfield, list_from_fields)
+        arcpy.DeleteFeatures_management(from_line_lyr)
+        arcpy.Append_management(adj_from_line, from_line_lyr, "NO_TEST")
+        arcpy.AddMessage("Junction {} complete...".format(oid))
     return
 
 
@@ -142,12 +163,21 @@ def main(fcFromLine,
          searchDistance,
          tempWorkspace):
 
-    gis_tools.resetData(fcOutputLineNetwork)
+    # Environment settings
     arcpy.env.overwriteOutput = True
+    arcpy.env.outputMFlag = "Disabled"
+    arcpy.env.outputZFlag = "Disabled"
+    arcpy.env.qualifiedFieldNames = False
 
+    arcpy.AddMessage("GNAT TLA: starting transfer process...")
+
+    gis_tools.resetData(fcOutputLineNetwork)
     fcFromLineTemp = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineTemp")
+    fcToLineTemp = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_ToLineTemp")
     arcpy.MakeFeatureLayer_management(fcFromLine, "lyrFromLine")
+    arcpy.MakeFeatureLayer_management(fcToLine, "lyrToLine")
     arcpy.CopyFeatures_management("lyrFromLine", fcFromLineTemp)
+    arcpy.CopyFeatures_management("lyrToLine", fcToLineTemp)
 
     # Add a unique ID for the "From" line feature class
     from_oid = arcpy.Describe(fcFromLineTemp).OIDFieldName
@@ -156,10 +186,10 @@ def main(fcFromLine,
 
     # Snap "From" line network to "To" line network
     lyrFromLineTemp = gis_tools.newGISDataset("Layer", "lyrFromLineTemp")
+    lyrToLineTemp = gis_tools.newGISDataset("Layer", "lyrToLineTemp")
     arcpy.MakeFeatureLayer_management(fcFromLineTemp, lyrFromLineTemp)
-    arcpy.Snap_edit(lyrFromLineTemp,
-                    [[fcToLine, "END", "{0} Meters".format(searchDistance)]])
-    # TODO replace Snap_edit with new custom snapping function here
+    arcpy.MakeFeatureLayer_management(fcToLineTemp, lyrToLineTemp)
+    snap_junction_points(lyrFromLineTemp, lyrToLineTemp, searchDistance)
 
     # Make bounding polygon for "From" line feature class
     arcpy.AddMessage("GNAT TLA: Create buffer polygon around 'From' network")
@@ -226,3 +256,13 @@ def main(fcFromLine,
     arcpy.AddMessage("GNAT TLA: Tool complete")
 
     return
+
+
+# TEST
+if __name__ == "__main__":
+    from_line = r'C:\JL\Testing\arcGNAT\TransferLineAttributes\input\wen_24k_nhd_01.shp'
+    to_line = r'C:\JL\Testing\arcGNAT\TransferLineAttributes\input\wen_100k_nhd.shp'
+    output_line = r'C:\JL\Testing\arcGNAT\TransferLineAttributes\output\wen_24k_to_100k.shp'
+    search_dist = 50
+    temp_wspace = r'C:\JL\Testing\arcGNAT\TransferLineAttributes\scratch.gdb'
+    main(from_line, to_line, output_line, search_dist, temp_wspace)
