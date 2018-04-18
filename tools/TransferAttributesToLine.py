@@ -75,32 +75,6 @@ def plot_junction_points(line_lyr, network_type):
     return pnt_junctions
 
 
-def vertex_type(line_lyr):
-    """
-    Converts line vertices to points, assigns start and end node types as attribute field
-    :param line_lyr: network line layer
-    :return: point feature class with added node type attribute field
-    """
-    temp_workspace = r'C:\JL\Testing\arcGNAT\TransferLineAttributes\scratch.gdb'
-    vrtx_all = gis_tools.newGISDataset(temp_workspace, "vrtx_all")
-    vrtx_start = gis_tools.newGISDataset(temp_workspace, "vrtx_start")
-    vrtx_end = gis_tools.newGISDataset(temp_workspace, "vrtx_end")
-    arcpy.FeatureVerticesToPoints_management(line_lyr, vrtx_all, point_location="ALL")
-    arcpy.AddXY_management(vrtx_all)
-    vrtx_all_lyr = gis_tools.newGISDataset("Layer", "vrtx_all_lyr")
-    arcpy.MakeFeatureLayer_management(vrtx_all, vrtx_all_lyr)
-    arcpy.AddField_management(vrtx_all_lyr, "node_type", "TEXT", "#", "#", 6)
-    arcpy.FeatureVerticesToPoints_management(line_lyr, vrtx_start, point_location="START")
-    arcpy.FeatureVerticesToPoints_management(line_lyr, vrtx_end, point_location="END")
-    arcpy.SelectLayerByLocation_management(vrtx_all_lyr, "INTERSECT", vrtx_start, "#", "NEW_SELECTION")
-    arcpy.CalculateField_management(vrtx_all_lyr, "node_type", '"START"', "PYTHON_9.3")
-    arcpy.SelectLayerByAttribute_management(vrtx_all_lyr, "CLEAR_SELECTION")
-    arcpy.SelectLayerByLocation_management(vrtx_all_lyr, "INTERSECT", vrtx_end, "#", "NEW_SELECTION")
-    arcpy.CalculateField_management(vrtx_all_lyr, "node_type", '"END"', "PYTHON_9.3")
-    arcpy.SelectLayerByAttribute_management(vrtx_all_lyr, "CLEAR_SELECTION")
-    return vrtx_all_lyr
-
-
 def list_oids(in_fc, oid_field):
     list_oid = []
     with arcpy.da.SearchCursor(in_fc, oid_field) as cursor:
@@ -136,19 +110,22 @@ def snap_junction_points(from_line_lyr, to_line_lyr, search_distance):
     for oid in list_from_oid:
         arcpy.SelectLayerByAttribute_management(lyr_from_junc_pnts, "NEW_SELECTION", """"{0}" = {1}""".format(from_line_oidfield, oid))
         arcpy.SelectLayerByLocation_management(from_line_lyr, "INTERSECT", lyr_from_junc_pnts, "#", "NEW_SELECTION")
-        arcpy.CopyFeatures_management(from_line_lyr, temp_wspace + "\\sel_line") #TEST
-        from_vrtx_lyr = vertex_type(from_line_lyr)
+        from_vrtx_adj = gis_tools.newGISDataset(temp_wspace, "vrtx_adj")
+        arcpy.FeatureVerticesToPoints_management(from_line_lyr, from_vrtx_adj, point_location="ALL")
+        arcpy.AddXY_management(from_vrtx_adj)
+        from_vrtx_lyr = gis_tools.newGISDataset("Layer", "from_vrtx_lyr")
+        arcpy.MakeFeatureLayer_management(from_vrtx_adj, from_vrtx_lyr)
         arcpy.Near_analysis(from_vrtx_lyr, to_junction_pnts, search_distance, "LOCATION")
         arcpy.SelectLayerByLocation_management(from_vrtx_lyr, "INTERSECT", lyr_from_junc_pnts, "#", "NEW_SELECTION")
         # Update Point_X and Point_Y fields with coordinates of nearest "To" junction point
         arcpy.CalculateField_management(from_vrtx_lyr, "POINT_X", "!NEAR_X!", "PYTHON_9.3")
         arcpy.CalculateField_management(from_vrtx_lyr, "POINT_Y", "!NEAR_Y!", "PYTHON_9.3")
         arcpy.MakeXYEventLayer_management(from_vrtx_lyr, "POINT_X", "POINT_Y", "xy_events", from_vrtx_lyr)
-        xy_events_pnt = gis_tools.newGISDataset("in_memory", "xy_events_pnt")
+        xy_events_pnt = gis_tools.newGISDataset(temp_wspace, "xy_events_pnt")
         arcpy.CopyFeatures_management("xy_events", xy_events_pnt)
         xy_events_lyr = gis_tools.newGISDataset("Layer", "xy_events_lyr")
         arcpy.MakeFeatureLayer_management(xy_events_pnt, xy_events_lyr)
-        adj_from_line = gis_tools.newGISDataset("in_memory", "adj_from_line")
+        adj_from_line = gis_tools.newGISDataset(temp_wspace, "adj_from_line")
         arcpy.PointsToLine_management("xy_events", adj_from_line, "ORIG_FID")
         arcpy.JoinField_management(adj_from_line, "ORIG_FID", from_line_lyr, from_line_oidfield, list_from_fields)
         arcpy.DeleteFeatures_management(from_line_lyr)
@@ -194,7 +171,7 @@ def main(fcFromLine,
     # Make bounding polygon for "From" line feature class
     arcpy.AddMessage("GNAT TLA: Create buffer polygon around 'From' network")
     fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBuffer")
-    arcpy.Buffer_analysis(fcFromLineTemp,fcFromLineBuffer,"{0} Meters".format(searchDistance * 3), "FULL", "ROUND", "ALL")
+    arcpy.Buffer_analysis(lyrFromLineTemp,fcFromLineBuffer,"{0} Meters".format(searchDistance * 3), "FULL", "ROUND", "ALL")
     fcFromLineBufDslv = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBUfDslv")
     arcpy.AddMessage("GNAT TLA: Dissolve buffer")
     arcpy.Dissolve_management(fcFromLineBuffer, fcFromLineBufDslv)
@@ -215,7 +192,7 @@ def main(fcFromLine,
     # Segment "From" line buffer polygon
     arcpy.AddMessage("GNAT TLA: Segmenting 'From' line buffer polygon")
     fcSegmentedBoundingPolygons = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_SegmentedBoundingPolygons")
-    DividePolygonBySegment.main(fcFromLineTemp, fcFromLineBuffer, fcSegmentedBoundingPolygons, 10.0, 150.0)
+    DividePolygonBySegment.main(lyrFromLineTemp, fcFromLineBuffer, fcSegmentedBoundingPolygons, 10.0, 150.0)
 
     # Split points of "To" line at intersection of polygon segments
     arcpy.AddMessage("GNAT TLA: Split 'To' line features")
@@ -260,9 +237,34 @@ def main(fcFromLine,
 
 # TEST
 if __name__ == "__main__":
-    from_line = r'C:\JL\Testing\arcGNAT\TransferLineAttributes\input\wen_24k_nhd_01.shp'
-    to_line = r'C:\JL\Testing\arcGNAT\TransferLineAttributes\input\wen_100k_nhd.shp'
+    from_line = r'C:\JL\Testing\arcGNAT\TransferLineAttributes\input\wen_24k_sel.shp'
+    to_line = r'C:\JL\Testing\arcGNAT\TransferLineAttributes\input\wen_100k_sel.shp'
     output_line = r'C:\JL\Testing\arcGNAT\TransferLineAttributes\output\wen_24k_to_100k.shp'
     search_dist = 50
     temp_wspace = r'C:\JL\Testing\arcGNAT\TransferLineAttributes\scratch.gdb'
     main(from_line, to_line, output_line, search_dist, temp_wspace)
+
+# def vertex_type(line_lyr):
+#     """
+#     Converts line vertices to points, assigns start and end node types as attribute field
+#     :param line_lyr: network line layer
+#     :return: point feature class with added node type attribute field
+#     """
+#     temp_workspace = r'C:\JL\Testing\arcGNAT\TransferLineAttributes\scratch.gdb'
+#     vrtx_all = gis_tools.newGISDataset(temp_workspace, "vrtx_all")
+#     vrtx_start = gis_tools.newGISDataset(temp_workspace, "vrtx_start")
+#     vrtx_end = gis_tools.newGISDataset(temp_workspace, "vrtx_end")
+#     arcpy.FeatureVerticesToPoints_management(line_lyr, vrtx_all, point_location="ALL")
+#     arcpy.AddXY_management(vrtx_all)
+#     vrtx_all_lyr = gis_tools.newGISDataset("Layer", "vrtx_all_lyr")
+#     arcpy.MakeFeatureLayer_management(vrtx_all, vrtx_all_lyr)
+#     arcpy.AddField_management(vrtx_all_lyr, "node_type", "TEXT", "#", "#", 6)
+#     arcpy.FeatureVerticesToPoints_management(line_lyr, vrtx_start, point_location="START")
+#     arcpy.FeatureVerticesToPoints_management(line_lyr, vrtx_end, point_location="END")
+#     arcpy.SelectLayerByLocation_management(vrtx_all_lyr, "INTERSECT", vrtx_start, "#", "NEW_SELECTION")
+#     arcpy.CalculateField_management(vrtx_all_lyr, "node_type", '"START"', "PYTHON_9.3")
+#     arcpy.SelectLayerByAttribute_management(vrtx_all_lyr, "CLEAR_SELECTION")
+#     arcpy.SelectLayerByLocation_management(vrtx_all_lyr, "INTERSECT", vrtx_end, "#", "NEW_SELECTION")
+#     arcpy.CalculateField_management(vrtx_all_lyr, "node_type", '"END"', "PYTHON_9.3")
+#     arcpy.SelectLayerByAttribute_management(vrtx_all_lyr, "CLEAR_SELECTION")
+#     return vrtx_all_lyr
