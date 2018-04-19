@@ -44,7 +44,7 @@ def main(in_shp, out_shp, riverkm_bool=False):
     # attribute fields
     edgetype = "_edgetype_"
     netid = "_netid_"
-    streamname = "GNIS_Name"
+    streamname = "GNIS_Name" #FIXME this should call a regex function, to better handle this field name
 
     arcpy.AddMessage("GNA: Generating network attributes...")
     arcpy.AddMessage("GNA: Converting shapefile to a NetworkX graph...")
