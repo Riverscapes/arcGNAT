@@ -10,9 +10,9 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.5.6                                                          #
+# Version:     2.5.7                                                          #
 # Revised:     2018-April-9                                                   #
-# Released:    2018-April-12                                                  #
+# Released:    2018-April-20                                                  #
 #                                                                             #
 # License:     MIT License                                                    #
 #                                                                             #
