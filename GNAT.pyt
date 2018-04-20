@@ -10,7 +10,7 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.5.7                                                          #
+# Version:     2.5.8                                                          #
 # Revised:     2018-April-9                                                   #
 # Released:    2018-April-20                                                  #
 #                                                                             #
@@ -27,7 +27,7 @@ from tools import CalculateGradient, CalculateThreadedness, CombineAttributes, D
     Sinuosity, Segmentation, TransferAttributesToLine, ValleyPlanform, moving_window
 from tools.FCT import Centerline
 
-GNAT_version = "2.5.6"
+GNAT_version = "2.5.8"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -464,20 +464,27 @@ class GenerateNetworkAttributesTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
+            displayName="Primary Stream Name Field (i.e. GNIS Name)",
+            name="StreamNameField",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+
+        param2 = arcpy.Parameter(
             displayName="Output polyline feature class",
             name="OutputStreamNetwork",
             datatype="DEShapefile",
             parameterType="Required",
             direction="Output")
 
-        param2 = arcpy.Parameter(
+        param3 = arcpy.Parameter(
             displayName="Calculate river kilometers",
             name="BoolRiverKM",
             datatype="GPBoolean",
             parameterType="Optional",
             direction="Input")
 
-        return [param0, param1, param2]
+        return [param0, param1, param2, param3]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -487,6 +494,17 @@ class GenerateNetworkAttributesTool(object):
         """Modify the values and properties of parameters before internal
         validation is performed. This method is called whenever a parameter
         has been changed."""
+
+        if parameters[0].altered:
+            fields = arcpy.ListFields(parameters[0].value)
+            field_names = []
+            for field in fields:
+                field_names.append(field.name)
+                if field.name == "GNIS_Name" or field.name == "GNIS_NAME" or field.name == "GNIS_name" or field.name == "gnis_name":
+                    parameters[1].value = field.name
+            parameters[1].filter.type = "ValueList"
+            parameters[1].filter.list = field_names
+
         return
 
     def updateMessages(self, parameters):
@@ -500,7 +518,8 @@ class GenerateNetworkAttributesTool(object):
 
         GenerateNetworkAttributes.main(p[0].valueAsText,
                                        p[1].valueAsText,
-                                       p[2].valueAsText)
+                                       p[2].valueAsText,
+                                       p[3].valueAsText)
         return
 
 

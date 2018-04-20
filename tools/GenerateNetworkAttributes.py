@@ -8,9 +8,7 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2017-Nov-27                                                    #
-# Version:     0.1                                                            #
-# Revised:     2017-Nov-27                                                    #
-# Released:                                                                   #
+# Revised:     2018-Apr-20                                                    #
 #                                                                             #
 # License:     MIT License                                                    #
 #                                                                             #
@@ -33,7 +31,7 @@ except ImportError:
 arcpy.env.overwriteOutput = True
 
 
-def main(in_shp, out_shp, riverkm_bool=False):
+def main(in_shp, field_name, out_shp, riverkm_bool=False):
     """
     Iterates through all identified subnetworks and generates network attributes
     which are added as new attribute fields.
@@ -44,7 +42,7 @@ def main(in_shp, out_shp, riverkm_bool=False):
     # attribute fields
     edgetype = "_edgetype_"
     netid = "_netid_"
-    streamname = "GNIS_Name" #FIXME this should call a regex function, to better handle this field name
+    streamname = field_name
 
     arcpy.AddMessage("GNA: Generating network attributes...")
     arcpy.AddMessage("GNA: Converting shapefile to a NetworkX graph...")
