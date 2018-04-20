@@ -464,7 +464,7 @@ class GenerateNetworkAttributesTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
-            displayName="Primary Stream Name Field (i.e. GNIS Name)",
+            displayName="Primary stream name field (i.e. GNIS Name)",
             name="StreamNameField",
             datatype="GPString",
             parameterType="Required",
