@@ -10,9 +10,9 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.5.8                                                          #
+# Version:     2.5.9                                                          #
 # Revised:     2018-April-9                                                   #
-# Released:    2018-April-20                                                  #
+# Released:    2018-April-23                                                  #
 #                                                                             #
 # License:     MIT License                                                    #
 #                                                                             #
@@ -27,7 +27,7 @@ from tools import CalculateGradient, CalculateThreadedness, CombineAttributes, D
     Sinuosity, Segmentation, TransferAttributesToLine, ValleyPlanform, moving_window
 from tools.FCT import Centerline
 
-GNAT_version = "2.5.8"
+GNAT_version = "2.5.9"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -549,7 +549,15 @@ class GenerateStreamOrderTool(object):
             direction="Output")
         param1.filter.list = ["Polyline"]
 
-        return [param0, param1, paramTempWorkspace]
+        param2 = arcpy.Parameter(
+            displayName="Temporary workspace",
+            name="TempWorkspace",
+            datatype="DEWorkspace",
+            parameterType="Required",
+            direction="Input")
+        param2.filter.list = ["Workspace"]
+
+        return [param0, param1, param2]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -566,7 +574,6 @@ class GenerateStreamOrderTool(object):
         parameter.  This method is called after internal validation."""
 
         testProjected(parameters[0])
-        testWorkspacePath(parameters[2])
         return
 
     def execute(self, p, messages):
@@ -576,7 +583,7 @@ class GenerateStreamOrderTool(object):
 
         GenerateStreamOrder.main(p[0].valueAsText,
                                  p[1].valueAsText,
-                                 p[2].valueAsText)
+                                 getTempWorkspace(p[2].valueAsText))
 
 
 class StreamBranchesTool(object):
