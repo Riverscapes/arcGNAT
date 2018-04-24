@@ -65,13 +65,9 @@ def main(in_shp, field_name, out_shp, riverkm_bool=False):
     for id in net_ids:
         subnet_G = theNetwork.select_by_attribute(theNetwork.G, netid, id)
         theNetwork.add_attribute(subnet_G, edgetype, "connector")
-        arcpy.AddMessage("GNA: Finding the outflow...")
         outflow_G = theNetwork.get_outflow_edges(subnet_G, edgetype, "outflow")
-        arcpy.AddMessage("GNA: Finding headwaters...")
         headwater_G = theNetwork.get_headwater_edges(subnet_G, edgetype, "headwater")
-        arcpy.AddMessage("GNA: Finding complex braids...")
         braid_complex_G = theNetwork.get_complex_braids(subnet_G, edgetype, "braid")
-        arcpy.AddMessage("GNA: Finding simple braids...")
         braid_simple_G = theNetwork.get_simple_braids(subnet_G, edgetype, "braid")
         arcpy.AddMessage("GNA: Merging all edge types...")
         gnat_G = theNetwork.merge_subgraphs(subnet_G,

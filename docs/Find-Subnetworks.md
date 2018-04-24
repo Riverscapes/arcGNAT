@@ -41,8 +41,8 @@ are not currently supported.
 **Input stream network shapefile**
 
 Stream network shapefile representing a drainage network. Ideally this network should be a USGS NHD flowline
-dataset, or derived from NHD. Also, all canal features (i.e. `FCode = 336`) MUST be removed prior to running the tool.
-Removing canal features will create disconnected subnetworks within the overall stream network, each of which will be 
+dataset, or derived from NHD. Also, all canal and pipeline features (i.e. `FType = 336` or `FType = 428`) MUST be removed prior to running the tool.
+Removing these features will create disconnected subnetworks within the overall stream network, each of which will be 
 assigned a unique identifier code by the tool.
 
 ### Outputs

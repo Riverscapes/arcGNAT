@@ -32,7 +32,7 @@ def check_field(in_shp, field_name):
         return True
 
 
-def get_fieldmap(in_network, in_gnis_pnt):
+def get_fieldmap(in_network, in_gnis_pnt, name_field):
     fm = arcpy.FieldMappings()
 
     # Add all fields from inputs.
@@ -40,7 +40,7 @@ def get_fieldmap(in_network, in_gnis_pnt):
     fm.addTable(in_gnis_pnt)
 
     # Name of field to keep
-    keep = ["GNIS_Name"]
+    keep = [name_field]
 
     # Remove all output fields you don't want.
     for field in fm.fields:
@@ -49,15 +49,15 @@ def get_fieldmap(in_network, in_gnis_pnt):
 
     return fm
 
-def dslv_network(in_shp, temp_wspace):
+def dslv_network(in_shp, name_field, temp_wspace):
     # Preprocess network
     network_dslv = gis_tools.newGISDataset(temp_wspace, "GNAT_SO_NetworkDissolved")
     gnis_pnt = gis_tools.newGISDataset(temp_wspace, "GNAT_SO_NetworkDslv_pnt")
     network_gnis = gis_tools.newGISDataset(temp_wspace, "GNAT_SO_NetworkDslv_GNIS_join")
     arcpy.Dissolve_management(in_shp, network_dslv, multi_part="SINGLE_PART", unsplit_lines="DISSOLVE_LINES")
-    if check_field(in_shp, "GNIS_Name"):
+    if check_field(in_shp, name_field):
         arcpy.FeatureToPoint_management(in_shp, gnis_pnt,"INSIDE")
-        fieldmapping = get_fieldmap(network_dslv, gnis_pnt)
+        fieldmapping = get_fieldmap(network_dslv, gnis_pnt, name_field)
         arcpy.SpatialJoin_analysis(network_dslv, gnis_pnt, network_gnis,"JOIN_ONE_TO_ONE","KEEP_ALL",
                                    fieldmapping,"WITHIN_A_DISTANCE", "1 Meters", "#")
         return network_gnis
@@ -65,7 +65,7 @@ def dslv_network(in_shp, temp_wspace):
         arcpy.AddError("{0} attribute field not found in {1}".format("GNIS_Name", os.path.basename(in_shp)))
 
 
-def main(in_shp, out_shp, temp_wspace):
+def main(in_shp, name_field, out_shp, temp_wspace):
     """Main function to calculate Strahler stream order for an input stream network.
     :param in_shp: Shapefile output, which is the output from Find Subnetworks tool.
     :param temp_wspace: Temporary workspace to store intermediate datasets.
@@ -82,7 +82,7 @@ def main(in_shp, out_shp, temp_wspace):
 
     # Dissolve the network and split at intersections
     arcpy.AddMessage("SO: Dissolving input shapefile...")
-    dslv_shp = dslv_network(in_shp, temp_wspace)
+    dslv_shp = dslv_network(in_shp, name_field, temp_wspace)
 
     # Find subnetworks
     subnet_shp = "{0}\\{1}".format(temp_wspace, "GNAT_SO_subnetworks.shp")
@@ -90,7 +90,7 @@ def main(in_shp, out_shp, temp_wspace):
 
     # Generate network attributes
     attrb_shp = "{0}\\{1}".format(temp_wspace, "GNAT_SO_attributed_network.shp")
-    GenerateNetworkAttributes.main(subnet_shp, attrb_shp, False)
+    GenerateNetworkAttributes.main(subnet_shp, name_field, attrb_shp, False)
 
     # Calculate stream order
     arcpy.AddMessage("SO: Calcuating stream order...")

@@ -753,5 +753,4 @@ class Network:
         if next_edges:
             print "---next_edges: {0}".format(len(next_edges))
             return self.streamorder_iter(G, next_edges)
-        print "Stream ordering complete!"
         return G
