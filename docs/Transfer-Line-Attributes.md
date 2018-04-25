@@ -18,25 +18,26 @@ _______________________________________________________________
 
 ![form]({{site.baseurl}}images/transfer_form.PNG)
 
-**Input “From” Line Network**
+**Input “From” polyline feature class**
 
 The polyline feature class from which attributes will be transferred. This feature class is used to "resegment" the “To” line network.
 
-**Input “To” Line Network**
+**Input “To” polyline feature class**
 
 The polyline feature class that will receive the attributes from the “From” network. This feature class will retain its segmentation and attributes, but will also be resegmented based on the transfer of the “From” polyline feature class. This allows both the new and original attributes to exist in the resulting network.
 
-**Stream Branch ID Field**
-
-Name of the attribute field which stores branch ID values (i.e. "BranchID").
-
-**Output Line Network**
+**Output polyline feature class**
 
 Polyline feature class that will contain the resulting line network with transferred ("From") and original("To") attributes.
 
-**Save Temp Files to Scratch Workspace** (optional)
+**Search distance** (optional)
 
-File geodatabase or folder for storing temporary data during processing.
+Distance (in meters) that the tool will use to search for nearby junction points between the "From"
+and "To" networks.
+
+**Scratch workspace** (optional)
+
+Local folder for storing temporary data during processing.
 
 _______________________________________________________________
 ## Technical Background
