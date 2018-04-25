@@ -10,9 +10,9 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.5.9                                                          #
-# Revised:     2018-April-9                                                   #
-# Released:    2018-April-23                                                  #
+# Version:     2.6.0                                                          #
+# Revised:     2018-April-24                                                  #
+# Released:    2018-April-25                                                  #
 #                                                                             #
 # License:     MIT License                                                    #
 #                                                                             #
@@ -27,7 +27,7 @@ from tools import CalculateGradient, CalculateThreadedness, CombineAttributes, D
     Sinuosity, Segmentation, TransferAttributesToLine, ValleyPlanform, moving_window
 from tools.FCT import Centerline
 
-GNAT_version = "2.5.9"
+GNAT_version = "2.6.0"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
@@ -42,7 +42,7 @@ class Toolbox(object):
         .pyt file)."""
         self.label = "Geomorphic Network and Analysis Toolbox"
         self.alias = 'GNAT'
-        self.description = "Tools for generating a stream network and for generating geomorphic attributes."
+        self.description = "Tools for generating geomorphic attributes for a stream network."
 
         # List of tool classes associated with this toolbox
         self.tools = [FindSubnetworksTool,
@@ -2103,7 +2103,7 @@ def testProjected(parameter):
     if parameter.value:
         if arcpy.Exists(parameter.value):
             if arcpy.Describe(parameter.value).spatialReference.type <> u"Projected":
-                parameter.setErrorMessage("Input " + parameter.name + " must be in a Projected Coordinate System.")
+                parameter.setErrorMessage("Input " + parameter.name + " must be in a projected coordinate system.")
                 return False
             else:
                 return True
@@ -2113,7 +2113,7 @@ def testMValues(parameter):
     if parameter.value:
         if arcpy.Exists(parameter.value):
             if arcpy.Describe(parameter.value).hasM is True:
-                parameter.setWarningMessage("Input " + parameter.name + " should not be M-enabled. Make sure to Disable M-values in the Environment Settings for this tool.")
+                parameter.setErrorMessage("Input " + parameter.name + " must not be M-enabled. Make sure to disable M-values in the Environment Settings for this tool.")
                 return False
             else:
                 return True
