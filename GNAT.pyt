@@ -10,7 +10,7 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Version:     2.6.0                                                          #
+# Version:     2.6.1                                                          #
 # Revised:     2018-April-24                                                  #
 # Released:    2018-April-25                                                  #
 #                                                                             #
@@ -27,7 +27,7 @@ from tools import CalculateGradient, CalculateThreadedness, CombineAttributes, D
     Sinuosity, Segmentation, TransferAttributesToLine, ValleyPlanform, moving_window
 from tools.FCT import Centerline
 
-GNAT_version = "2.6.0"
+GNAT_version = "2.6.1"
 
 strCatagoryStreamNetworkPreparation = "Analyze Network Attributes\\Step 1 - Stream Network Preparation"
 strCatagoryStreamNetworkSegmentation = "Analyze Network Attributes\\Step 2 - Stream Network Segmentation"
