@@ -542,22 +542,29 @@ class GenerateStreamOrderTool(object):
         param0.filter.list = ["Polyline"]
 
         param1 = arcpy.Parameter(
+            displayName="Primary stream name field (i.e. GNIS Name)",
+            name="StreamNameField",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+
+        param2 = arcpy.Parameter(
             displayName="Output network shapefile with stream order",
             name="OutputStreamNetwork",
             datatype="DEShapefile",
             parameterType="Required",
             direction="Output")
-        param1.filter.list = ["Polyline"]
+        param2.filter.list = ["Polyline"]
 
-        param2 = arcpy.Parameter(
+        param3 = arcpy.Parameter(
             displayName="Temporary workspace",
             name="TempWorkspace",
             datatype="DEWorkspace",
             parameterType="Required",
             direction="Input")
-        param2.filter.list = ["Workspace"]
+        param3.filter.list = ["Workspace"]
 
-        return [param0, param1, param2]
+        return [param0, param1, param2, param3]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -567,6 +574,15 @@ class GenerateStreamOrderTool(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
+        if parameters[0].altered:
+            fields = arcpy.ListFields(parameters[0].value)
+            field_names = []
+            for field in fields:
+                field_names.append(field.name)
+                if field.name == "GNIS_Name" or field.name == "GNIS_NAME" or field.name == "GNIS_name" or field.name == "gnis_name":
+                    parameters[1].value = field.name
+            parameters[1].filter.type = "ValueList"
+            parameters[1].filter.list = field_names
         return
 
     def updateMessages(self, parameters):
@@ -574,6 +590,7 @@ class GenerateStreamOrderTool(object):
         parameter.  This method is called after internal validation."""
 
         testProjected(parameters[0])
+        testMValues(parameters[0])
         return
 
     def execute(self, p, messages):
@@ -583,7 +600,8 @@ class GenerateStreamOrderTool(object):
 
         GenerateStreamOrder.main(p[0].valueAsText,
                                  p[1].valueAsText,
-                                 getTempWorkspace(p[2].valueAsText))
+                                 p[2].valueAsText,
+                                 getTempWorkspace(p[3].valueAsText))
 
 
 class StreamBranchesTool(object):
