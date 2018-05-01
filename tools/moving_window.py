@@ -21,9 +21,8 @@ def main(fcLineNetwork,
     arcpy.AddMessage("Preparing Moving Window Analysis")
     fc_line_dissolve = gis_tools.newGISDataset(tempWorkspace, "GNAT_MWA_LineNetworkDissolved")
     arcpy.Dissolve_management(fcLineNetwork, fc_line_dissolve, fieldStreamRouteID, multi_part=False, unsplit_lines=True)
-    #listWindows = []
+
     listSeeds = []
-    #listWindowEvents = []
     listgWindows = []
     intSeedID = 0
 
@@ -36,44 +35,29 @@ def main(fcLineNetwork,
         for fLine in scLines:  # Loop Through Routes
             arcpy.SetProgressorLabel("Route: {} Seed Point: {}".format(iRoute, intSeedID))
             arcpy.SetProgressorPosition(iRoute)
-            gLine = fLine[0]
             dblSeedPointPosition = float(max(window_sizes)) / 2  # Start Seeds at position of largest window
             while dblSeedPointPosition + float(max(window_sizes)) / 2 < fLine[2]:
                 arcpy.SetProgressorLabel("Route: {} Seed Point: {}".format(iRoute, intSeedID))
-                gSeedPointPosition = gLine.positionAlongLine(dblSeedPointPosition)
+                gSeedPointPosition = fLine[0].positionAlongLine(dblSeedPointPosition)
                 listSeeds.append([scLines[1], intSeedID, gSeedPointPosition])
                 for window_size in window_sizes:
                     dblWindowSize = float(window_size)
                     dblLengthStart = dblSeedPointPosition - dblWindowSize / 2
                     dblLengthEnd = dblSeedPointPosition + dblWindowSize / 2
-
-                    #gPointStartLocation = gLine.positionAlongLine(dblLengthStart)
-                    #gPointEndLocation = gLine.positionAlongLine(dblLengthEnd)
-                    listgWindows.append([scLines[1], intSeedID, dblWindowSize, gLine.segmentAlongLine(dblLengthStart, dblLengthEnd)])
-                    #listWindows.append([scLines[1], intSeedID, dblWindowSize, gPointStartLocation])
-                    #listWindows.append([scLines[1], intSeedID, dblWindowSize, gPointEndLocation])
-                    #listWindowEvents.append([scLines[1], intSeedID, dblWindowSize, dblLengthStart, dblLengthEnd])
+                    listgWindows.append([scLines[1], intSeedID, dblWindowSize, fLine[0].segmentAlongLine(dblLengthStart, dblLengthEnd)])
                 dblSeedPointPosition = dblSeedPointPosition + float(seed_distance)
                 intSeedID = intSeedID + 1
             iRoute = iRoute + 1
 
     arcpy.AddMessage("Compiling Moving Windows")
     fcSeedPoints = gis_tools.newGISDataset(tempWorkspace, "GNAT_MWA_SeedPoints")
-    #fcWindowEndPoints = gis_tools.newGISDataset(tempWorkspace, "GNAT_MWA_WindowEndPoints")
     fcWindowLines = gis_tools.newGISDataset(tempWorkspace, "GNAT_MWA_WindowLines")
-
     arcpy.CreateFeatureclass_management(tempWorkspace, "GNAT_MWA_SeedPoints", "POINT", spatial_reference=fcLineNetwork)
-    # arcpy.CreateFeatureclass_management(tempWorkspace, "GNAT_MWA_WindowEndPoints", "POINT",
-    #                                     spatial_reference=fcLineNetwork)
     arcpy.CreateFeatureclass_management(tempWorkspace, "GNAT_MWA_WindowLines", "POLYLINE",
                                         spatial_reference=fcLineNetwork)
 
     gis_tools.resetField(fcSeedPoints, "RouteID", "TEXT")
     gis_tools.resetField(fcSeedPoints, "SeedID", "LONG")
-
-    # gis_tools.resetField(fcWindowEndPoints, "RouteID", "TEXT")
-    # gis_tools.resetField(fcWindowEndPoints, "SeedID", "LONG")
-    # gis_tools.resetField(fcWindowEndPoints, "Seg", "DOUBLE")
 
     gis_tools.resetField(fcWindowLines, "RouteID", "TEXT")
     gis_tools.resetField(fcWindowLines, "SeedID", "LONG")
@@ -82,10 +66,6 @@ def main(fcLineNetwork,
     with arcpy.da.InsertCursor(fcSeedPoints, ["RouteID", "SeedID", "SHAPE@XY"]) as icSeedPoints:
         for row in listSeeds:
             icSeedPoints.insertRow(row)
-
-    # with arcpy.da.InsertCursor(fcWindowEndPoints, ["RouteID", "SeedID", "Seg", "SHAPE@XY"]) as icWindowEndPoints:
-    #     for row in listWindows:
-    #         icWindowEndPoints.insertRow(row)
 
     with arcpy.da.InsertCursor(fcWindowLines, ["RouteID", "SeedID", "Seg", "SHAPE@"]) as icWindowLines:
         for row in listgWindows:
@@ -134,12 +114,6 @@ def main(fcLineNetwork,
                     wave_vals = sum([val / slen for val, slen in zip(vals, seglen)])/ float(count_vals)
                     new_row.extend([count_vals, ave_vals, sum_vals, range_vals, min_vals, max_vals, sd_vals, wave_vals])
             ucSeedPoints.updateRow(new_row)
-
-    # stat_fields_param = [[field, stat] for field in stat_fields for stat in ["COUNT", "MEAN", "SUM", "RANGE", "MIN", "MAX", "STD"]]
-    # stats = gis_tools.newGISTable(tempWorkspace, "StatisticsTable")
-    # arcpy.Statistics_analysis(fcIntersected, stats, stat_fields_param, ["SeedID", "Seg"])
-
-    #arcpy.JoinField_management(fcSeedPoints, "SeedID", stats, "SeedID")
 
     # Manage Outputs
     arcpy.AddMessage("Saving Outputs")

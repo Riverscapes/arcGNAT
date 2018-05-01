@@ -6,8 +6,6 @@ The moving window analysis tool summarizes attributes on length based 'windows' 
 
 ![]()
 
-[TOC]
-
 # Usage
 
 ![](Images/MovingWindowToolWindow.PNG)
