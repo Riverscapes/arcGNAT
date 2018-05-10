@@ -226,3 +226,16 @@ def main(fcFromLine,
     arcpy.AddMessage("GNAT TLA: Tool complete")
 
     return
+
+
+# TEST
+
+if __name__ == "__main__":
+
+    fcFromLine = r'C:\JL\Testing\arcGNAT\Issue84\input\d_NHDPlus_100k_Seg2000m.shp'
+    fcToLine = r'C:\JL\Testing\arcGNAT\Issue84\input\a_NHD_24k_Seg1000m.shp'
+    fcOutputLineNetwork = r'C:\JL\Testing\arcGNAT\Issue84\output\g_100k_to_24k.shp'
+    searchDistance = r'50'
+    tempWorkspace = r'C:\JL\Testing\arcGNAT\Issue84\scratch.gdb'
+
+    main(fcFromLine, fcToLine, fcOutputLineNetwork, searchDistance, tempWorkspace)
