@@ -8,7 +8,7 @@
 #              Seattle, Washington                                            #
 #                                                                             #
 # Created:     2015-Jan-08                                                    #
-# Modified:    2018-April-20                                                  #
+# Modified:    2018-May-11                                                    #
 #                                                                             #
 # Copyright:   (c) South Fork Research, Inc. 2018                             #
 #                                                                             #
@@ -61,8 +61,8 @@ def transfer_fields(fc):
 def plot_junction_points(line_lyr, network_type):
     """
     Dissolves a network polyline feature class into single part features, intersects the dissolved network
-    with itself, and returns a junction point (i.e. tributarty confluence) feature class.
-    :param fc: network polyine feature class
+    with itself, and returns a junction point (i.e. tributary confluence) feature class.
+    :param fc: network polyline feature class
     :return: point feature class
     """
     line_dslv = "in_memory\\line_dslv"
@@ -97,11 +97,14 @@ def snap_junction_points(from_line_lyr, to_line_lyr, search_distance):
     :param from_line_lyr: polyline layer representing 'From' stream network
     :param to_line_lyr: polyline layer representing 'To' stream network
     :param search_distance: buffer distance around each 'To' junction point, in meters
-    :return:
+    :return: line feature class
     """
+
+    tempWorkspace = "in_memory"
+
     arcpy.AddMessage("GNAT TLA: snapping junction points in 'From' network to 'To' network")
 
-    snapped_from_line = gis_tools.newGISDataset("in_memory", "snapped_from_line")
+    snapped_from_line = gis_tools.newGISDataset(tempWorkspace, "snapped_from_line")
     arcpy.CopyFeatures_management(from_line_lyr, snapped_from_line)
     snap_line_lyr  = gis_tools.newGISDataset("Layer", "snap_line_lyr")
     arcpy.MakeFeatureLayer_management(snapped_from_line, snap_line_lyr)
@@ -117,7 +120,7 @@ def snap_junction_points(from_line_lyr, to_line_lyr, search_distance):
 
     from_line_oidfield = arcpy.Describe(snap_line_lyr).OIDFieldName
 
-    from_vrtx = gis_tools.newGISDataset("in_memory", "from_vrtx")
+    from_vrtx = gis_tools.newGISDataset(tempWorkspace, "from_vrtx")
     arcpy.FeatureVerticesToPoints_management(snap_line_lyr, from_vrtx, point_location="ALL")
     arcpy.AddXY_management(from_vrtx)
     from_vrtx_lyr = gis_tools.newGISDataset("Layer", "from_vrtx_lyr")
@@ -126,10 +129,10 @@ def snap_junction_points(from_line_lyr, to_line_lyr, search_distance):
     arcpy.SelectLayerByLocation_management(from_vrtx_lyr, "INTERSECT", lyr_from_junc_pnts, "#", "NEW_SELECTION")
     update_xy_coord(from_vrtx_lyr)
     arcpy.MakeXYEventLayer_management(from_vrtx_lyr, "POINT_X", "POINT_Y", "xy_events", from_vrtx_lyr)
-    xy_events_pnt = gis_tools.newGISDataset("in_memory", "xy_events_pnt")
+    xy_events_pnt = gis_tools.newGISDataset(tempWorkspace, "xy_events_pnt")
     arcpy.CopyFeatures_management("xy_events", xy_events_pnt)
     arcpy.MakeFeatureLayer_management(xy_events_pnt, "xy_events_lyr")
-    xy_line = gis_tools.newGISDataset("in_memory", "xy_line")
+    xy_line = gis_tools.newGISDataset(tempWorkspace, "xy_line")
     arcpy.PointsToLine_management("xy_events_lyr", xy_line, "ORIG_FID")
     arcpy.JoinField_management(xy_line, "ORIG_FID", snap_line_lyr, from_line_oidfield, list_from_fields)
     arcpy.DeleteFeatures_management(snap_line_lyr)
@@ -142,6 +145,7 @@ def main(fcFromLine,
          fcOutputLineNetwork,
          searchDistance,
          tempWorkspace):
+
 
     # Environment settings
     arcpy.env.overwriteOutput = True
@@ -195,7 +199,7 @@ def main(fcFromLine,
     # Segment "From" line buffer polygon
     arcpy.AddMessage("GNAT TLA: Segmenting 'From' line buffer polygon")
     fcSegmentedBoundingPolygons = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_SegmentedBoundingPolygons")
-    DividePolygonBySegment.main(lyrSnapFromLine, fcFromLineBuffer, fcSegmentedBoundingPolygons, 10.0, 150.0)
+    DividePolygonBySegment.main(lyrSnapFromLine, fcFromLineBuffer, fcSegmentedBoundingPolygons, 10.0)
 
     # Split points of "To" line at intersection of polygon segments
     arcpy.AddMessage("GNAT TLA: Split 'To' line features")
@@ -204,13 +208,15 @@ def main(fcFromLine,
     fcSplitLines = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_SplitLines")
     arcpy.SplitLineAtPoint_management(fcToLineWithinFromBuffer, fcIntersectSplitPoints, fcSplitLines, "0.1 METERS")
 
-    # instead of spatial join, use Transfer Attributes tool
-    arcpy.AddMessage("GNAT TLA: Transferring attributes")
-    listFromFieldNames, strFromFieldNames = transfer_fields(fcFromLine)
-    arcpy.MakeFeatureLayer_management(fcSplitLines, "lyrSplitLines")
-    arcpy.CopyFeatures_management("lyrSplitLines", fcOutputLineNetwork)
-    arcpy.MakeFeatureLayer_management(fcOutputLineNetwork, "lyrOutputLineNetwork")
-    arcpy.TransferAttributes_edit(lyrSnapFromLine, "lyrOutputLineNetwork", listFromFieldNames, "100 Meters")
+    # Spatial join lines based on a common field, as transferred by segmented polygon
+    arcpy.AddMessage("GNAT TLA: Joining polygon segments")
+    arcpy.SpatialJoin_analysis(fcSplitLines,
+                               fcSegmentedBoundingPolygons,
+                               fcOutputLineNetwork,
+                               "JOIN_ONE_TO_ONE",
+                               "KEEP_ALL",
+                               match_option="WITHIN")
+    arcpy.JoinField_management(fcOutputLineNetwork, "FromID", fcFromLineTemp, "FromID")
 
     # Append the "To" lines that were outside of the "From" line buffer, which will have NULL or zero values
     arcpy.env.extent = fcToLine # changed earlier in the workflow in DividePolygonBySegment module
@@ -226,16 +232,3 @@ def main(fcFromLine,
     arcpy.AddMessage("GNAT TLA: Tool complete")
 
     return
-
-
-# TEST
-
-if __name__ == "__main__":
-
-    fcFromLine = r'C:\JL\Testing\arcGNAT\Issue84\input\d_NHDPlus_100k_Seg2000m.shp'
-    fcToLine = r'C:\JL\Testing\arcGNAT\Issue84\input\a_NHD_24k_Seg1000m.shp'
-    fcOutputLineNetwork = r'C:\JL\Testing\arcGNAT\Issue84\output\g_100k_to_24k.shp'
-    searchDistance = r'50'
-    tempWorkspace = r'C:\JL\Testing\arcGNAT\Issue84\scratch.gdb'
-
-    main(fcFromLine, fcToLine, fcOutputLineNetwork, searchDistance, tempWorkspace)
