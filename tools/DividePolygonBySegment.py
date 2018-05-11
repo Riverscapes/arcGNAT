@@ -26,8 +26,9 @@ def main(fcInputCenterline,
          fcInputPolygon,
          fcSegmentedPolygons,
          dblPointDensity=10.0,
-         dblJunctionBuffer=100.00):
-    workspaceTemp = "in_memory"
+         dblJunctionBuffer=100.00,
+         workspaceTemp="in_memory"):
+
 
     arcpy.env.OutputMFlag = "Disabled"
     arcpy.env.OutputZFlag = "Disabled"
@@ -35,6 +36,10 @@ def main(fcInputCenterline,
     # Copy centerline to temporary workspace
     fcCenterline = gis_tools.newGISDataset(workspaceTemp, "GNAT_DPS_Centerline")
     arcpy.CopyFeatures_management(fcInputCenterline, fcCenterline)
+
+    if "FromID" not in [field.name for field in arcpy.ListFields(fcCenterline)]:
+        arcpy.AddField_management(fcCenterline, "FromID", "LONG")
+        arcpy.CalculateField_management(fcCenterline, "FromID", "!{}!".format(arcpy.Describe(fcCenterline).OIDFieldName), "PYTHON_9.3")
 
     # Build Thiessan polygons
     arcpy.AddMessage("GNAT DPS: Building Thiessan polygons")

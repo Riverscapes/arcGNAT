@@ -140,12 +140,22 @@ def snap_junction_points(from_line_lyr, to_line_lyr, search_distance):
     return snap_line_lyr
 
 
+def external_edge_buffer(edges, edge_buffer, out_fc=None):
+
+    g_edge_to_polys = arcpy.FeatureToPolygon_management(edges, arcpy.Geometry())
+    g_buffer_polys = arcpy.Buffer_analysis(g_edge_to_polys, arcpy.Geometry(), edge_buffer, "FULL", "ROUND", "ALL")
+    if out_fc:
+        arcpy.CopyFeatures_management(g_buffer_polys, out_fc,)
+    return g_buffer_polys
+
+
 def main(fcFromLine,
          fcToLine,
          fcOutputLineNetwork,
          searchDistance,
          tempWorkspace):
 
+    reload(DividePolygonBySegment)
 
     # Environment settings
     arcpy.env.overwriteOutput = True
@@ -176,17 +186,22 @@ def main(fcFromLine,
     lyrSnapFromLine = snap_junction_points(lyrFromLineTemp, lyrToLineTemp, searchDistance)
 
     # Make bounding polygon for "From" line feature class
-    arcpy.AddMessage("GNAT TLA: Create buffer polygon around 'From' network")
-    fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBuffer")
-    arcpy.Buffer_analysis(lyrSnapFromLine, fcFromLineBuffer, "{0} Meters".format(searchDistance * 3), "FULL", "ROUND", "ALL")
-    fcFromLineBufDslv = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBUfDslv")
-    arcpy.AddMessage("GNAT TLA: Dissolve buffer")
-    arcpy.Dissolve_management(fcFromLineBuffer, fcFromLineBufDslv)
+    # arcpy.AddMessage("GNAT TLA: Create buffer polygon around 'From' network")
+    # fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBuffer")
+    # arcpy.Buffer_analysis(lyrSnapFromLine, fcFromLineBuffer, "{0} Meters".format(searchDistance * 3), "FULL", "ROUND", "ALL")
+    # fcFromLineBufDslv = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBUfDslv")
+    # arcpy.AddMessage("GNAT TLA: Dissolve buffer")
+    # arcpy.Dissolve_management(fcFromLineBuffer, fcFromLineBufDslv)
+
+    merge_lines = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_merged_lines")
+    arcpy.Merge_management([lyrSnapFromLine, lyrToLineTemp], merge_lines)
+    fcFromLineBuffer = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_FromLineBUfDslv")
+    external_edge_buffer(merge_lines, 10, fcFromLineBuffer)
 
     # Select features from "To" line feature class that are inside "From" line buffer
     arcpy.AddMessage("GNAT TLA: Select 'To' line features inside 'From' buffer")
     lyrFromLineBuffer = gis_tools.newGISDataset("Layer", "lyrFromLineBuffer")
-    arcpy.MakeFeatureLayer_management(fcFromLineBufDslv, lyrFromLineBuffer)
+    arcpy.MakeFeatureLayer_management(fcFromLineBuffer, lyrFromLineBuffer)
     lyrToLine = gis_tools.newGISDataset("Layer", "lyrToLine")
     arcpy.MakeFeatureLayer_management(fcToLine, lyrToLine)
     arcpy.SelectLayerByLocation_management(lyrToLine, "WITHIN", lyrFromLineBuffer, "#", "NEW_SELECTION")
@@ -199,7 +214,8 @@ def main(fcFromLine,
     # Segment "From" line buffer polygon
     arcpy.AddMessage("GNAT TLA: Segmenting 'From' line buffer polygon")
     fcSegmentedBoundingPolygons = gis_tools.newGISDataset(tempWorkspace, "GNAT_TLA_SegmentedBoundingPolygons")
-    DividePolygonBySegment.main(lyrSnapFromLine, fcFromLineBuffer, fcSegmentedBoundingPolygons, 10.0)
+
+    DividePolygonBySegment.main(lyrSnapFromLine, fcFromLineBuffer, fcSegmentedBoundingPolygons, 10.0, 150.0, tempWorkspace)
 
     # Split points of "To" line at intersection of polygon segments
     arcpy.AddMessage("GNAT TLA: Split 'To' line features")
