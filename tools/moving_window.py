@@ -21,6 +21,7 @@ def main(fcLineNetwork,
     arcpy.AddMessage("Preparing Moving Window Analysis")
     fc_line_dissolve = gis_tools.newGISDataset(tempWorkspace, "GNAT_MWA_LineNetworkDissolved")
     arcpy.Dissolve_management(fcLineNetwork, fc_line_dissolve, fieldStreamRouteID, multi_part=False, unsplit_lines=True)
+    arcpy.FlipLine_edit(fc_line_dissolve)
 
     listSeeds = []
     listgWindows = []
@@ -39,7 +40,7 @@ def main(fcLineNetwork,
             while dblSeedPointPosition + float(max(window_sizes)) / 2 < fLine[2]:
                 arcpy.SetProgressorLabel("Route: {} Seed Point: {}".format(iRoute, intSeedID))
                 gSeedPointPosition = fLine[0].positionAlongLine(dblSeedPointPosition)
-                listSeeds.append([scLines[1], intSeedID, gSeedPointPosition])
+                listSeeds.append([scLines[1], intSeedID, gSeedPointPosition, dblSeedPointPosition])
                 for window_size in window_sizes:
                     dblWindowSize = float(window_size)
                     dblLengthStart = dblSeedPointPosition - dblWindowSize / 2
@@ -58,12 +59,13 @@ def main(fcLineNetwork,
 
     gis_tools.resetField(fcSeedPoints, "RouteID", "TEXT")
     gis_tools.resetField(fcSeedPoints, "SeedID", "LONG")
+    gis_tools.resetField(fcSeedPoints, "SeedDist", "DOUBLE")
 
     gis_tools.resetField(fcWindowLines, "RouteID", "TEXT")
     gis_tools.resetField(fcWindowLines, "SeedID", "LONG")
     gis_tools.resetField(fcWindowLines, "Seg", "DOUBLE")
 
-    with arcpy.da.InsertCursor(fcSeedPoints, ["RouteID", "SeedID", "SHAPE@XY"]) as icSeedPoints:
+    with arcpy.da.InsertCursor(fcSeedPoints, ["RouteID", "SeedID", "SHAPE@XY", "SeedDist"]) as icSeedPoints:
         for row in listSeeds:
             icSeedPoints.insertRow(row)
 
@@ -92,7 +94,7 @@ def main(fcLineNetwork,
                 else:
                     valueDict[keyValue][segValue].append((searchRow[2:]))
 
-    addfields = ["w{}{}_{}".format(str(ws)[:2], stat, field)[:10] for ws in window_sizes for field in stat_fields for stat in ["N", "Av", "Sm", "Rn", "Mn", "Mx", "Sd", "WA"]]
+    addfields = ["w{}{}{}".format(str(ws)[:4].rstrip("."), stat, field)[:10] for ws in window_sizes for field in stat_fields for stat in ["N", "Av", "Sm", "Rn", "Mn", "Mx", "Sd", "WA"]]
     for field in addfields:
         gis_tools.resetField(fcSeedPoints, field, "DOUBLE")
 
