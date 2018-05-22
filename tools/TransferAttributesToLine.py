@@ -140,9 +140,10 @@ def snap_junction_points(from_line_lyr, to_line_lyr, search_distance):
     return snap_line_lyr
 
 
-def external_edge_buffer(edges, edge_buffer, out_fc=None):
+def external_edge_buffer(in_edges, edge_buffer, out_fc=None):
 
-    g_edge_to_polys = arcpy.FeatureToPolygon_management(edges, arcpy.Geometry())
+    g_edges = arcpy.Buffer_analysis(in_edges, arcpy.Geometry(), 0.1, "FULL", "ROUND", "ALL")
+    g_edge_to_polys = arcpy.FeatureToPolygon_management(g_edges, arcpy.Geometry())
     g_buffer_polys = arcpy.Buffer_analysis(g_edge_to_polys, arcpy.Geometry(), edge_buffer, "FULL", "ROUND", "ALL")
     if out_fc:
         arcpy.CopyFeatures_management(g_buffer_polys, out_fc,)
