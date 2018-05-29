@@ -16,7 +16,7 @@ _______________________________________________________________
 
 ### Input Parameters
 
-![form]({{site.baseurl}}images/transfer_form.PNG)
+![transfer_form]({{site.baseurl}}assets/images/transfer_form.PNG)
 
 **Input “From” polyline feature class**
 
@@ -46,9 +46,10 @@ _______________________________________________________________
 
 1. Divide polygon into segments based on segmentation/junctions in the “From” line network, using the [Divide Polygons by Segments](http://gnat.riverscapes.xyz/Divide-Polygon-by-Segments) tool.
 2. Split “To” line network based on the intersection of the divided polygons.
-3. Transfer “From” network OID’s to polygon segments, then to the “To” line network
-4. Join table of “From” network to the “To” network based on Object ID values.
+3. Transfer “From” network OID’s to polygon segments.
+4. Spatially join the segmented polygons the “To” line network feature centroids.
+5. Copy attributes from segmented polygons to the line features.
 
 ### Troubleshooting and Potential Issues
+* Line features in the 'To' network with no associated features in the 'To' network are assigned the value '-99999'
 * Tributary junctions may cause suboptimal results
-* Null values (Thiessen Polygon issue?)
