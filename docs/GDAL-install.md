@@ -104,14 +104,6 @@ in the dialog box:
     
     Click "OK"
 
-6. Add one more new variable by clicking "New..."
-
-    Variable name: `GDAL_DRIVER_PATH`
-    
-    Variable value: `C:\Program Files (x86)\GDAL\gdalplugins`
-    
-    Click "OK"
-
 ## Step 4: Testing the GDAL install
 
 1. Open the Windows command line, by going to the Start menu ->Run -> type in `cmd` and press "Enter". 
