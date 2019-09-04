@@ -25,12 +25,12 @@ To find out what version of Python you have installed:
 
 1. Go to Python -> IDLE (Python GUI) in your Start menu
 
-    ![gdal-PythonIdleMenu.png]({{site.baseurl}}/images/gdal-PythonIdleMenu.png)
+    ![gdal-PythonIdleMenu.png]({{site.baseurl}}assets/images/gdal-PythonIdleMenu.png)
 
 2. Make a note of the number that shows the version of your installed Python in the
 top right, as highlighted below:
 
-    ![gdal-PythonIdleShell.png]({{site.baseurl}}/images/gdal-PythonIdleShell.png)
+    ![gdal-PythonIdleShell.png]({{site.baseurl}}assets/images/gdal-PythonIdleShell.png)
 
 *Please Note:* `MSV v.1500` may differ based on your different Python installation.  If it does,
 please make a note of that number.  Also, if you installed the 64-bit version of Python, for the 
@@ -47,22 +47,22 @@ GDAL binaries (i.e. installers).
     systems, and the green highlight indicates the release-1500 number which should match the number from
     IDLE in step 1 above.
 
-    ![gdal-VersionList.png]({{site.baseurl}}/images/gdal-VersionList.png)
+    ![gdal-VersionList.png]({{site.baseurl}}assets/images/gdal-VersionList.png)
 
 2. Click the appropriate link, which will take you to the list of packages to download.
 
-    ![gdal-PackageList.png]({{site.baseurl}}/images/gdal-PackageList.png)
+    ![gdal-PackageList.png]({{site.baseurl}}assets/images/gdal-PackageList.png)
 
 3. Locate and download the "core" installer, which has most of the GDAL components.
 
-    ![gdal-PackageList-core.png]({{site.baseurl}}/images/gdal-PackageList-core.png)
+    ![gdal-PackageList-core.png]({{site.baseurl}}assets/images/gdal-PackageList-core.png)
 
 4. After downloading your version of the `core.msi` installer, install GDAL with standard settings.
 
 5. Next, return to the list of GDAL binaries, locate and download the Python bindings for your version
 of Python, which should be 2.7.
 
-    ![gdal-PackageList-python.png]({{site.baseurl}}/images/gdal-PackageList-python.png)
+    ![gdal-PackageList-python.png]({{site.baseurl}}assets/images/gdal-PackageList-python.png)
 
 6. After downloading the Python bindings, install them.
 
@@ -71,20 +71,20 @@ of Python, which should be 2.7.
 We need to tell your Windows operating system where the GDAL installations are located, so we need
 to add some Windows environment system variables. 
 
-1. Click on the Windows Start button ![gdal-WindowsButton.png]({{site.baseurl}}/images/gdal-WindowsButton.png) 
+1. Click on the Windows Start button ![gdal-WindowsButton.png]({{site.baseurl}}assets/images/gdal-WindowsButton.png) 
 and in the "Search programs and files" text box, type in "System Environment Variables", then select 
 "Edit the system environment variables".
 
-    ![gdal-PathVariable-search.png]({{site.baseurl}}/images/gdal-PathVariable-search.png)
+    ![gdal-PathVariable-search.png]({{site.baseurl}}assets/images/gdal-PathVariable-search.png)
 
 2. Once the "System Properties" dialog is open, click the "Environment Variables" button.
 
-    ![gdal-PathVariable-SystemProperties.png]({{site.baseurl}}/images/gdal-PathVariable-SystemProperties.png)
+    ![gdal-PathVariable-SystemProperties.png]({{site.baseurl}}assets/images/gdal-PathVariable-SystemProperties.png)
 
 3. In the "Environment Variables" dialog, under the "System variables" pane, select the "Path" variables,
 then click the "Edit" button.
 
-    ![gdal-PathVariable-EnvironmentVariables.png]({{site.baseurl}}/images/gdal-PathVariable-EnvironmentVariables.png)
+    ![gdal-PathVariable-EnvironmentVariables.png]({{site.baseurl}}assets/images/gdal-PathVariable-EnvironmentVariables.png)
 
 4. In the "Edit System Variable" dialog, in the "Variable value" text box, go to the end of the text string, and
 copy and paste the following:
@@ -100,15 +100,7 @@ in the dialog box:
     
     Variable value: `C:\Program Files(x86)\GDAL\gdal-data`
 
-    ![gdal-PathVariable-NewSystemVariable.png]({{site.baseurl}}/images/gdal-PathVariable-NewSystemVariable.png)
-    
-    Click "OK"
-
-6. Add one more new variable by clicking "New..."
-
-    Variable name: `GDAL_DRIVER_PATH`
-    
-    Variable value: `C:\Program Files (x86)\GDAL\gdalplugins`
+    ![gdal-PathVariable-NewSystemVariable.png]({{site.baseurl}}assets/images/gdal-PathVariable-NewSystemVariable.png)
     
     Click "OK"
 
@@ -120,7 +112,7 @@ in the dialog box:
 
 3. If you get the following result, congratulations!  Your GDAL installation is complete!
 
-     ![gdal-CommandLineCheck.PNG]({{site.baseurl}}/images/gdal-CommandLineCheck.PNG)
+     ![gdal-CommandLineCheck.PNG]({{site.baseurl}}assets/images/gdal-CommandLineCheck.PNG)
         
 
 

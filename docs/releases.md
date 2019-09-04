@@ -1,4 +1,6 @@
-# Installation
+---
+title: Installation
+---
 
 1. Install the GDAL Windows binaries
 2. Install NetworkX using pip
@@ -16,8 +18,7 @@ If you do not already have GDAL installed, we recommend installing the binaries 
 
 Detailed installation instructions are available [here](GDAL-install).
 
-
-## Networkx
+## NetworkX
 
 The [NetworkX](https://networkx.github.io/documentation/networkx-1.11/) python package (specifically version 1.11) is 
 required by several GNAT tools, but it must be installed separately. We highly recommend using 
