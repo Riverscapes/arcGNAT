@@ -1,4 +1,6 @@
-# GDAL Installation on Windows
+---
+title: GDAL Installation on Windows
+---
 
 GDAL is a useful command line to process spatial data, and the installed Python libraries allow for the 
 use of GDAL tools directly in Python code.
