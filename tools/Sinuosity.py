@@ -1,4 +1,4 @@
-﻿# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Name:        Channel Sinuosity                                              #
 # Purpose:     Calculate channel sinuosity of a stream network feature class. #
 #              Please note, this tool can calculate sinuosity for any linear  #
@@ -24,7 +24,7 @@ from lib import gis_tools
 arcpy.env.qualifiedFieldNames = False
 arcpy.env.overwriteOutput = True
 
-def main(fcInput, fieldName = "Sin", workspaceTmp = "in_memory"):
+def main(fcInput, output, fieldName = "Sinuosity", workspaceTmp = "in_memory"):
 
     # Get list of fields from input feature class
     keepFields = [keepField.name for keepField in arcpy.ListFields(fcInput)]
@@ -67,13 +67,14 @@ def main(fcInput, fieldName = "Sin", workspaceTmp = "in_memory"):
 
     # Calculate sinuosity
     codeblock = """def calculateSinuosity(length,distance):
-        if distance == 0:
-            return -9999 
-        else:
-            return length/distance """
+    if distance == 0:
+        sinuosity = -9999 
+    else:
+        sinuosity = length/distance
+    return sinuosity"""
     arcpy.CalculateField_management(lyrInputTmp,
                                     fieldSinuosity,
-                                    "calculateSinuosity(!{}!, !{}!".format(fieldSegmentLength, fieldDistance),
+                                    "calculateSinuosity(!{}!, !{}!)".format(fieldSegmentLength, fieldDistance),
                                     "PYTHON_9.3",
                                     codeblock)
 
@@ -86,15 +87,16 @@ def main(fcInput, fieldName = "Sin", workspaceTmp = "in_memory"):
     for dropField in dropFields:
         if dropField not in keepFields:
             arcpy.DeleteField_management("fcOutputView", dropField)
-
-    # join final sinuosity output back to input stream network
-    arcpy.MakeFeatureLayer_management(fcInput, "lyrInput")
-    fcInputOID = arcpy.Describe("lyrInput").OIDFieldName
-    arcpy.JoinField_management("lyrInput",
-                               fcInputOID,
-                               "fcOutputView",
-                               "InputID",
-                               fieldName)
+    
+    # join final sinuosity output back to output stream network
+    arcpy.CopyFeatures_management(fcOutput, output) 
+    #arcpy.MakeFeatureLayer_management(fcInput, "lyrInput")
+    #fcInputOID = arcpy.Describe("lyrInput").OIDFieldName
+    #arcpy.JoinField_management("lyrInput",
+    #                           fcInputOID,
+    #                           "fcOutputView",
+    #                           "InputID",
+    #                           fieldName)
     return
 
 

@@ -1619,12 +1619,20 @@ class SinuosityTool(object):
             direction="Input")
         param0.filter.list = ["Polyline"]
 
+        param1 = arcpy.Parameter(
+            displayName="Output stream network feature class",
+            name="OutputFCNetwork",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Output")
+
         return [param0,
-                paramRiverscapesBool, #1
-                paramProjectXML, #2
-                paramRealization, #3
-                paramSegmentAnalysisName, #4
-                paramAttributeAnalysisName] #5
+		param1,
+                paramRiverscapesBool, #2
+                paramProjectXML, #3
+                paramRealization, #4
+                paramSegmentAnalysisName, #5
+                paramAttributeAnalysisName] #6
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -1636,12 +1644,13 @@ class SinuosityTool(object):
         has been changed."""
 
         inSegmentedStreamNetwork = p[0]
+	outputFCNetwork = p[1]
 
-        paramRiverscapesBool = p[1]
-        paramProjectXML = p[2]
-        paramRealization = p[3]
-        paramSegmentAnalysis = p[4]
-        paramAttributeAnalysis = p[5]
+        paramRiverscapesBool = p[2]
+        paramProjectXML = p[3]
+        paramRealization = p[4]
+        paramSegmentAnalysis = p[5]
+        paramAttributeAnalysis = p[6]
 
         if paramRiverscapesBool.value == True:
             paramProjectXML.enabled = True
@@ -1690,16 +1699,17 @@ class SinuosityTool(object):
 
         # Tool input variables
         inCenterline = p[0].valueAsText
+	outputNetwork = p[1].valueAsText
 
         # Riverscapes project variables
-        paramRiverscapesBool = p[1]
-        paramProjectXML = p[2].valueAsText
-        paramRealization = p[3].valueAsText
-        paramSegmentAnalysis = p[4].valueAsText
-        paramAttributeAnalysis = p[5].valueAsText
+        paramRiverscapesBool = p[2]
+        paramProjectXML = p[3].valueAsText
+        paramRealization = p[4].valueAsText
+        paramSegmentAnalysis = p[5].valueAsText
+        paramAttributeAnalysis = p[6].valueAsText
 
         # outSinuosityName = os.path.basename(outSinuosity)
-        paramChannelSinuosityField = "C_Sin"
+        paramChannelSinuosityField = "Sinuosity"
 
         # Where the tool output data will be stored in Riverscapes Project directory
         if paramRiverscapesBool.value == True:
@@ -1722,7 +1732,7 @@ class SinuosityTool(object):
                         makedirs(os.path.join(attributesDir, "Outputs"))
 
         # Main tool module
-        Sinuosity.main(inCenterline, paramChannelSinuosityField)
+        Sinuosity.main(inCenterline, outputNetwork, paramChannelSinuosityField)
 
         # Add results of tool processing to the Riverscapes project XML
         if paramRiverscapesBool.value == True:
