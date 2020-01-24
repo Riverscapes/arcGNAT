@@ -13,6 +13,7 @@
 #!/usr/bin/env python
 
 import arcpy
+import os
 from lib import gis_tools
 
 
@@ -43,11 +44,15 @@ def join_node_summary(lyrInputSegments, node_type, lyrNodesToSegments, LineOID, 
     arcpy.SelectLayerByAttribute_management(lyrNodesToSegments, "NEW_SELECTION", """"NODE_TYPE" = '{0}'""".format(node_type))
     arcpy.Statistics_analysis(lyrNodesToSegments, tblNodeSummary, [["NODE_TYPE", "COUNT"]], LineOID)
     arcpy.SelectLayerByAttribute_management(lyrNodesToSegments, "CLEAR_SELECTION")
-
+    
     arcpy.AddField_management(lyrInputSegments, NODES, "TEXT")
-    arcpy.MakeTableView_management(tblNodeSummary, viewNodeSummary)
-    arcpy.AddJoin_management(lyrInputSegments, LineOID, viewNodeSummary, LineOID, "KEEP_COMMON")
-    arcpy.CalculateField_management(lyrInputSegments, NODES, '"!COUNT_NODE_TYPE!"', "PYTHON_9.3")
+    # error handling for if using folder instead of geodatabase
+    if not os.path.exists(tblNodeSummary):
+      tblNodeSummaryFile = tblNodeSummary.split('.')[0] + '.dbf'
+    arcpy.MakeTableView_management(tblNodeSummaryFile, viewNodeSummary)
+    TableOID = arcpy.Describe(tblNodeSummaryFile).OIDFieldName
+    arcpy.AddJoin_management(lyrInputSegments, LineOID, viewNodeSummary, TableOID, "KEEP_COMMON")
+    arcpy.CalculateField_management(lyrInputSegments, NODES, '"!COUNT_NODE!"', "PYTHON_9.3")
     arcpy.RemoveJoin_management(lyrInputSegments)
     return
 
@@ -58,6 +63,7 @@ def main(fcInputSegments,
          tempWorkspace):
 
     arcpy.env.overwriteOutput = True
+    arcpy.env.workspace = 'in_memory'
 
     # Turn off Z and M geometry
     arcpy.env.outputMFlag = "Disabled"
@@ -100,7 +106,7 @@ def main(fcInputSegments,
     # Braid-to-braid nodes
     arcpy.AddMessage("GNAT CTT: Generating braid-to-braid nodes...")
     arcpy.MakeFeatureLayer_management(fcInputAttrbNetworkTemp, "lyrInputAttrbNetworkTemp")
-    arcpy.SelectLayerByAttribute_management("lyrInputAttrbNetworkTemp","NEW_SELECTION", """ "_edgetype_" = 'braid' """)
+    arcpy.SelectLayerByAttribute_management("lyrInputAttrbNetworkTemp", "NEW_SELECTION", """ "_edgetype_" = 'braid' """)
     arcpy.Dissolve_management("lyrInputAttrbNetworkTemp", fcBraidDslv, "#", "#", "SINGLE_PART")
     arcpy.Intersect_analysis([fcBraidDslv], fcNodeBraidToBraid, "ONLY_FID", "#", "POINT")
     arcpy.MakeFeatureLayer_management(fcNodeBraidToBraid, "lyrNodeBraidToBraid")
@@ -148,6 +154,7 @@ def main(fcInputSegments,
     # Summarize each node type by attribute field LineOID
     arcpy.AddMessage("GNAT CTT: Summarize nodes per stream segments...")
     arcpy.MakeFeatureLayer_management(fcNodesToSegments, "lyrNodesToSegments")
+    
 
     # Spatial join each summary table as a new attribute field to final segment network
     node_types = ["BB", "BM", "TC"]
