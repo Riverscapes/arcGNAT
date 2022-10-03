@@ -58,7 +58,7 @@ The segmentation tool can be used in either a GNAT Project or as a stand-alone t
 
 - Requirements: 
   - Projected coordinate system, not geographic.
-  - (Optional) All appropriate lines are connected as a network. The user can find unconnected stream reaches by building a network topology table with the [Build Network Topology Table](http://gnat.riverscapes.xyz/Build-Network-Topology-Table) tool, finding errors using the [Find Network Features](http://gnat.riverscapes.xyz/Find-Network-Features) tool, then manually correcting topology errors using editing tools in ArcMap.
+  - (Optional) All appropriate lines are connected as a network. The user can find unconnected stream reaches by building a network topology table with the [Build Network Topology Table](http://gnat.riverscapes.net/Build-Network-Topology-Table) tool, finding errors using the [Find Network Features](http://gnat.riverscapes.net/Find-Network-Features) tool, then manually correcting topology errors using editing tools in ArcMap.
   - The network consists of single-part features only.
 
 3. **Segment Length (Meters)** The desired length of each stream segment, using the input stream network feature class linear unit. 

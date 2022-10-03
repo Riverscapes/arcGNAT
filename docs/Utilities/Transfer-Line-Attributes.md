@@ -2,7 +2,7 @@
 title: Transfer Line Attributes
 ---
 
-The **Transfer Line Attributes** tool transfers attributes between stream network polyline feature classes, using a segmented polygon approach. The segmented polygons are generated using Thiessen polygons in the [Divide Polygons by Segments](http://gnat.riverscapes.xyz/Divide-Polygon-by-Segments) tool. Alternatively, this tool can use Branch IDs from both networks datasets to better manage tributary junctions. 
+The **Transfer Line Attributes** tool transfers attributes between stream network polyline feature classes, using a segmented polygon approach. The segmented polygons are generated using Thiessen polygons in the [Divide Polygons by Segments](http://gnat.riverscapes.net/Divide-Polygon-by-Segments) tool. Alternatively, this tool can use Branch IDs from both networks datasets to better manage tributary junctions. 
 
 _______________________________________________________________
 ## Usage
@@ -44,7 +44,7 @@ _______________________________________________________________
 
 ### Calculation Method
 
-1. Divide polygon into segments based on segmentation/junctions in the “From” line network, using the [Divide Polygons by Segments](http://gnat.riverscapes.xyz/Divide-Polygon-by-Segments) tool.
+1. Divide polygon into segments based on segmentation/junctions in the “From” line network, using the [Divide Polygons by Segments](http://gnat.riverscapes.net/Divide-Polygon-by-Segments) tool.
 2. Split “To” line network based on the intersection of the divided polygons.
 3. Transfer “From” network OID’s to polygon segments.
 4. Spatially join the segmented polygons the “To” line network feature centroids.

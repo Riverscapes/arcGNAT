@@ -5,7 +5,7 @@ title: Generate Stream Branches
 
 The **Generate Stream Branches** tool dissolves the line network based on GNIS name and stream order attributes, to 
 create stream branches in the stream network polyline feature class. The resulting stream branches can then by used 
-by the [Segment Stream Network](http://gnat.riverscapes.xyz/Segment-Stream-Network) tool for splitting the stream 
+by the [Segment Stream Network](http://gnat.riverscapes.net/Segment-Stream-Network) tool for splitting the stream 
 network by the longest, continuous stretches of stream.
 
 ![example]({{site.baseurl}}assets/images/branchID_example.png)
@@ -24,7 +24,7 @@ Stream network polyline feature class with Stream Order Attributes (from stream 
 **Input Stream Network Nodes** (Optional)
 
 Points representing nodes within the stream network. Ideally this should be the point shapefile output (i.e with the
-"_node.shp" suffix) from the [Generate Network Attributes](http://gnat.riverscape.xyz/Generate-Network-Attributes) tool. 
+"_node.shp" suffix) from the [Generate Network Attributes](http://gnat.riverscape.net/Generate-Network-Attributes) tool. 
 Otherwise, the tool will dissolve all stream order segments that converge with the same stream order value.
 
 **Primary Stream Name Field** (i.e. GNIS Name)

@@ -14,7 +14,7 @@ _______________________________________________________________
 
 * Disable Z and M geometry in the Shape field if topology errors are encountered.
 * Input data should use the same projected spatial reference system.
-* Segment the flowline ( or centerline) as desired using the [Segment Stream Network](http://gnat.riverscapes.xyz/Segment-Stream-Network) tool.
+* Segment the flowline ( or centerline) as desired using the [Segment Stream Network](http://gnat.riverscapes.net/Segment-Stream-Network) tool.
 
 ### Input Parameters
 
